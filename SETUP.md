@@ -108,3 +108,24 @@ backend:
 - 소개 내용: `src/pages/about/index.astro`
 - 이메일/연락처: `src/pages/contact/index.astro` 상단
 - 글 분류(카테고리) 목록: `src/content.config.ts`와 `public/admin/config.yml` 두 곳을 같이 맞춰주세요
+
+---
+
+## 행정지원앱 (AI 앱) 운영
+
+### 앱이 사는 곳
+- 앱 파일(HTML 등): `public/apps/<앱이름>/index.html` → 주소는 `사이트/apps/<앱이름>/`
+- 앱 목록 카드: `/admin`의 **"행정지원앱"** 에서 추가·수정 (제목·설명·링크·태그)
+- 새 앱 올리기 = ① 앱 HTML을 `public/apps/새앱/`에 올리기(코드 업로드) → ② `/admin`에서 카드 추가
+
+### AI(키)가 필요한 앱 — 키는 코드에 넣지 않습니다
+키가 필요한 앱은 `functions/api/`의 서버 함수가 대신 AI를 호출하고, **키는 Cloudflare 환경변수에 숨겨** 둡니다.
+
+**Gemini 무료 키 발급 → Cloudflare에 등록 (한 번만):**
+1. Google AI Studio(aistudio.google.com)에서 **무료 API 키** 발급 (신용카드 불필요, 요금 청구 없음)
+2. Cloudflare 대시보드 → 해당 Pages 프로젝트 → **Settings → Environment variables**
+3. 변수 추가: 이름 `GEMINI_API_KEY`, 값 = 발급받은 키. (Production/Preview 모두)
+4. 저장 후 다시 배포(Retry deployment 또는 새 커밋)하면 적용됨
+
+- 무료 등급은 하루 사용량 한도가 있어, 초과하면 잠시 도구가 쉬었다가 다시 됩니다(요금은 0원 유지).
+- 무료 등급은 입력 내용이 Google 제품 개선에 쓰일 수 있으니, 앱에 "민감·비공개 정보 입력 금지" 안내를 두는 게 좋습니다.

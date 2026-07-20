@@ -10,6 +10,7 @@ const latest = posts.slice(0, 5);
 
 const books = (await getCollection('books')).sort((a, b) => a.data.order - b.data.order);
 const videos = (await getCollection('videos')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
+const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
 ---
 <Base>
   <!-- 히어로: 네이비 표지 -->
@@ -103,6 +104,29 @@ const videos = (await getCollection('videos')).sort((a, b) => a.data.order - b.d
     </div>
   </section>
 
+  <!-- 행정지원앱 -->
+  <section class="section wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Tools</p>
+        <h2>행정지원앱</h2>
+      </div>
+      <a class="more" href="/apps/">전체 보기 →</a>
+    </div>
+    <div class="home-app-row">
+      {apps.map((app) => (
+        <a class="home-app" href={app.data.url} target={app.data.url.startsWith('http') ? '_blank' : undefined} rel="noopener">
+          <span class="home-app-top">
+            {app.data.tag && <span class="home-app-tag">{app.data.tag}</span>}
+            {app.data.badge && <span class="home-app-badge">{app.data.badge}</span>}
+          </span>
+          <span class="home-app-title">{app.data.title}</span>
+          <span class="home-app-summary">{app.data.summary}</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
   <!-- 소개 스니펫 (지자체 담당자용 신뢰) -->
   <section class="section about-strip">
     <div class="wrap about-grid">
@@ -187,6 +211,17 @@ const videos = (await getCollection('videos')).sort((a, b) => a.data.order - b.d
   .video:hover .video-thumb::after { opacity: 1; }
   .play { width: 2.6rem; height: 2.6rem; border-radius: 50%; background: rgba(250,249,246,.92); color: var(--navy-deep); display: grid; place-items: center; font-size: .8rem; padding-left: 2px; position: relative; z-index: 1; }
   .video-title { font-weight: 600; font-size: .96rem; line-height: 1.45; }
+
+  /* 행정지원앱 */
+  .home-app-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.2rem; }
+  .home-app { display: flex; flex-direction: column; gap: .5rem; padding: 1.3rem; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); transition: border-color .16s, transform .16s; }
+  .home-app:hover { text-decoration: none; border-color: var(--navy); transform: translateY(-2px); }
+  .home-app-top { display: flex; gap: .4rem; }
+  .home-app-tag { font-family: var(--mono); font-size: .66rem; color: var(--navy); background: var(--paper-2); border: 1px solid var(--line); padding: .12rem .45rem; border-radius: 2px; }
+  .home-app-badge { font-family: var(--mono); font-size: .64rem; color: var(--navy-deep); background: var(--gold); padding: .12rem .45rem; border-radius: 2px; }
+  .home-app-title { font-family: var(--serif); font-weight: 600; font-size: 1.12rem; }
+  .home-app:hover .home-app-title { color: var(--blue); }
+  .home-app-summary { color: var(--muted); font-size: .9rem; line-height: 1.55; }
 
   /* 소개 스트립 */
   .about-strip { background: var(--paper-2); border-top: 1px solid var(--line); }

@@ -38,4 +38,17 @@ const videos = defineCollection({
   }),
 });
 
-export const collections = { writing, books, videos };
+// 행정지원앱 — 바이브 코딩으로 만든 실무 도구
+const apps = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/apps' }),
+  schema: z.object({
+    title: z.string(),
+    summary: z.string(),
+    url: z.string(),
+    tag: z.string().optional(),
+    badge: z.string().optional(),
+    order: z.number().default(0),
+  }),
+});
+
+export const collections = { writing, books, videos, apps };

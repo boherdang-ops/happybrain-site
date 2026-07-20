@@ -1,0 +1,61 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.order);
+---
+<Base title="행정지원앱" description="바이브 코딩으로 만든, 공무원 실무에 바로 쓰는 AI 도구 모음. 설치 없이 브라우저에서 무료로.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Tools</p>
+      <h1>행정지원앱</h1>
+      <p class="page-lead">
+        실무에서 직접 쓰려고 만든 AI 도구들입니다. 설치 없이 브라우저에서 바로,
+        대부분 무료로 써보실 수 있어요.
+      </p>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="app-grid">
+      {apps.map((app) => (
+        <a class="app-card" href={app.data.url} target={app.data.url.startsWith('http') ? '_blank' : undefined} rel="noopener">
+          <div class="app-top">
+            {app.data.tag && <span class="app-tag">{app.data.tag}</span>}
+            {app.data.badge && <span class="app-badge">{app.data.badge}</span>}
+          </div>
+          <h2 class="app-title">{app.data.title}</h2>
+          <p class="app-summary">{app.data.summary}</p>
+          <span class="app-go">열어보기 →</span>
+        </a>
+      ))}
+    </div>
+    {apps.length === 0 && <p class="empty">준비 중입니다.</p>}
+  </section>
+</Base>
+
+<style>
+  .page-head { background: var(--navy-deep); color: var(--paper-on-navy); }
+  .page-head .wrap { padding-block: clamp(3rem, 8vw, 5rem); }
+  .page-head h1 { color: #fff; margin-top: .8rem; }
+  .page-head .eyebrow { color: var(--gold); }
+  .page-head .eyebrow::before { background: var(--gold); }
+  .page-lead { color: var(--paper-on-navy); max-width: 38rem; margin-top: 1rem; }
+
+  .app-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.4rem; }
+  .app-card {
+    display: flex; flex-direction: column; gap: .7rem;
+    padding: 1.6rem; border: 1px solid var(--line); border-radius: 4px;
+    background: var(--paper); color: var(--ink);
+    transition: border-color .16s ease, transform .16s ease, box-shadow .16s ease;
+  }
+  .app-card:hover { text-decoration: none; border-color: var(--navy); transform: translateY(-3px); box-shadow: -6px 8px 0 -1px var(--paper-2), -6px 8px 0 0 var(--line); }
+  .app-top { display: flex; align-items: center; gap: .5rem; }
+  .app-tag { font-family: var(--mono); font-size: .68rem; letter-spacing: .04em; color: var(--navy); background: var(--paper-2); border: 1px solid var(--line); padding: .15rem .5rem; border-radius: 2px; }
+  .app-badge { font-family: var(--mono); font-size: .66rem; letter-spacing: .06em; color: var(--navy-deep); background: var(--gold); padding: .15rem .5rem; border-radius: 2px; }
+  .app-title { font-size: 1.28rem; margin: 0; }
+  .app-card:hover .app-title { color: var(--blue); }
+  .app-summary { color: var(--muted); font-size: .94rem; line-height: 1.6; margin: 0; flex: 1; }
+  .app-go { font-family: var(--mono); font-size: .8rem; color: var(--gold); margin-top: .4rem; }
+  .empty { color: var(--muted); }
+</style>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 보도자료 작성 도우미</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Noto Sans KR -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc; /* Tailwind slate-50 */
+        }
+        
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* 입력 폼 포커스 효과 */
+        .form-input {
+            transition: all 0.2s ease-in-out;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* 마크다운 스타일링 (보도자료 결과용) */
+        .prose h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: #1e293b; }
+        .prose h2 { font-size: 1.25rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #334155; }
+        .prose p { margin-bottom: 1rem; line-height: 1.6; color: #475569; }
+        .prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; color: #475569; }
+        .prose li { margin-bottom: 0.25rem; }
+        .prose strong { font-weight: 600; color: #0f172a; }
+
+        /* 로딩 스피너 */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3b82f6;
+            width: 24px;
+            height: 24px;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-slate-800">
+
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm z-10 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-md">
+                <i class="fa-solid fa-pen-nib text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">스마트 보도자료 도우미</h1>
+                <p class="text-xs text-slate-500">지방 공무원을 위한 AI 기반 보도자료 초안 생성기</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>보도자료 표준 양식 지원</span>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-slate-50">
+        
+        <!-- 왼쪽 패널: Wizard 입력 폼 -->
+        <section class="w-full lg:w-1/2 flex flex-col border-r border-slate-200 bg-white shadow-[2px_0_10px_rgba(0,0,0,0.02)] z-0 lg:max-w-2xl">
+            
+            <!-- 위저드 진행률 표시 -->
+            <div class="px-8 pt-8 pb-4 shrink-0">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-blue-600 tracking-wider">STEP <span id="current-step-text">1</span> / 3</span>
+                    <span id="step-title" class="text-sm font-medium text-slate-700">기본 정보 입력 (5W)</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 33.33%"></div>
+                </div>
+            </div>
+
+            <!-- 입력 폼 영역 (스크롤 가능) -->
+            <div class="flex-1 overflow-y-auto px-8 py-4">
+                <form id="wizard-form" class="space-y-6">
+                    
+                    <!-- STEP 1: 누가, 언제, 어디서, 무엇을 -->
+                    <div id="step-1" class="step-content space-y-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">누가 (Who) <span class="text-red-500">*</span></label>
+                            <input type="text" id="input-who" class="form-input w-full p-3 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm" placeholder="예: 서울시, OOO구청장, 관련 부서 등" required>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">언제 (When) <span class="text-red-500">*</span></label>
+                                <input type="text" id="input-when" class="form-input w-full p-3 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm" placeholder="예: 2024년 10월 25일 오전 10시" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">어디서 (Where) <span class="text-red-500">*</span></label>
+                                <input type="text" id="input-where" class="form-input w-full p-3 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm" placeholder="예: 구청 대강당, OOO공원 일대" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">무엇을 (What) <span class="text-red-500">*</span></label>
+                            <textarea id="input-what" rows="3" class="form-input w-full p-3 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm resize-none" placeholder="어떤 사업, 행사, 정책을 추진하는지 간략히 적어주세요.&#10;예: '2024 지역 경제 활성화 포럼' 개최" required></textarea>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: 어떻게, 왜, 기대효과 -->
+                    <div id="step-2" class="step-content hidden space-y-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">어떻게 (How) 추진합니까?</label>
+                            <textarea id="input-how" rows="3" class="form-input w-full p-3 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm resize-none" placeholder="세부적인 추진 방법, 행사 식순, 주요 프로그램 등을 적어주세요."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">왜 (Why) 추진합니까? (추진 배경)</label>
+                            <textarea id="input-why" rows="3" class="form-input w-full p-3 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm resize-none" placeholder="이 정책이나 행사를 기획하게 된 배경이나 사회적 필요성을 적어주세요."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">기대 효과</label>
+                            <textarea id="input-effect" rows="3" class="form-input w-full p-3 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm resize-none" placeholder="이 사업을 통해 시민/구민들이 얻게 될 이점이나 지역사회의 변화 등을 적어주세요."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: 인용구 및 기타정보 -->
+                    <div id="step-3" class="step-content hidden space-y-5">
+                        <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-2">
+                            <label class="block text-sm font-semibold text-blue-800 mb-2">
+                                <i class="fa-solid fa-quote-left mr-1"></i> 핵심 인용구 (Quote)
+                            </label>
+                            <p class="text-xs text-blue-600 mb-3">단체장(시장, 구청장) 또는 담당자의 핵심 멘트는 보도자료의 신뢰도를 높이고 기사화될 확률을 높입니다.</p>
+                            <textarea id="input-quote" rows="3" class="form-input w-full p-3 border border-blue-200 rounded-lg bg-white focus:border-blue-400 text-sm resize-none shadow-sm" placeholder="예: '이번 포럼을 통해 지역 소상공인들이 실질적인 도움을 받을 수 있도록 최선을 다하겠습니다.' - OOO구청장"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">담당 부서 및 연락처 (선택)</label>
+                            <input type="text" id="input-contact" class="form-input w-full p-3 border border-slate-300 rounded-lg bg-slate-50 focus:bg-white text-sm" placeholder="예: 홍보담당관 언론홍보팀 (02-123-4567)">
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 하단 버튼 영역 -->
+            <div class="px-8 py-5 border-t border-slate-200 bg-white shrink-0 flex justify-between items-center">
+                <button type="button" id="btn-prev" class="px-5 py-2.5 rounded-lg font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors hidden" onclick="navigateStep(-1)">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> 이전
+                </button>
+                <div class="flex-1"></div>
+                <button type="button" id="btn-next" class="px-5 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-md" onclick="navigateStep(1)">
+                    다음 단계 <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+                <button type="button" id="btn-generate" class="px-6 py-2.5 rounded-lg font-bold text-white bg-slate-800 hover:bg-slate-900 transition-colors shadow-md hidden flex items-center gap-2" onclick="generatePressRelease()">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> 보도자료 생성
+                </button>
+            </div>
+        </section>
+
+        <section class="w-full lg:w-1/2 flex flex-col bg-[#f8fafc] relative">
+            
+            <!-- 탭 네비게이션 -->
+            <div class="flex border-b border-slate-200 bg-white px-4 pt-3 shrink-0 gap-2">
+                <button onclick="switchTab('result')" id="tab-result" class="px-4 py-2.5 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition-colors flex items-center gap-2">
+                    <i class="fa-regular fa-file-lines"></i> 보도자료 결과물
+                </button>
+                <button onclick="switchTab('prompt')" id="tab-prompt" class="px-4 py-2.5 text-sm font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-terminal"></i> 작동한 프롬프트
+                </button>
+                <div class="flex-1 flex justify-end items-center pb-1">
+                    <button onclick="copyContent()" id="btn-copy" class="text-xs font-medium bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded shadow-sm hover:bg-slate-50 transition-colors flex items-center gap-1 hidden">
+                        <i class="fa-regular fa-copy"></i> 복사하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 내용 영역 -->
+            <div class="flex-1 overflow-y-auto p-6 relative">
+                
+                <!-- 초기 빈 상태 -->
+                <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                    <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4 border border-slate-200">
+                        <i class="fa-solid fa-newspaper text-3xl text-slate-300"></i>
+                    </div>
+                    <p class="text-sm">왼쪽 폼에 정보를 입력하고 생성 버튼을 누르면,</p>
+                    <p class="text-sm font-medium mt-1">이곳에 보도자료가 작성됩니다.</p>
+                </div>
+
+                <!-- 로딩 상태 -->
+                <div id="loading-state" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm z-10 hidden">
+                    <div class="loader mb-4"></div>
+                    <p class="text-blue-600 font-medium">AI가 보도자료를 작성하고 있습니다...</p>
+                    <p class="text-xs text-slate-500 mt-2">표준 공문서 양식에 맞춰 다듬는 중입니다.</p>
+                </div>
+
+                <!-- 결과물 탭 내용 -->
+                <div id="content-result" class="hidden h-full">
+                    <div class="bg-white border border-slate-200 rounded-xl p-8 shadow-sm min-h-full">
+                        <div id="output-markdown" class="prose max-w-none">
+                            <!-- 생성된 보도자료 렌더링 영역 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 프롬프트 탭 내용 -->
+                <div id="content-prompt" class="hidden h-full">
+                    <div class="bg-[#1e293b] border border-slate-800 rounded-xl p-6 shadow-sm min-h-full font-mono text-sm text-slate-300 overflow-x-auto leading-relaxed">
+                        <div class="flex items-center gap-2 mb-4 text-blue-400 border-b border-slate-700 pb-2">
+                            <i class="fa-solid fa-code"></i>
+                            <span class="font-semibold">LLM에 전달된 프롬프트 구조</span>
+                        </div>
+                        <pre id="output-prompt" class="whitespace-pre-wrap font-mono text-sm"></pre>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- 토스트 알림 -->
+    <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2">
+        <i class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toast-message">복사되었습니다.</span>
+    </div>
+
+    <script>
+        // --- UI 상태 관리 (Wizard) ---
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        function navigateStep(direction) {
+            // 유효성 검사 (다음으로 넘어갈 때 필수 항목 체크)
+            if (direction === 1 && currentStep === 1) {
+                const who = document.getElementById('input-who').value.trim();
+                const when = document.getElementById('input-when').value.trim();
+                const where = document.getElementById('input-where').value.trim();
+                const what = document.getElementById('input-what').value.trim();
+                
+                if (!who || !when || !where || !what) {
+                    showToast('필수 항목(*)을 모두 입력해주세요.', true);
+                    return;
+                }
+            }
+
+            // 스텝 변경
+            currentStep += direction;
+            if (currentStep < 1) currentStep = 1;
+            if (currentStep > totalSteps) currentStep = totalSteps;
+
+            updateWizardUI();
+        }
+
+        function updateWizardUI() {
+            // 모든 스텝 숨기기
+            for (let i = 1; i <= totalSteps; i++) {
+                document.getElementById(`step-${i}`).classList.add('hidden');
+            }
+            
+            // 현재 스텝 표시
+            document.getElementById(`step-${currentStep}`).classList.remove('hidden');
+
+            // 버튼 제어
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const btnGenerate = document.getElementById('btn-generate');
+
+            btnPrev.classList.toggle('hidden', currentStep === 1);
+            
+            if (currentStep === totalSteps) {
+                btnNext.classList.add('hidden');
+                btnGenerate.classList.remove('hidden');
+            } else {
+                btnNext.classList.remove('hidden');
+                btnGenerate.classList.add('hidden');
+            }
+
+            // 진행률 및 텍스트 업데이트
+            document.getElementById('current-step-text').innerText = currentStep;
+            document.getElementById('progress-bar').style.width = `${(currentStep / totalSteps) * 100}%`;
+            
+            const titles = ["기본 정보 입력 (5W)", "상세 내용 입력 (How, Why, Effect)", "인용구 및 추가 정보"];
+            document.getElementById('step-title').innerText = titles[currentStep - 1];
+        }
+
+        // --- 탭 컨트롤 ---
+        let activeTab = 'result';
+
+        function switchTab(tabName) {
+            activeTab = tabName;
+            
+            const tabResult = document.getElementById('tab-result');
+            const tabPrompt = document.getElementById('tab-prompt');
+            const contentResult = document.getElementById('content-result');
+            const contentPrompt = document.getElementById('content-prompt');
+
+            // 결과 탭 활성화
+            if (tabName === 'result') {
+                tabResult.className = "px-4 py-2.5 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition-colors flex items-center gap-2";
+                tabPrompt.className = "px-4 py-2.5 text-sm font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 transition-colors flex items-center gap-2";
+                contentResult.classList.remove('hidden');
+                contentPrompt.classList.add('hidden');
+            } 
+            // 프롬프트 탭 활성화
+            else {
+                tabPrompt.className = "px-4 py-2.5 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition-colors flex items-center gap-2";
+                tabResult.className = "px-4 py-2.5 text-sm font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 transition-colors flex items-center gap-2";
+                contentPrompt.classList.remove('hidden');
+                contentResult.classList.add('hidden');
+            }
+        }
+
+        // --- 토스트 알림 ---
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const icon = toast.querySelector('i');
+            
+            toastMessage.innerText = message;
+            
+            if(isError) {
+                icon.className = "fa-solid fa-circle-exclamation text-red-400";
+            } else {
+                icon.className = "fa-solid fa-circle-check text-green-400";
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-4');
+            }, 3000);
+        }
+
+        // --- 복사 기능 ---
+        function copyContent() {
+            let textToCopy = "";
+            if (activeTab === 'result') {
+                // 결과물 복사 (HTML 내부 텍스트)
+                textToCopy = document.getElementById('output-markdown').innerText;
+            } else {
+                // 프롬프트 복사
+                textToCopy = document.getElementById('output-prompt').innerText;
+            }
+
+            if(!textToCopy) return;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast(activeTab === 'result' ? '보도자료가 클립보드에 복사되었습니다.' : '프롬프트 내용이 복사되었습니다.');
+            }).catch(err => {
+                // iframe 등 클립보드 API 제한 시 폴백
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('복사되었습니다.');
+                } catch (e) {
+                    showToast('복사에 실패했습니다.', true);
+                }
+                document.body.removeChild(textArea);
+            });
+        }
+
+        // --- LLM 보도자료 생성 ---
+        async function generatePressRelease() {
+            // 1. 폼 데이터 수집
+            const data = {
+                who: document.getElementById('input-who').value.trim() || '미상',
+                when: document.getElementById('input-when').value.trim() || '미상',
+                where: document.getElementById('input-where').value.trim() || '미상',
+                what: document.getElementById('input-what').value.trim() || '내용 없음',
+                how: document.getElementById('input-how').value.trim() || '내용 없음',
+                why: document.getElementById('input-why').value.trim() || '내용 없음',
+                effect: document.getElementById('input-effect').value.trim() || '내용 없음',
+                quote: document.getElementById('input-quote').value.trim() || '없음',
+                contact: document.getElementById('input-contact').value.trim() || '담당부서 문의'
+            };
+
+            // 2. 시스템 및 유저 프롬프트 구성
+            const systemPrompt = "당신은 20년 차 베테랑 공공기관 홍보 담당자입니다. 제공된 정보를 바탕으로 공공기관 및 지자체 표준 보도자료 양식(보도일시, 제목, 본문, 붙임/연락처 등)에 맞추어 전문적이고 신뢰감 있는 보도자료를 작성합니다. 과장된 표현은 피하고 객관적이며 공식적인 문어체(~했다, ~할 계획이다)를 사용하세요. HTML 형태로 바로 출력되도록 마크다운 문법을 사용하지 말고 순수 HTML 태그(h1, h2, p, ul, li, strong 등)만 사용하여 응답해주세요.";
+            
+            const userPromptText = `다음 제공된 세부 정보를 바탕으로 언론 배포용 표준 보도자료를 작성해 주세요.
+
+[입력된 기본 정보 (5W1H 및 상세정보)]
+- 누가(Who): ${data.who}
+- 언제(When): ${data.when}
+- 어디서(Where): ${data.where}
+- 무엇을(What): ${data.what}
+- 어떻게(How): ${data.how}
+- 왜(Why, 추진배경): ${data.why}
+- 기대효과: ${data.effect}
+- 관계자 핵심 인용구(Quote): ${data.quote}
+- 문의/연락처: ${data.contact}
+
+[보도자료 작성 필수 지침]
+1. 문서 상단: 가상의 '보도일시'와 '배포일시' 명시
+2. 제목 (Title): 기자의 이목을 끄는 간결하고 명확한 메인 제목 (<h1> 태그)과 부제목 1~2개 (<h2> 태그) 작성
+3. 리드 문단: 가장 중요한 핵심 정보(5W1H 요약)를 첫 문단에 배치하여 전체 내용을 한눈에 파악할 수 있게 작성
+4. 본문 전개: 추진 배경(Why) -> 세부 내용 및 방법(How) -> 기대효과 순으로 논리적으로 서술
+5. 인용구 삽입: 본문 후반부에 관계자(단체장 등)의 인용구('${data.quote}')를 자연스럽게 배치하여 신뢰도 상승
+6. 하단: [붙임] 자료 안내 및 입력된 연락처(${data.contact}) 정보 표기
+7. 출력 형식: 코드 블록 없이 순수 HTML 태그만 사용하여 결과를 반환할 것.`;
+
+            // UI 업데이트: 로딩 상태 표시
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('content-result').classList.add('hidden');
+            document.getElementById('content-prompt').classList.add('hidden');
+            document.getElementById('loading-state').classList.remove('hidden');
+            document.getElementById('btn-copy').classList.add('hidden');
+
+            // 프롬프트 뷰어 업데이트
+            document.getElementById('output-prompt').innerText = `[시스템 프롬프트 (System Role)]\n${systemPrompt}\n\n=========================================\n\n[사용자 프롬프트 (User Request)]\n${userPromptText}`;
+
+            try {
+                // 키를 숨긴 서버 함수(/api/press-release)를 호출합니다. API 키는 이 코드에 없습니다.
+                const response = await fetch('/api/press-release', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ systemPrompt, userPrompt: userPromptText })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`요청 실패: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.text) {
+                    let htmlContent = result.text;
+                    
+                    // 만약 모델이 마크다운 코드블록을 반환했다면 제거
+                    htmlContent = htmlContent.replace(/```html/g, '').replace(/```/g, '').trim();
+
+                    document.getElementById('output-markdown').innerHTML = htmlContent;
+                    
+                    // 성공 처리: 로딩 숨기고 탭 표시
+                    document.getElementById('loading-state').classList.add('hidden');
+                    document.getElementById('btn-copy').classList.remove('hidden');
+                    
+                    // 현재 활성화된 탭에 맞게 내용 표시
+                    switchTab(activeTab);
+                    
+                } else {
+                    throw new Error("결과를 생성하지 못했습니다.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('empty-state').classList.remove('hidden');
+                showToast('생성 중 오류가 발생했습니다. 다시 시도해 주세요.', true);
+            }
+        }
+    </script>
+</body>
+</html>

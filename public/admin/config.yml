@@ -74,6 +74,23 @@ collections:
       - { name: date, label: "날짜", widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", required: false }
       - { name: order, label: "정렬 순서 (작을수록 먼저)", widget: number, default: 0, value_type: int }
 
+  # ── 행정지원앱 ──────────────────────────────────────
+  - name: apps
+    label: "행정지원앱"
+    label_singular: "앱"
+    folder: "src/content/apps"
+    create: true
+    slug: "{{slug}}"
+    extension: md
+    format: frontmatter
+    fields:
+      - { name: title, label: "앱 이름", widget: string }
+      - { name: summary, label: "설명", widget: text }
+      - { name: url, label: "링크 (예: /apps/press-release/ )", widget: string }
+      - { name: tag, label: "분류 태그 (예: 보도자료)", widget: string, required: false }
+      - { name: badge, label: "뱃지 (예: 무료)", widget: string, required: false }
+      - { name: order, label: "정렬 순서 (작을수록 먼저)", widget: number, default: 0, value_type: int }
+
   # ── 페이지 (소개·강의문의) ─────────────────────────
   - name: pages
     label: "페이지 내용"
