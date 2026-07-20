@@ -1,0 +1,58 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('writing', ({ data }) => !data.draft);
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const fmtDate = (d) => new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }).format(d);
+---
+<Base title={post.data.title} description={post.data.summary}>
+  <article>
+    <header class="post-head">
+      <div class="wrap">
+        <p class="eyebrow">{post.data.category}</p>
+        <h1>{post.data.title}</h1>
+        <p class="meta post-date">{fmtDate(post.data.date)}</p>
+      </div>
+    </header>
+
+    <div class="wrap post-body">
+      <Content />
+    </div>
+
+    <div class="wrap post-foot">
+      <a class="back" href="/writing/">← 글 목록으로</a>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .post-head { border-bottom: 1px solid var(--line); }
+  .post-head .wrap { padding-block: clamp(2.5rem, 6vw, 4rem); max-width: 46rem; }
+  .post-head h1 { margin: .9rem 0 1rem; font-size: clamp(1.9rem, 4.5vw, 2.8rem); }
+  .post-date { color: var(--muted); }
+
+  .post-body { max-width: 46rem; padding-block: clamp(2.5rem, 6vw, 3.5rem); font-size: 1.12rem; line-height: 1.85; }
+  .post-body :global(h2) { margin: 2.4rem 0 1rem; font-size: 1.6rem; }
+  .post-body :global(h3) { margin: 2rem 0 .8rem; font-size: 1.28rem; }
+  .post-body :global(p) { margin: 0 0 1.4em; }
+  .post-body :global(a) { color: var(--blue); }
+  .post-body :global(blockquote) {
+    margin: 1.8rem 0; padding: .3rem 0 .3rem 1.4rem; border-left: 3px solid var(--gold);
+    color: var(--muted); font-family: var(--serif); font-size: 1.15rem;
+  }
+  .post-body :global(ul), .post-body :global(ol) { padding-left: 1.3rem; margin: 0 0 1.4em; }
+  .post-body :global(li) { margin-bottom: .5em; }
+  .post-body :global(img) { border-radius: 3px; margin: 1.8rem 0; }
+  .post-body :global(code) { font-family: var(--mono); font-size: .9em; background: var(--paper-2); padding: .12rem .38rem; border-radius: 2px; }
+  .post-body :global(hr) { border: none; border-top: 1px solid var(--line); margin: 2.4rem 0; }
+
+  .post-foot { max-width: 46rem; padding-bottom: clamp(3rem, 7vw, 5rem); }
+  .back { font-family: var(--mono); font-size: .85rem; color: var(--muted); }
+  .back:hover { color: var(--blue); }
+</style>

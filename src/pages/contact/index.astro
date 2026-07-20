@@ -1,0 +1,53 @@
+---
+import Base from '../../layouts/Base.astro';
+
+// 아래 연락처는 실제 값으로 바꿔주세요.
+const email = 'hello@example.com';
+const channels = [
+  { label: '브런치', href: 'https://brunch.co.kr/' },
+  { label: '유튜브', href: 'https://www.youtube.com/' },
+  { label: '네이버 블로그', href: 'https://blog.naver.com/' },
+];
+---
+<Base title="강의·문의" description="지자체 AI 교육, 강연, 컨설팅 문의.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Contact</p>
+      <h1>강의·문의</h1>
+      <p class="page-lead">지자체 AI 교육, 강연, 컨설팅에 대한 문의를 환영합니다.</p>
+    </div>
+  </section>
+
+  <section class="section wrap contact-grid">
+    <div>
+      <p class="eyebrow">Email</p>
+      <a class="email" href={`mailto:${email}`}>{email}</a>
+      <p class="note">교육 일정, 대상, 규모를 함께 적어 보내주시면 더 빠르게 도와드릴 수 있습니다.</p>
+    </div>
+    <div>
+      <p class="eyebrow">Channels</p>
+      <ul class="channels">
+        {channels.map((c) => (
+          <li><a href={c.href} target="_blank" rel="noopener">{c.label} →</a></li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head { background: var(--navy-deep); color: var(--paper-on-navy); }
+  .page-head .wrap { padding-block: clamp(3rem, 8vw, 5rem); }
+  .page-head h1 { color: #fff; margin-top: .8rem; }
+  .page-head .eyebrow { color: var(--gold); }
+  .page-head .eyebrow::before { background: var(--gold); }
+  .page-lead { color: var(--paper-on-navy); max-width: 34rem; margin-top: 1rem; }
+
+  .contact-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 3rem; align-items: start; }
+  .email { font-family: var(--serif); font-size: clamp(1.4rem, 4vw, 2.1rem); font-weight: 600; color: var(--ink); display: inline-block; margin: .6rem 0 1.2rem; border-bottom: 2px solid var(--gold); }
+  .email:hover { text-decoration: none; color: var(--blue); }
+  .note { color: var(--muted); max-width: 30rem; line-height: 1.7; }
+  .channels { list-style: none; margin: .6rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .7rem; }
+  .channels a { font-size: 1.05rem; }
+  @media (max-width: 620px) { .contact-grid { grid-template-columns: 1fr; gap: 2rem; } }
+</style>

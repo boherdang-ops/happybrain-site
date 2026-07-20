@@ -1,0 +1,52 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const videos = (await getCollection('videos')).sort((a, b) => a.data.order - b.data.order);
+---
+<Base title="영상" description="해피브레인 유튜브 영상 큐레이션.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Videos</p>
+      <h1>영상</h1>
+      <p class="page-lead">글로 다 담지 못한 이야기는 영상으로.</p>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="grid">
+      {videos.map((v) => (
+        <a class="video" href={v.data.url} target="_blank" rel="noopener">
+          <span class="thumb" style={v.data.thumbnail ? `background-image:url(${v.data.thumbnail})` : ''}>
+            <span class="play" aria-hidden="true">▶</span>
+          </span>
+          <span class="title">{v.data.title}</span>
+        </a>
+      ))}
+    </div>
+    {videos.length === 0 && <p class="empty">아직 등록된 영상이 없습니다.</p>}
+  </section>
+</Base>
+
+<style>
+  .page-head { background: var(--navy-deep); color: var(--paper-on-navy); }
+  .page-head .wrap { padding-block: clamp(3rem, 8vw, 5rem); }
+  .page-head h1 { color: #fff; margin-top: .8rem; }
+  .page-head .eyebrow { color: var(--gold); }
+  .page-head .eyebrow::before { background: var(--gold); }
+  .page-lead { color: var(--paper-on-navy); max-width: 34rem; margin-top: 1rem; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.6rem; }
+  .video { color: var(--ink); }
+  .video:hover { text-decoration: none; }
+  .thumb {
+    aspect-ratio: 16 / 9; background: var(--navy); background-size: cover; background-position: center;
+    border-radius: 3px; display: flex; align-items: center; justify-content: center; margin-bottom: .8rem;
+    position: relative; overflow: hidden;
+  }
+  .thumb::after { content: ""; position: absolute; inset: 0; background: rgba(22,35,63,.18); opacity: 0; transition: opacity .18s; }
+  .video:hover .thumb::after { opacity: 1; }
+  .play { width: 3rem; height: 3rem; border-radius: 50%; background: rgba(250,249,246,.92); color: var(--navy-deep); display: grid; place-items: center; font-size: .9rem; padding-left: 3px; position: relative; z-index: 1; }
+  .title { font-weight: 600; font-size: 1rem; line-height: 1.45; }
+  .empty { color: var(--muted); }
+</style>

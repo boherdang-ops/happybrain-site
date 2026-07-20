@@ -1,0 +1,95 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const career = [
+  { period: '현재', role: '한국공공자치연구원 연구기획본부장 · AI행정혁신연구소장' },
+  { period: '현재', role: '필명 해피브레인 — 저술·유튜브·블로그 운영' },
+  { period: '이전', role: '국가안보전략연구원 선임연구원' },
+  { period: '이전', role: '서일대학 겸임교수' },
+  { period: '이전', role: '한국능률협회 국제사업' },
+];
+const focus = [
+  { title: 'AI 행정 실무 교육', body: '지자체 공무원이 실제 업무에 AI를 쓰도록 돕는 실습 중심 커리큘럼을 설계하고 진행합니다.' },
+  { title: '지역문제 해결', body: '지역 특성에 맞춘 AI 활용으로 행정 효율과 주민 체감 성과를 함께 잡는 방법을 연구합니다.' },
+  { title: 'Human Premium', body: 'AI가 확산될수록 더 귀해지는 사람의 몫 — 판단, 관계, 의미 — 을 글과 책으로 풀어냅니다.' },
+];
+---
+<Base title="소개" description="박상득(해피브레인) — 지자체 공무원을 위한 AI 교육 전문가, 저자.">
+  <!-- 표지 -->
+  <section class="intro">
+    <div class="wrap intro-inner">
+      <p class="eyebrow">About</p>
+      <h1>박상득 <span class="pen">해피브레인</span></h1>
+      <p class="intro-lead">
+        지자체 공무원을 위한 AI 교육 전문가입니다. 10년 넘게 공직 교육 현장에 서며,
+        "AI로 어떻게 더 잘 일할 것인가"와 "그럼에도 사람이 남기는 프리미엄은 무엇인가"를
+        동시에 붙잡고 있습니다.
+      </p>
+    </div>
+  </section>
+
+  <!-- 하는 일 -->
+  <section class="section wrap">
+    <p class="eyebrow">What I do</p>
+    <h2 class="sec-title">하는 일</h2>
+    <div class="focus">
+      {focus.map((f, i) => (
+        <div class="focus-item">
+          <span class="focus-idx">{String(i + 1).padStart(2, '0')}</span>
+          <h3>{f.title}</h3>
+          <p>{f.body}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- 이력 -->
+  <section class="section wrap">
+    <p class="eyebrow">Career</p>
+    <h2 class="sec-title">지나온 자리</h2>
+    <ul class="career">
+      {career.map((c) => (
+        <li>
+          <span class="period">{c.period}</span>
+          <span class="role">{c.role}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <!-- CTA -->
+  <section class="section cta-strip">
+    <div class="wrap cta-inner">
+      <h2>강의나 협업을 생각하고 계신가요?</h2>
+      <p>지자체 교육, 강연, 컨설팅 문의를 환영합니다.</p>
+      <a class="btn btn--on-navy" href="/contact/">문의하기</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .intro { border-bottom: 1px solid var(--line); }
+  .intro-inner { padding-block: clamp(3.5rem, 9vw, 6rem); max-width: 44rem; }
+  .intro h1 { margin: 1rem 0 1.4rem; display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap; }
+  .pen { font-family: var(--mono); font-size: .95rem; font-weight: 400; letter-spacing: .06em; color: var(--gold); }
+  .intro-lead { font-size: clamp(1.1rem, 2.4vw, 1.35rem); line-height: 1.75; color: var(--ink); }
+
+  .sec-title { margin: .5rem 0 2.2rem; }
+
+  .focus { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 2rem; }
+  .focus-item { padding-top: 1.2rem; border-top: 2px solid var(--gold); }
+  .focus-idx { font-family: var(--mono); font-size: .78rem; color: var(--gold); }
+  .focus-item h3 { margin: .5rem 0 .7rem; }
+  .focus-item p { color: var(--muted); line-height: 1.7; margin: 0; }
+
+  .career { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); max-width: 46rem; }
+  .career li { display: grid; grid-template-columns: 6rem 1fr; gap: 1.5rem; padding: 1.1rem .25rem; border-bottom: 1px solid var(--line); align-items: baseline; }
+  .period { font-family: var(--mono); font-size: .78rem; color: var(--gold); }
+  .role { font-size: 1.02rem; }
+
+  .cta-strip { background: var(--navy-deep); color: var(--paper-on-navy); }
+  .cta-inner { text-align: center; max-width: 40rem; margin-inline: auto; }
+  .cta-inner h2 { color: #fff; }
+  .cta-inner p { margin: 1rem 0 1.8rem; color: var(--paper-on-navy); }
+  @media (max-width: 520px) { .career li { grid-template-columns: 1fr; gap: .2rem; } }
+</style>

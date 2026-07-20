@@ -1,0 +1,196 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const fmtDate = (d) => new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(d).replace(/\.\s?$/, '').replace(/\.\s?/g, '.');
+
+const posts = (await getCollection('writing', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const latest = posts.slice(0, 5);
+
+const books = (await getCollection('books')).sort((a, b) => a.data.order - b.data.order);
+const videos = (await getCollection('videos')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
+---
+<Base>
+  <!-- 히어로: 네이비 표지 -->
+  <section class="cover">
+    <div class="wrap cover-inner">
+      <p class="eyebrow eyebrow--gold">해피브레인 · 박상득</p>
+      <h1 class="cover-title">AI는 도구,<br />프리미엄은 사람.</h1>
+      <p class="cover-lead">
+        지자체 공무원이 AI를 실제 업무에 쓰도록 돕는 일을 합니다.
+        그 과정에서 배우고 연구한 것, 그리고 기술이 대신할 수 없는 사람의 몫에 대한 생각을
+        이곳에 차곡차곡 남깁니다.
+      </p>
+      <div class="cover-actions">
+        <a class="btn btn--on-navy" href="/writing/">글 읽기</a>
+        <a class="btn btn--on-navy" href="/about/">어떤 사람인지 보기</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 글 색인 -->
+  <section class="section wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Archive</p>
+        <h2>최근 글</h2>
+      </div>
+      <a class="more" href="/writing/">전체 보기 →</a>
+    </div>
+
+    <ol class="index">
+      {latest.map((post, i) => (
+        <li class="index-row">
+          <a href={`/writing/${post.id}/`}>
+            <span class="idx">{String(i + 1).padStart(2, '0')}</span>
+            <span class="index-main">
+              <span class="index-title">{post.data.title}</span>
+              {post.data.summary && <span class="index-summary">{post.data.summary}</span>}
+            </span>
+            <span class="index-meta">
+              <span class="tag">{post.data.category}</span>
+              <span class="meta">{fmtDate(post.data.date)}</span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <!-- 책 -->
+  <section class="section wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Books</p>
+        <h2>책</h2>
+      </div>
+      <a class="more" href="/books/">전체 보기 →</a>
+    </div>
+    <div class="book-row">
+      {books.map((b) => (
+        <a class="book" href={b.data.link || '/books/'}>
+          <span class="book-cover" style={b.data.cover ? `background-image:url(${b.data.cover})` : ''}>
+            {!b.data.cover && <span class="book-cover-title">{b.data.title}</span>}
+          </span>
+          <span class="book-info">
+            <span class="book-status">{b.data.status}{b.data.year ? ` · ${b.data.year}` : ''}</span>
+            <span class="book-title">{b.data.title}</span>
+          </span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- 영상 -->
+  <section class="section wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Videos</p>
+        <h2>영상</h2>
+      </div>
+      <a class="more" href="/videos/">전체 보기 →</a>
+    </div>
+    <div class="video-row">
+      {videos.map((v) => (
+        <a class="video" href={v.data.url} target="_blank" rel="noopener">
+          <span class="video-thumb" style={v.data.thumbnail ? `background-image:url(${v.data.thumbnail})` : ''}>
+            <span class="play" aria-hidden="true">▶</span>
+          </span>
+          <span class="video-title">{v.data.title}</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- 소개 스니펫 (지자체 담당자용 신뢰) -->
+  <section class="section about-strip">
+    <div class="wrap about-grid">
+      <div>
+        <p class="eyebrow">About</p>
+        <h2>이 기록을 남기는 사람</h2>
+      </div>
+      <div class="about-body">
+        <p>
+          한국공공자치연구원 연구기획본부장이자 AI행정혁신연구소장으로,
+          10년 넘게 공직자 교육 현장에 서 왔습니다. 필명 해피브레인으로
+          《출근길 3분 AI》를 썼고, 지금은 'Human Premium' 시리즈를 이어가고 있습니다.
+        </p>
+        <p><a href="/about/">더 자세히 보기 →</a></p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* 히어로 표지 */
+  .cover { background: var(--navy-deep); color: var(--paper-on-navy); position: relative; overflow: hidden; }
+  .cover::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(120% 80% at 85% 0%, rgba(184,134,59,.14), transparent 55%);
+    pointer-events: none;
+  }
+  .cover-inner { padding-block: clamp(4.5rem, 12vw, 8.5rem); position: relative; }
+  .eyebrow--gold { color: var(--gold); }
+  .eyebrow--gold::before { background: var(--gold); }
+  .cover-title { color: #fff; font-size: clamp(2.6rem, 8vw, 5rem); line-height: 1.12; margin: 1.4rem 0 0; letter-spacing: -0.02em; }
+  .cover-lead { max-width: 40rem; margin: 1.6rem 0 2.4rem; color: var(--paper-on-navy); font-size: clamp(1.02rem, 2vw, 1.18rem); line-height: 1.75; }
+  .cover-actions { display: flex; gap: .8rem; flex-wrap: wrap; }
+
+  /* 글 색인 (서재 카탈로그) */
+  .index { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .index-row { border-bottom: 1px solid var(--line); }
+  .index-row a {
+    display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 1.4rem;
+    padding: 1.4rem .25rem; color: var(--ink);
+  }
+  .index-row a:hover { text-decoration: none; background: var(--paper-2); }
+  .idx { font-family: var(--mono); font-size: .8rem; color: var(--gold); font-weight: 500; }
+  .index-main { display: flex; flex-direction: column; gap: .3rem; }
+  .index-title { font-family: var(--serif); font-size: 1.22rem; font-weight: 600; line-height: 1.35; }
+  .index-row a:hover .index-title { color: var(--blue); }
+  .index-summary { color: var(--muted); font-size: .92rem; line-height: 1.55; }
+  .index-meta { display: flex; flex-direction: column; align-items: flex-end; gap: .35rem; text-align: right; white-space: nowrap; }
+  .tag { font-family: var(--mono); font-size: .68rem; letter-spacing: .04em; color: var(--navy); background: var(--paper-2); border: 1px solid var(--line); padding: .15rem .5rem; border-radius: 2px; }
+
+  @media (max-width: 640px) {
+    .index-row a { grid-template-columns: auto 1fr; gap: .9rem; }
+    .index-meta { grid-column: 2; flex-direction: row; align-items: center; justify-content: flex-start; }
+  }
+
+  /* 책 */
+  .book-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1.6rem; }
+  .book { display: flex; flex-direction: column; gap: .8rem; color: var(--ink); }
+  .book:hover { text-decoration: none; }
+  .book-cover {
+    aspect-ratio: 3 / 4.2; background: var(--navy); background-size: cover; background-position: center;
+    border-radius: 2px; display: flex; align-items: center; justify-content: center; padding: 1rem;
+    box-shadow: 0 1px 0 var(--line), -6px 6px 0 -1px var(--paper-2), -6px 6px 0 0 var(--line);
+    transition: transform .18s ease;
+  }
+  .book:hover .book-cover { transform: translateY(-3px); }
+  .book-cover-title { font-family: var(--serif); color: #fff; font-size: 1rem; text-align: center; line-height: 1.4; }
+  .book-info { display: flex; flex-direction: column; gap: .2rem; }
+  .book-status { font-family: var(--mono); font-size: .68rem; letter-spacing: .04em; color: var(--gold); }
+  .book-title { font-weight: 600; font-size: .98rem; }
+
+  /* 영상 */
+  .video-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.4rem; }
+  .video { color: var(--ink); }
+  .video:hover { text-decoration: none; }
+  .video-thumb {
+    aspect-ratio: 16 / 9; background: var(--navy); background-size: cover; background-position: center;
+    border-radius: 3px; display: flex; align-items: center; justify-content: center; margin-bottom: .7rem;
+    position: relative; overflow: hidden;
+  }
+  .video-thumb::after { content: ""; position: absolute; inset: 0; background: rgba(22,35,63,.18); opacity: 0; transition: opacity .18s; }
+  .video:hover .video-thumb::after { opacity: 1; }
+  .play { width: 2.6rem; height: 2.6rem; border-radius: 50%; background: rgba(250,249,246,.92); color: var(--navy-deep); display: grid; place-items: center; font-size: .8rem; padding-left: 2px; position: relative; z-index: 1; }
+  .video-title { font-weight: 600; font-size: .96rem; line-height: 1.45; }
+
+  /* 소개 스트립 */
+  .about-strip { background: var(--paper-2); border-top: 1px solid var(--line); }
+  .about-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 2.5rem; align-items: start; }
+  .about-body p { font-size: 1.05rem; line-height: 1.8; }
+  @media (max-width: 680px) { .about-grid { grid-template-columns: 1fr; gap: 1.2rem; } }
+</style>

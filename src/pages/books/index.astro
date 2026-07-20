@@ -1,0 +1,62 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+
+const books = (await getCollection('books')).sort((a, b) => a.data.order - b.data.order);
+const rendered = await Promise.all(books.map(async (b) => ({ ...b, Content: (await render(b)).Content })));
+---
+<Base title="책" description="해피브레인이 쓴 책과 집필 중인 시리즈.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Books</p>
+      <h1>책</h1>
+      <p class="page-lead">현장에서 배운 것을 책으로 남깁니다.</p>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="books">
+      {rendered.map((b) => (
+        <article class="book-item">
+          <div class="cover" style={b.data.cover ? `background-image:url(${b.data.cover})` : ''}>
+            {!b.data.cover && <span class="cover-title">{b.data.title}</span>}
+          </div>
+          <div class="detail">
+            <p class="status">{b.data.status}{b.data.year ? ` · ${b.data.year}` : ''}</p>
+            <h2>{b.data.title}</h2>
+            <div class="desc"><b.Content /></div>
+            {b.data.link && <a class="btn btn--ghost" href={b.data.link} target="_blank" rel="noopener">보러 가기</a>}
+          </div>
+        </article>
+      ))}
+    </div>
+    {books.length === 0 && <p class="empty">아직 등록된 책이 없습니다.</p>}
+  </section>
+</Base>
+
+<style>
+  .page-head { background: var(--navy-deep); color: var(--paper-on-navy); }
+  .page-head .wrap { padding-block: clamp(3rem, 8vw, 5rem); }
+  .page-head h1 { color: #fff; margin-top: .8rem; }
+  .page-head .eyebrow { color: var(--gold); }
+  .page-head .eyebrow::before { background: var(--gold); }
+  .page-lead { color: var(--paper-on-navy); max-width: 34rem; margin-top: 1rem; }
+
+  .books { display: flex; flex-direction: column; gap: clamp(2rem, 5vw, 3.5rem); }
+  .book-item { display: grid; grid-template-columns: 200px 1fr; gap: 2.5rem; align-items: start; padding-bottom: clamp(2rem, 5vw, 3.5rem); border-bottom: 1px solid var(--line); }
+  .book-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .cover {
+    aspect-ratio: 3 / 4.2; background: var(--navy); background-size: cover; background-position: center;
+    border-radius: 2px; display: flex; align-items: center; justify-content: center; padding: 1.2rem;
+    box-shadow: -8px 8px 0 -1px var(--paper-2), -8px 8px 0 0 var(--line);
+  }
+  .cover-title { font-family: var(--serif); color: #fff; text-align: center; font-size: 1.1rem; line-height: 1.4; }
+  .status { font-family: var(--mono); font-size: .74rem; letter-spacing: .04em; color: var(--gold); margin: 0 0 .5rem; }
+  .detail h2 { font-size: 1.7rem; margin-bottom: 1rem; }
+  .desc { color: var(--ink); line-height: 1.75; margin-bottom: 1.3rem; }
+  .desc :global(p) { margin: 0 0 1em; }
+  .empty { color: var(--muted); }
+  @media (max-width: 620px) {
+    .book-item { grid-template-columns: 140px 1fr; gap: 1.5rem; }
+  }
+</style>

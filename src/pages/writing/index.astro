@@ -1,0 +1,96 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const fmtDate = (d) => new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(d).replace(/\.$/, '');
+
+const posts = (await getCollection('writing', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const categories = ['AI 행정혁신', '프롬프트·도구', '교육 이야기', '책 이야기'];
+---
+<Base title="글" description="AI 행정혁신, 프롬프트와 도구, 교육 현장, 책 이야기 — 해피브레인의 글 아카이브.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Archive</p>
+      <h1>글</h1>
+      <p class="page-lead">공부하고 연구한 것을 이곳에 쌓아 둡니다. 분류로 골라 읽어보세요.</p>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="filters" data-filters>
+      <button class="chip is-on" data-cat="all" aria-pressed="true">전체</button>
+      {categories.map((c) => <button class="chip" data-cat={c} aria-pressed="false">{c}</button>)}
+    </div>
+
+    <ol class="index" data-list>
+      {posts.map((post, i) => (
+        <li class="index-row" data-category={post.data.category}>
+          <a href={`/writing/${post.id}/`}>
+            <span class="idx">{String(i + 1).padStart(2, '0')}</span>
+            <span class="index-main">
+              <span class="index-title">{post.data.title}</span>
+              {post.data.summary && <span class="index-summary">{post.data.summary}</span>}
+            </span>
+            <span class="index-meta">
+              <span class="tag">{post.data.category}</span>
+              <span class="meta">{fmtDate(post.data.date)}</span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ol>
+    {posts.length === 0 && <p class="empty">아직 글이 없습니다. 관리자 화면(<code>/admin</code>)에서 첫 글을 써보세요.</p>}
+  </section>
+</Base>
+
+<script>
+  const wrap = document.querySelector('[data-filters]');
+  const rows = Array.from(document.querySelectorAll('[data-list] .index-row'));
+  wrap?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip');
+    if (!btn) return;
+    wrap.querySelectorAll('.chip').forEach((c) => { c.classList.remove('is-on'); c.setAttribute('aria-pressed', 'false'); });
+    btn.classList.add('is-on'); btn.setAttribute('aria-pressed', 'true');
+    const cat = btn.dataset.cat;
+    rows.forEach((r) => { r.style.display = (cat === 'all' || r.dataset.category === cat) ? '' : 'none'; });
+  });
+</script>
+
+<style>
+  .page-head { background: var(--navy-deep); color: var(--paper-on-navy); }
+  .page-head .wrap { padding-block: clamp(3rem, 8vw, 5rem); }
+  .page-head h1 { color: #fff; margin-top: .8rem; }
+  .page-head .eyebrow { color: var(--gold); }
+  .page-head .eyebrow::before { background: var(--gold); }
+  .page-lead { color: var(--paper-on-navy); max-width: 34rem; margin-top: 1rem; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 2rem; }
+  .chip {
+    font-family: var(--mono); font-size: .78rem; letter-spacing: .02em;
+    padding: .4rem .85rem; border-radius: 2px; cursor: pointer;
+    border: 1px solid var(--line); background: transparent; color: var(--muted);
+    transition: all .14s ease;
+  }
+  .chip:hover { border-color: var(--gold); color: var(--ink); }
+  .chip.is-on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+  .index { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .index-row { border-bottom: 1px solid var(--line); }
+  .index-row a { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 1.4rem; padding: 1.4rem .25rem; color: var(--ink); }
+  .index-row a:hover { text-decoration: none; background: var(--paper-2); }
+  .idx { font-family: var(--mono); font-size: .8rem; color: var(--gold); font-weight: 500; }
+  .index-main { display: flex; flex-direction: column; gap: .3rem; }
+  .index-title { font-family: var(--serif); font-size: 1.22rem; font-weight: 600; line-height: 1.35; }
+  .index-row a:hover .index-title { color: var(--blue); }
+  .index-summary { color: var(--muted); font-size: .92rem; line-height: 1.55; }
+  .index-meta { display: flex; flex-direction: column; align-items: flex-end; gap: .35rem; text-align: right; white-space: nowrap; }
+  .tag { font-family: var(--mono); font-size: .68rem; letter-spacing: .04em; color: var(--navy); background: var(--paper-2); border: 1px solid var(--line); padding: .15rem .5rem; border-radius: 2px; }
+  .empty { color: var(--muted); }
+  .empty code { font-family: var(--mono); background: var(--paper-2); padding: .1rem .35rem; border-radius: 2px; }
+  @media (max-width: 640px) {
+    .index-row a { grid-template-columns: auto 1fr; gap: .9rem; }
+    .index-meta { grid-column: 2; flex-direction: row; align-items: center; justify-content: flex-start; }
+  }
+</style>

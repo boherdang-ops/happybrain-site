@@ -1,0 +1,75 @@
+# ============================================================
+#  Sveltia CMS 설정
+#  아래 3곳(REPO, base_url)을 본인 값으로 바꾼 뒤 배포하세요.
+#  자세한 순서는 저장소 루트의 SETUP.md 참고.
+# ============================================================
+
+backend:
+  name: github
+  repo: OWNER/REPO            # ← 본인 GitHub 저장소 (예: sdpark/happybrain-site)
+  branch: main
+  base_url: https://YOUR-WORKER.workers.dev   # ← Cloudflare Worker 주소로 교체 (로그인 처리)
+
+# 이미지 업로드 위치
+media_folder: "public/uploads"
+public_folder: "/uploads"
+
+# 관리자 UI 언어
+locale: ko
+
+collections:
+  # ── 글 ──────────────────────────────────────────────
+  - name: writing
+    label: "글"
+    label_singular: "글"
+    description: "공부·연구 아카이브. 본진 콘텐츠입니다."
+    folder: "src/content/writing"
+    create: true
+    slug: "{{slug}}"
+    extension: md
+    format: frontmatter
+    sortable_fields: [date, title]
+    fields:
+      - { name: title, label: "제목", widget: string }
+      - { name: date, label: "날짜", widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD" }
+      - name: category
+        label: "분류"
+        widget: select
+        options: ["AI 행정혁신", "프롬프트·도구", "교육 이야기", "책 이야기"]
+      - { name: summary, label: "요약 (목록에 보임)", widget: text, required: false }
+      - { name: draft, label: "임시저장(공개 안 함)", widget: boolean, default: false }
+      - { name: body, label: "본문", widget: markdown }
+
+  # ── 책 ──────────────────────────────────────────────
+  - name: books
+    label: "책"
+    label_singular: "책"
+    folder: "src/content/books"
+    create: true
+    slug: "{{slug}}"
+    extension: md
+    format: frontmatter
+    fields:
+      - { name: title, label: "제목", widget: string }
+      - { name: status, label: "상태", widget: select, options: ["출간", "집필 중", "기획 중"], default: "출간" }
+      - { name: year, label: "연도", widget: string, required: false }
+      - { name: cover, label: "표지 이미지", widget: image, required: false }
+      - { name: link, label: "구매/소개 링크", widget: string, required: false }
+      - { name: order, label: "정렬 순서 (작을수록 먼저)", widget: number, default: 0, value_type: int }
+      - { name: body, label: "소개글", widget: markdown }
+
+  # ── 영상 ────────────────────────────────────────────
+  - name: videos
+    label: "영상"
+    label_singular: "영상"
+    folder: "src/content/videos"
+    create: true
+    slug: "{{slug}}"
+    extension: md
+    format: frontmatter
+    fields:
+      - { name: title, label: "제목", widget: string }
+      - { name: url, label: "유튜브 링크", widget: string }
+      - { name: thumbnail, label: "썸네일 이미지", widget: image, required: false }
+      - { name: date, label: "날짜", widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", required: false }
+      - { name: order, label: "정렬 순서 (작을수록 먼저)", widget: number, default: 0, value_type: int }

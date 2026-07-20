@@ -1,0 +1,53 @@
+---
+const year = new Date().getFullYear();
+const channels = [
+  { href: 'https://brunch.co.kr/', label: '브런치' },
+  { href: 'https://www.youtube.com/', label: '유튜브' },
+  { href: 'https://blog.naver.com/', label: '블로그' },
+];
+---
+<footer class="site-footer">
+  <div class="wrap grid">
+    <div class="col-brand">
+      <p class="fname">해피브레인</p>
+      <p class="ftag">AI는 도구, 프리미엄은 사람.<br />지자체 행정을 위한 AI 활용을 연구하고 나눕니다.</p>
+    </div>
+    <nav class="col-nav" aria-label="사이트 맵">
+      <p class="col-label">둘러보기</p>
+      <a href="/writing/">글</a>
+      <a href="/books/">책</a>
+      <a href="/videos/">영상</a>
+      <a href="/about/">소개</a>
+      <a href="/contact/">강의·문의</a>
+    </nav>
+    <nav class="col-nav" aria-label="채널">
+      <p class="col-label">채널</p>
+      {channels.map((c) => <a href={c.href} rel="me noopener" target="_blank">{c.label}</a>)}
+    </nav>
+  </div>
+  <div class="wrap baseline">
+    <span>© {year} 박상득 · 해피브레인</span>
+    <span class="mono">Human Premium</span>
+  </div>
+</footer>
+
+<style>
+  .site-footer { background: var(--navy-deep); color: var(--paper-on-navy); margin-top: 0; }
+  .grid {
+    display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 2.5rem;
+    padding-block: clamp(3rem, 6vw, 4.5rem);
+  }
+  .fname { font-family: var(--serif); font-weight: 700; font-size: 1.35rem; color: #fff; margin: 0 0 .6rem; }
+  .ftag { color: var(--muted-on-navy); font-size: .92rem; line-height: 1.65; margin: 0; max-width: 26rem; }
+  .col-label { font-family: var(--mono); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); margin: 0 0 1rem; }
+  .col-nav { display: flex; flex-direction: column; gap: .55rem; }
+  .col-nav a { color: var(--paper-on-navy); font-size: .95rem; }
+  .col-nav a:hover { color: #fff; text-decoration: none; }
+  .baseline {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    border-top: 1px solid var(--line-on-navy); padding-block: 1.4rem;
+    font-size: .8rem; color: var(--muted-on-navy);
+  }
+  .baseline .mono { font-family: var(--mono); letter-spacing: .12em; color: var(--gold); }
+  @media (max-width: 680px) { .grid { grid-template-columns: 1fr 1fr; } .col-brand { grid-column: 1 / -1; } }
+</style>
