@@ -7,7 +7,7 @@ const writing = defineCollection({
   schema: z.object({
     title: z.string(),
     date: z.coerce.date(),
-    category: z.enum(['AI 행정혁신', '프롬프트·도구', '교육 이야기', '책 이야기']),
+    category: z.enum(['AI 활용법', 'AI 행정혁신', 'Human Premium', '교육 노트']),
     summary: z.string().optional(),
     draft: z.boolean().default(false),
   }),

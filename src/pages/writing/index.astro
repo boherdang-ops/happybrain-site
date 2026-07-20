@@ -7,9 +7,9 @@ const fmtDate = (d) => new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month
 const posts = (await getCollection('writing', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-const categories = ['AI 행정혁신', '프롬프트·도구', '교육 이야기', '책 이야기'];
+const categories = ['AI 활용법', 'AI 행정혁신', 'Human Premium', '교육 노트'];
 ---
-<Base title="글" description="AI 행정혁신, 프롬프트와 도구, 교육 현장, 책 이야기 — 해피브레인의 글 아카이브.">
+<Base title="글" description="AI 활용법, AI 행정혁신, Human Premium, 교육 노트 — 해피브레인의 글 아카이브.">
   <section class="page-head">
     <div class="wrap">
       <p class="eyebrow">Archive</p>

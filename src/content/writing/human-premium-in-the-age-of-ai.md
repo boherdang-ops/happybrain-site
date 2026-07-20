@@ -1,7 +1,7 @@
 ---
 title: AI 시대에 더 비싸지는 것들
 date: 2026-06-28
-category: 책 이야기
+category: Human Premium
 summary: 자동화가 흔해질수록 값이 오르는 건 결국 사람만이 할 수 있는 일입니다.
 draft: false
 ---

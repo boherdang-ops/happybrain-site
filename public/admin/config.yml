@@ -6,9 +6,9 @@
 
 backend:
   name: github
-  repo: OWNER/REPO            # ← 본인 GitHub 저장소 (예: sdpark/happybrain-site)
+  repo: boherdang-ops/happybrain-site
   branch: main
-  base_url: https://YOUR-WORKER.workers.dev   # ← Cloudflare Worker 주소로 교체 (로그인 처리)
+  # 로그인: 개인 액세스 토큰(PAT) 방식 — 별도 Worker 불필요
 
 # 이미지 업로드 위치
 media_folder: "public/uploads"
@@ -35,7 +35,7 @@ collections:
       - name: category
         label: "분류"
         widget: select
-        options: ["AI 행정혁신", "프롬프트·도구", "교육 이야기", "책 이야기"]
+        options: ["AI 활용법", "AI 행정혁신", "Human Premium", "교육 노트"]
       - { name: summary, label: "요약 (목록에 보임)", widget: text, required: false }
       - { name: draft, label: "임시저장(공개 안 함)", widget: boolean, default: false }
       - { name: body, label: "본문", widget: markdown }
