@@ -73,3 +73,43 @@ collections:
       - { name: thumbnail, label: "썸네일 이미지", widget: image, required: false }
       - { name: date, label: "날짜", widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", required: false }
       - { name: order, label: "정렬 순서 (작을수록 먼저)", widget: number, default: 0, value_type: int }
+
+  # ── 페이지 (소개·강의문의) ─────────────────────────
+  - name: pages
+    label: "페이지 내용"
+    editor:
+      preview: false
+    files:
+      - name: about
+        label: "소개 페이지"
+        file: "src/data/about.json"
+        fields:
+          - { name: name, label: "이름", widget: string }
+          - { name: penName, label: "필명", widget: string }
+          - { name: intro, label: "소개 문단", widget: text }
+          - name: focus
+            label: "하는 일 (카드 3개)"
+            widget: list
+            fields:
+              - { name: title, label: "제목", widget: string }
+              - { name: body, label: "설명", widget: text }
+          - name: career
+            label: "지나온 자리"
+            widget: list
+            fields:
+              - { name: period, label: "시기 (예: 현재 / 이전)", widget: string }
+              - { name: role, label: "내용", widget: string }
+          - { name: ctaHeading, label: "하단 문구 - 제목", widget: string }
+          - { name: ctaBody, label: "하단 문구 - 설명", widget: string }
+      - name: contact
+        label: "강의·문의 페이지"
+        file: "src/data/contact.json"
+        fields:
+          - { name: email, label: "이메일", widget: string }
+          - { name: note, label: "안내 문구", widget: text }
+          - name: channels
+            label: "채널 링크"
+            widget: list
+            fields:
+              - { name: label, label: "이름 (예: 브런치)", widget: string }
+              - { name: href, label: "링크 주소", widget: string }
