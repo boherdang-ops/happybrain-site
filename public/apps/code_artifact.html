@@ -3,376 +3,579 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 공무원 보도자료 자동 생성기</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title>공무원 보도자료 자동 생성기</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap');
-        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            padding: 20px;
         }
 
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 80vh;
+        }
+
+        .input-section {
+            padding: 40px;
+            background: #f8fafc;
+            border-right: 2px solid #e2e8f0;
+            overflow-y: auto;
+        }
+
+        .output-section {
+            padding: 40px;
+            background: white;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .date-time-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-ai {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            flex: 1 1 100%;
+            margin-bottom: 5px;
+        }
+
+        .btn-ai:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-generate {
             background: #f1f5f9;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        
-        .paper-font {
-            font-family: 'Batang', 'Gungsuh', 'Times New Roman', serif;
+            color: #475569;
+            border: 2px solid #cbd5e1;
+            flex: 1;
+            font-size: 0.95rem;
         }
 
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); opacity: 0.8; }
-            50% { transform: scale(1.05); opacity: 0.4; }
-            100% { transform: scale(0.95); opacity: 0.8; }
+        .btn-generate:hover {
+            background: #e2e8f0;
         }
-        .ai-pulse {
-            animation: pulse-ring 2s infinite ease-in-out;
+
+        .btn-clear {
+            background: #fef2f2;
+            color: #ef4444;
+            border: 2px solid #fecaca;
+            flex: 1;
+            font-size: 0.95rem;
+        }
+
+        .btn-clear:hover {
+            background: #fee2e2;
+        }
+
+        .output-content {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 30px;
+            min-height: 500px;
+            white-space: pre-wrap;
+            font-family: 'Batang', 'Times New Roman', serif;
+            font-size: 15px;
+            line-height: 1.8;
+            position: relative;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 5;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #e2e8f0;
+            border-top-color: #10b981;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .output-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-copy, .btn-download {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn-copy { background: #6366f1; color: white; }
+        .btn-download { background: #3b82f6; color: white; }
+        .btn-copy:hover, .btn-download:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tips-section {
+            background: #f0fdf4;
+            border: 2px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .tips-section h3 {
+            color: #166534;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .template-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .template-btn {
+            padding: 10px;
+            background: #e0e7ff;
+            border: 2px solid #c7d2fe;
+            border-radius: 8px;
+            color: #3730a3;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .template-btn:hover {
+            background: #c7d2fe;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .info-box {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            z-index: 20;
+            font-size: 0.95rem;
+            font-weight: bold;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .info-box.success { background-color: #10b981; }
+        .info-box.error { background-color: #ef4444; }
+
+        @media (max-width: 1024px) {
+            .main-content { grid-template-columns: 1fr; }
+            .input-section { border-right: none; border-bottom: 2px solid #e2e8f0; }
         }
     </style>
 </head>
-<body class="p-3 sm:p-6 text-slate-800">
-    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-700/20">
-        <!-- Header -->
-        <header class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white p-6 sm:p-8 relative">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full text-blue-300 text-xs font-semibold mb-3">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Gemini AI 기반 행정지원
-                    </div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">📰 AI 공무원 보도자료 자동 생성기</h1>
-                    <p class="text-slate-300 text-sm sm:text-base mt-1">간단한 개요만 입력하면 AI가 공공기관 표준 보도자료 양식으로 풍성하게 완성합니다.</p>
-                </div>
-            </div>
-        </header>
-
-        <!-- Notification Banner -->
-        <div id="toastMessage" class="hidden transition-all duration-300 px-6 py-3 text-sm font-medium text-center text-white bg-emerald-600">
-            알림 메시지
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📰 공무원 보도자료 자동 생성기</h1>
+            <p>간단한 개요만 입력하면 AI가 완벽한 공공기관 표준 보도자료로 확장해 드립니다.</p>
         </div>
 
-        <!-- Main Workspace -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 min-h-[750px]">
-            
-            <div class="lg:col-span-6 bg-slate-50 p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-slate-200 custom-scrollbar overflow-y-auto max-h-[85vh]">
-                
-                <!-- Quick Guide -->
-                <div class="bg-indigo-50/80 border border-indigo-200/80 rounded-xl p-4 mb-6 text-indigo-950 text-xs leading-relaxed">
-                    <div class="flex items-center gap-2 font-bold text-indigo-900 text-sm mb-1.5">
-                        <i class="fa-solid fa-lightbulb text-amber-500 text-base"></i> AI 작성 팁
-                    </div>
-                    완벽한 문장을 작성할 필요가 없습니다! <strong>'기관명', '제목/주제', '핵심 요점 메모'</strong>에 키워드나 불릿 포인트만 적어두고 <span class="font-bold text-indigo-700">[✨ AI 보도자료 생성]</span> 버튼을 누르면 정식 보도자료로 자동 확장됩니다.
+        <div class="main-content">
+            <div class="input-section">
+                <div class="tips-section">
+                    <h3>✨ AI 스마트 작성 팁</h3>
+                    <p style="color: #166534; font-size: 0.95rem; line-height: 1.6;">
+                        완벽한 문장을 작성할 필요가 없습니다!<br>
+                        <strong>'주요 내용', '추진 배경'</strong>에 핵심 키워드나 거친 메모만 적어두고 
+                        <strong>[✨ AI 보도자료 자동 작성]</strong> 버튼을 누르면, AI가 알아서 살을 붙이고 행정 어조에 맞게 다듬어 정식 보도자료를 완성합니다.
+                    </p>
                 </div>
 
-                <!-- Template Preset Buttons -->
-                <div class="mb-6">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">예시 샘플 불러오기</label>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <button type="button" onclick="loadTemplate('policy')" class="px-3 py-2 bg-white hover:bg-indigo-50 text-indigo-700 border border-slate-200 hover:border-indigo-300 rounded-lg text-xs font-semibold transition text-center shadow-sm">
-                            🏛️ 정책 발표
-                        </button>
-                        <button type="button" onclick="loadTemplate('event')" class="px-3 py-2 bg-white hover:bg-indigo-50 text-indigo-700 border border-slate-200 hover:border-indigo-300 rounded-lg text-xs font-semibold transition text-center shadow-sm">
-                            🎉 행사·축제
-                        </button>
-                        <button type="button" onclick="loadTemplate('budget')" class="px-3 py-2 bg-white hover:bg-indigo-50 text-indigo-700 border border-slate-200 hover:border-indigo-300 rounded-lg text-xs font-semibold transition text-center shadow-sm">
-                            💰 예산·투자
-                        </button>
-                        <button type="button" onclick="loadTemplate('welfare')" class="px-3 py-2 bg-white hover:bg-indigo-50 text-indigo-700 border border-slate-200 hover:border-indigo-300 rounded-lg text-xs font-semibold transition text-center shadow-sm">
-                            🤝 복지·지원
-                        </button>
-                    </div>
+                <div class="template-buttons">
+                    <button type="button" class="template-btn" onclick="loadTemplate('policy')">📝 정책 발표 예시</button>
+                    <button type="button" class="template-btn" onclick="loadTemplate('event')">🎉 행사 개최 예시</button>
+                    <button type="button" class="template-btn" onclick="loadTemplate('budget')">💰 예산 편성 예시</button>
+                    <button type="button" class="template-btn" onclick="loadTemplate('welfare')">🤝 복지 확대 예시</button>
                 </div>
 
-                <!-- Input Form -->
-                <form id="pressForm" class="space-y-4">
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="organization" class="block text-sm font-bold text-slate-700 mb-1">기관명 <span class="text-rose-500">*</span></label>
-                            <input type="text" id="organization" placeholder="예: 서울특별시, 해양수산부" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition" required>
-                        </div>
-                        <div>
-                            <label for="department" class="block text-sm font-bold text-slate-700 mb-1">담당부서 <span class="text-rose-500">*</span></label>
-                            <input type="text" id="department" placeholder="예: 청년주거과, 기획예산실" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition" required>
-                        </div>
+                <form id="pressReleaseForm">
+                    <div class="form-group">
+                        <label for="organization">기관명</label>
+                        <input type="text" id="organization" placeholder="예: ○○시청, 해양수산부" required>
                     </div>
 
-                    <div>
-                        <label for="title" class="block text-sm font-bold text-slate-700 mb-1">보도자료 주제 및 가제목 <span class="text-rose-500">*</span></label>
-                        <input type="text" id="title" placeholder="예: 청년 임차료 월 최대 20만원 지원 확대" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition" required>
+                    <div class="form-group">
+                        <label for="title">보도자료 주제 및 제목</label>
+                        <input type="text" id="title" placeholder="예: 청년 주거 지원 정책 확대" required>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="releaseDate" class="block text-sm font-bold text-slate-700 mb-1">배포일자</label>
-                            <input type="date" id="releaseDate" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition">
+                    <div class="form-group">
+                        <label for="subtitle">부제목 (핵심 요약 - 선택)</label>
+                        <input type="text" id="subtitle" placeholder="예: 월 최대 20만원 지원, 대상자 2배 확대">
+                    </div>
+
+                    <div class="date-time-group">
+                        <div class="form-group">
+                            <label for="releaseDate">배포일시</label>
+                            <input type="date" id="releaseDate" required>
                         </div>
-                        <div>
-                            <label for="embargoTime" class="block text-sm font-bold text-slate-700 mb-1">보도시점</label>
-                            <select id="embargoTime" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition">
+                        <div class="form-group">
+                            <label for="embargoTime">보도시점</label>
+                            <select id="embargoTime">
                                 <option value="즉시 보도 가능">즉시 보도 가능</option>
                                 <option value="배포 즉시">배포 즉시</option>
-                                <option value="석간용 (12:00 이후)">석간용 (12:00 이후)</option>
-                                <option value="조간용 (익일 06:00 이후)">조간용 (익일 06:00 이후)</option>
+                                <option value="명일 조간용">명일 조간용</option>
                             </select>
                         </div>
                     </div>
 
-                    <div>
-                        <label for="aiTone" class="block text-sm font-bold text-slate-700 mb-1">AI 작성 어조 / 스타일</label>
-                        <select id="aiTone" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition">
-                            <option value="standard">🏛️ 정석 행정형 (격식 있고 신뢰감 높은 어조)</option>
-                            <option value="friendly">😊 시민 친화형 (가독성이 높고 이해하기 쉬운 어조)</option>
-                            <option value="urgent">📢 성과/긴급 발표형 (명확한 숫자와 기대효과 강조)</option>
-                        </select>
+                    <div class="form-group">
+                        <label for="department">담당부서</label>
+                        <input type="text" id="department" placeholder="예: 주거복지과" required>
                     </div>
 
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label for="keyPoints" class="block text-sm font-bold text-slate-700">핵심 내용 및 요점 메모 (AI 자동 다듬기용) <span class="text-rose-500">*</span></label>
-                            <span class="text-xs text-indigo-600 font-semibold">키워드/개요만 자유롭게 작성</span>
-                        </div>
-                        <textarea id="keyPoints" rows="6" placeholder="AI가 보도자료로 확장할 내용을 키워드나 요약 형태로 자유롭게 적어주세요.
-
-예시:
-- 사업목적: 청년 주거비 부담 완화
-- 지원대상: 만19~34세, 무주택 청년 1천명
-- 지원내용: 월 최대 20만원, 최대 2년
-- 신청방법: 10월부터 시 홈페이지에서 신청
-- 예산: 총 24억원 투입" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition" required></textarea>
+                    <div class="form-group">
+                        <label for="mainContent">주요 내용 및 요점 메모 (AI 확장용)</label>
+                        <textarea id="mainContent" placeholder="정책의 핵심 내용을 키워드나 불릿 포인트로 자유롭게 적어주세요. AI가 완벽한 문장으로 다듬어 줍니다.&#13;&#10;&#13;&#10;예:&#13;&#10;- 만 19~34세 대상&#13;&#10;- 월 20만원, 2년 지원" required></textarea>
                     </div>
 
-                    <div>
-                        <label for="contact" class="block text-sm font-bold text-slate-700 mb-1">담당자 및 연락처 <span class="text-rose-500">*</span></label>
-                        <input type="text" id="contact" placeholder="예: 홍길동 과장(02-123-4567), 김철수 주무관(02-123-4568)" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition" required>
+                    <div class="form-group">
+                        <label for="background">추진 배경 (선택)</label>
+                        <textarea id="background" placeholder="어떤 이유로 이 정책/행사를 추진하게 되었는지 간단히 메모해주세요."></textarea>
                     </div>
 
-                    <div class="pt-2 space-y-2">
-                        <button type="button" onclick="generateWithAI()" id="btnAiGenerate" class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/25 transition transform active:scale-[0.99] flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                            <span>✨ AI 보도자료 자동 작성</span>
+                    <div class="form-group">
+                        <label for="details">세부 내용 (선택)</label>
+                        <textarea id="details" placeholder="구체적인 지원 대상, 일정, 신청 방법 등을 적어주세요."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="effects">기대 효과 (선택)</label>
+                        <textarea id="effects" placeholder="이 정책으로 기대되는 긍정적 효과를 적어주세요."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact">담당자 연락처</label>
+                        <input type="text" id="contact" placeholder="예: 홍길동 과장 (☎ 02-000-0000)" required>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-ai" id="btnAiGenerate" onclick="generateWithAI()">
+                            ✨ AI 보도자료 자동 작성
                         </button>
-                        
-                        <div class="grid grid-cols-2 gap-2">
-                            <button type="button" onclick="generateStandardFormat()" class="py-2.5 px-3 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold rounded-lg text-xs transition flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-align-left text-slate-400"></i> 단순 문맥 조합
-                            </button>
-                            <button type="button" onclick="clearForm()" class="py-2.5 px-3 bg-white hover:bg-rose-50 text-rose-600 border border-slate-300 hover:border-rose-200 font-semibold rounded-lg text-xs transition flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-rotate-left"></i> 입력 초기화
-                            </button>
-                        </div>
+                        <button type="button" class="btn btn-generate" onclick="generateSimple()">
+                            단순 문맥 조합
+                        </button>
+                        <button type="button" class="btn btn-clear" onclick="clearForm()">
+                            입력 초기화
+                        </button>
                     </div>
                 </form>
             </div>
 
-            <div class="lg:col-span-6 p-6 sm:p-8 bg-slate-100 flex flex-col justify-between relative overflow-hidden">
+            <div class="output-section">
+                <div id="infoBox" class="info-box"></div>
+                <h2 style="margin-bottom: 20px; color: #2d3748; display: flex; align-items: center; justify-content: space-between;">
+                    📄 생성된 보도자료
+                </h2>
                 
-                <div>
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-regular fa-file-lines text-indigo-600"></i> 생성된 보도자료
-                        </h2>
-                        <span id="statusTag" class="text-xs px-2.5 py-1 bg-slate-200 text-slate-600 rounded-full font-semibold">대기 중</span>
+                <div id="outputContent" class="output-content">
+                    <div class="loading-overlay" id="loadingOverlay">
+                        <div class="spinner"></div>
+                        <h3 style="color: #047857; margin-bottom: 10px;">AI가 보도자료를 작성 중입니다</h3>
+                        <p style="color: #64748b; font-size: 0.95rem; text-align: center;">입력하신 요점 메모를 분석하여<br>전문적인 행정 어조로 확장하고 있습니다...</p>
                     </div>
-
-                    <!-- Document Sheet Container -->
-                    <div class="relative">
-                        <!-- Loading Overlay -->
-                        <div id="loadingOverlay" class="hidden absolute inset-0 bg-white/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center rounded-xl p-6 text-center shadow-lg">
-                            <div class="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-                            <h3 class="text-base font-bold text-slate-800 mb-1">AI가 보도자료를 다듬고 있습니다</h3>
-                            <p class="text-xs text-slate-500 max-w-xs leading-relaxed">입력하신 개요를 기반으로 행정 표제, 5W1H 리드문, 상세 추진배경 및 기대효과를 구성 중입니다...</p>
-                        </div>
-
-                        <!-- Output Paper -->
-                        <div id="outputContent" class="paper-font w-full min-h-[580px] bg-white border border-slate-300 rounded-xl p-6 sm:p-8 text-slate-900 text-sm leading-relaxed whitespace-pre-wrap shadow-sm overflow-y-auto max-h-[620px]">
-보도자료를 생성하려면 왼쪽 양식을 작성한 후 [✨ AI 보도자료 자동 작성] 버튼을 누르세요.
-
-💡 입력 양식이 복잡하다면 '예시 샘플 불러오기' 버튼을 클릭해 테스트해보세요.
-                        </div>
-                    </div>
+                    <div id="resultText">보도자료를 생성하려면 왼쪽 양식을 작성하고 [✨ AI 보도자료 자동 작성] 버튼을 클릭하세요.</div>
                 </div>
-
-                <!-- Export Action Buttons -->
-                <div class="pt-6 border-t border-slate-200 mt-6 flex flex-wrap gap-3">
-                    <button type="button" onclick="copyToClipboard()" class="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-sm">
-                        <i class="fa-regular fa-copy"></i> 복사하기
-                    </button>
-                    <button type="button" onclick="downloadAsWord()" class="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-sm">
-                        <i class="fa-regular fa-file-word"></i> 워드(.doc) 다운로드
-                    </button>
+                
+                <div class="output-actions">
+                    <button class="btn-copy" onclick="copyToClipboard()">📋 복사하기</button>
+                    <button class="btn-download" onclick="downloadAsWord()">📄 워드로 다운로드</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Set default release date to today
         document.getElementById('releaseDate').value = new Date().toISOString().split('T')[0];
 
-        // Sample Presets
         const templates = {
             policy: {
-                organization: "서울특별시",
-                department: "청년주거과",
-                title: "청년 월세 특별지원 사업 확대 시행",
-                keyPoints: `- 무주택 청년 임차료 부담 완화를 위한 월세 지원 확대
-- 지원 대상: 만 19세~34세 무주택 청년 (기준 중위소득 120% 이하)
-- 지원 내용: 월 최대 20만원, 최대 24개월간 지원
-- 신청 일정: 10월 1일부터 서울주거포털 온라인 접수
-- 사업 예산: 총 50억원 투입, 지원 대상자 기존 1천명에서 2천명으로 2배 확대`,
-                contact: "홍길동 청년주거과장(02-2133-0000), 김주무관(02-2133-0001)"
+                organization: "○○시청",
+                title: "청년 주거 지원 정책 대폭 확대",
+                subtitle: "월 최대 20만원 임차료 지원, 대상자 2배 확대",
+                department: "주거복지과",
+                mainContent: "- 만 19~34세 청년 대상 월 최대 20만원 지원\n- 지원 대상자 500명에서 1,000명으로 2배 확대\n- 소득 기준: 중위소득 120% 이하",
+                background: "- 청년층 주거비 부담 가중 (소득의 30% 이상 지출)\n- 지역 청년 이탈 방지 및 정착 유도 필요성",
+                details: "- 지원 기간: 최대 2년\n- 신청: 10월 1일~31일, 시 홈페이지 온라인 신청\n- 서류: 임대차계약서, 소득증명서",
+                effects: "- 연 1,000명 혜택, 연평균 240만원 주거비 절감\n- 청년층 자립 기반 마련 및 지역 경제 활성화",
+                contact: "홍길동 주거복지과장 (☎ 02-000-0000)"
             },
             event: {
-                organization: "부산광역시",
-                department: "해양레저관광과",
-                title: "2026 부산 국제 해양 레저 페스티벌 개최",
-                keyPoints: `- 행사명: 2026 부산 국제 해양 레저 페스티벌
-- 일시 및 장소: 2026년 8월 12일~15일 / 해운대 및 광안리 해수욕장 일원
-- 주요 내용: 요트 체험, 요가 및 서핑 클래스, 해양 환경보호 퀴즈대회, 버스킹 공연
-- 참가비: 무료 (일부 체험 프로그램 사전 예약제)
-- 기대효과: 관광객 10만 명 유치, 지역 소상공인 매출 증대 및 해양 도시 브랜드 제고`,
-                contact: "이영희 관광과장(051-888-0000)"
+                organization: "○○시청",
+                title: "2026 시민과 함께하는 녹색도시 축제 개최",
+                subtitle: "10월 15일~17일, 시민공원에서 환경보호 체험행사",
+                department: "환경정책과",
+                mainContent: "- 10월 15일부터 3일간 시민공원에서 녹색도시 축제 개최\n- 탄소중립 실천 체험, 전시, 공연 진행",
+                background: "- 기후위기 대응을 위한 시민 인식 개선 필요\n- 일상 속 탄소중립 실천 문화 확산",
+                details: "- 프로그램: 업사이클링 공예, 친환경 먹거리 장터, 환경 퀴즈대회\n- 참가비 무료, 누구나 참여 가능",
+                effects: "- 친환경 생활 실천 유도 및 지속가능한 생태도시 조성 기여",
+                contact: "이영희 환경정책과장 (☎ 02-000-1111)"
             },
             budget: {
-                organization: "경기도",
-                department: "기획예산담당관",
-                title: "2026년도 본예산 35조 원 편성 발표",
-                keyPoints: `- 전년 대비 6.5% 증액된 총 35조 원 규모 예산안 편성
-- 주요 투자 분야: AI/반도체 미래산업 육성(1.2조), 민생경제 회복 및 소상공인 지원(2.5조), 취약계층 돌봄 복지(8조)
-- 특징: 불요불급한 행정경비 10% 절감, 민생 민감 사업에 집중 투입
-- 일정: 도의회 제출 후 12월 최종 확정 예정`,
-                contact: "박철수 기획예산담당관(031-8008-0000)"
+                organization: "○○시청",
+                title: "2026년 예산안 총 1조 2,000억 원 편성",
+                subtitle: "복지·교육 분야 20% 증액, 신규 일자리 창출 집중",
+                department: "기획예산실",
+                mainContent: "- 2026년 예산안 1조 2,000억원 편성 (전년 대비 8.5% 증가)\n- 사회복지 4,800억, 교육 1,440억 등 포용도시 구현에 집중",
+                background: "- 경제적 불확실성 대비 시민 삶의 질 향상 및 지역경제 활력 제고 필요",
+                details: "- 주요 신규사업: 청년 창업 지원센터 건립, 스마트 교육환경 구축, 어르신 통합돌봄",
+                effects: "- 약 5,000개 신규 일자리 창출 및 복지 사각지대 해소",
+                contact: "박철수 기획예산실장 (☎ 02-000-2222)"
             },
             welfare: {
-                organization: "인천광역시",
+                organization: "○○시청",
+                title: "독거어르신 돌봄서비스 24시간 체계로 확대",
+                subtitle: "AI 응급상황 감지 시스템 도입, 생활지원사 2배 증원",
                 department: "노인복지과",
-                title: "독거어르신 AI 스마트 돌봄 케어콜 서비스 전면 도입",
-                keyPoints: `- 홀몸 어르신 고독사 예방 및 안부 확인을 위한 AI 안부 전화 서비스
-- 대상: 관내 만 65세 이상 독거노인 5,000명
-- 운영방식: AI가 주 2회 인공지능 전화로 건강/식사/복약 상태 확인 및 대화 나누기
-- 응급 상황 감지 시 읍면동 복지담당자 및 119 즉시 출동 연계
-- 사업 효과: 복지 사각지대 해소 및 노인 고독감 완화`,
-                contact: "최민수 노인복지과장(032-440-0000)"
+                mainContent: "- 독거어르신 돌봄을 24시간 체계로 개편\n- AI 기반 움직임 감지 센서 설치\n- 생활지원사 50명에서 100명으로 확충",
+                background: "- 고령화로 인한 독거노인 증가 및 고독사 위험성 증대",
+                details: "- 대상: 만 65세 이상 독거어르신\n- 내용: 24시간 모니터링, 건강 체크, 말벗 지원",
+                effects: "- 응급상황 시 10분 이내 신속 대응 가능\n- 어르신들의 정서적 고립감 해소 및 안전 확보",
+                contact: "김영수 노인복지과장 (☎ 02-000-3333)"
             }
         };
 
-        // UI Toast Message Helper (No Alert)
-        function showMessage(msg, isError = false) {
-            const toast = document.getElementById('toastMessage');
-            toast.textContent = msg;
-            toast.className = `transition-all duration-300 px-6 py-3 text-sm font-medium text-center text-white ${isError ? 'bg-rose-600' : 'bg-emerald-600'}`;
-            toast.classList.remove('hidden');
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 3500);
+        function loadTemplate(type) {
+            const template = templates[type];
+            if (template) {
+                Object.keys(template).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.value = template[key];
+                    }
+                });
+                showMessage('✅ 예시 데이터가 입력되었습니다.');
+            }
         }
 
-        // Load Preset Template
-        function loadTemplate(type) {
-            const data = templates[type];
-            if (data) {
-                document.getElementById('organization').value = data.organization;
-                document.getElementById('department').value = data.department;
-                document.getElementById('title').value = data.title;
-                document.getElementById('keyPoints').value = data.keyPoints;
-                document.getElementById('contact').value = data.contact;
-                showMessage(`'${data.title}' 예시 데이터가 로드되었습니다.`);
+        const showMessage = (message, isError = false) => {
+            const infoBox = document.getElementById('infoBox');
+            infoBox.textContent = message;
+            infoBox.className = 'info-box ' + (isError ? 'error' : 'success');
+            infoBox.style.display = 'block';
+            
+            setTimeout(() => {
+                infoBox.style.display = 'none';
+            }, 3500);
+        };
+
+        function getFormData() {
+            return {
+                organization: document.getElementById('organization').value.trim(),
+                title: document.getElementById('title').value.trim(),
+                subtitle: document.getElementById('subtitle').value.trim(),
+                releaseDate: document.getElementById('releaseDate').value,
+                embargoTime: document.getElementById('embargoTime').value,
+                department: document.getElementById('department').value.trim(),
+                mainContent: document.getElementById('mainContent').value.trim(),
+                background: document.getElementById('background').value.trim(),
+                details: document.getElementById('details').value.trim(),
+                effects: document.getElementById('effects').value.trim(),
+                contact: document.getElementById('contact').value.trim()
+            };
+        }
+
+        function validateForm(data) {
+            if (!data.organization || !data.title || !data.department || !data.mainContent || !data.contact) {
+                showMessage("기관명, 제목, 담당부서, 주요 내용, 담당자 연락처는 필수입니다.", true);
+                return false;
             }
+            return true;
         }
 
         async function generateWithAI() {
-            const org = document.getElementById('organization').value.trim();
-            const dept = document.getElementById('department').value.trim();
-            const title = document.getElementById('title').value.trim();
-            const keyPoints = document.getElementById('keyPoints').value.trim();
-            const contact = document.getElementById('contact').value.trim();
-            const releaseDate = document.getElementById('releaseDate').value;
-            const embargoTime = document.getElementById('embargoTime').value;
-            const toneOption = document.getElementById('aiTone').value;
+            const data = getFormData();
+            if (!validateForm(data)) return;
 
-            if (!org || !dept || !title || !keyPoints || !contact) {
-                showMessage("필수 항목(기관명, 담당부서, 주제, 핵심요점, 연락처)을 모두 입력해주세요.", true);
-                return;
-            }
-
-            // Show Loading UI
-            const loadingOverlay = document.getElementById('loadingOverlay');
             const btnAi = document.getElementById('btnAiGenerate');
-            const statusTag = document.getElementById('statusTag');
-            
-            loadingOverlay.classList.remove('hidden');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const resultTextDiv = document.getElementById('resultText');
+
+            // UI 변경: 로딩 시작
             btnAi.disabled = true;
-            btnAi.classList.add('opacity-50');
-            statusTag.textContent = "AI 작성 중...";
-            statusTag.className = "text-xs px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full font-semibold animate-pulse";
+            btnAi.style.opacity = '0.7';
+            loadingOverlay.style.display = 'flex';
+            resultTextDiv.style.opacity = '0.2';
 
-            const formattedDate = formatDate(releaseDate);
+            const formattedDate = new Date(data.releaseDate).toLocaleDateString('ko-KR');
 
-            // Construct System Instructions for Public Sector Writing Style
             const systemPrompt = `당신은 대한민국 정부 부처 및 지방자치단체의 20년 차 베테랑 공보관입니다.
 사용자가 제공한 거친 요점 메모, 주제, 키워드를 바탕으로 언론사에 즉시 배포 가능한 완성도 높은 정식 보도자료를 작성하세요.
-
-[Tone & Style 선택 조건]
-- standard: 격식 있고 정제된 표준 행정 문체
-- friendly: 시민들이 이해하기 쉽고 명확하며 가독성 높은 어조
-- urgent: 성과, 중요 지표, 파급 효과를 직관적이고 강력하게 전달하는 어조
 
 [필수 작성 규칙]
 1. 보도자료의 표준 구조(헤더 -> 제목 -> 부제목 -> 리드문 -> 본문 소항목 -> 문의 -> 기관명)를 반드시 준수하세요.
 2. 리드문(첫 번째 단락)은 5W1H(누가, 언제, 어디서, 무엇을, 왜, 어떻게)를 포함하여 핵심 내용을 명확히 한 문단으로 요약하세요.
-3. 본문은 아래와 같이 □ 기호와 (추진 배경), (주요 내용), (기대 효과) 등의 항목으로 나누고, 세부항목은 '○', ' -' 개조식 문장과 완전한 문장을 적절히 혼용하세요.
-4. 사용자 입력 내용에 구체적 숫자가 없더라도 행정적 맥락에 어울리는 풍성한 설명과 전문적 용어로 다듬으세요.
+3. 본문은 아래와 같이 □ 기호와 (추진 배경), (주요 내용), (기대 효과) 등의 항목으로 나누고, 완전한 문장과 개조식 문장('-')을 적절히 혼용하여 전문적으로 다듬어주세요.
+4. 사용자가 짧은 키워드만 입력했더라도 행정적 맥락에 어울리게 살을 붙여 풍성한 내용으로 확장하세요.
+5. 마크다운 문법(*, # 등)은 절대 사용하지 마세요. 오직 일반 텍스트와 줄바꿈, 특수기호(□, ○, -)만 사용하세요.
 
-[반드시 이 형태로 출력하세요 (다른 설명문이나 인사말 금지)]:
+[출력 양식]:
 보  도  자  료
 
 배포일시: [배포일자]
 보도시점: [보도시점]
 담당부서: [담당부서]
 
-[주제/제목]
-- [부제목 (핵심 내용을 1~2줄로 요약)] -
+[제목]
+- [부제목] -
 
+□ [리드문: 단락 요약]
 
-□ [리드문: 핵심 내용 종합 요약 단락]
+□ (추진 배경)
+  - ...
 
-□ (추진 배경 및 필요성)
-  ○ ...
-
-□ (주요 세부 내용)
-  ○ ...
+□ (주요 내용)
+  - ...
 
 □ (기대 효과)
-  ○ ...
+  - ...
 
 ※ 기타 자세한 사항은 담당부서로 문의하시기 바랍니다.
 
 [문의] [담당자 및 연락처]
 
-
                                     [기관명]`;
 
-            const userPrompt = `
-- 기관명: ${org}
-- 담당부서: ${dept}
+            const userPrompt = `다음 정보를 바탕으로 보도자료를 완벽하게 작성해줘:
+- 기관명: ${data.organization}
+- 담당부서: ${data.department}
 - 배포일자: ${formattedDate}
-- 보도시점: ${embargoTime}
-- 주제/제목: ${title}
-- 담당자/연락처: ${contact}
-- 선택된 작성 어조 스타일: ${toneOption}
-- 핵심 내용 및 개요 메모:
-${keyPoints}
-`;
+- 보도시점: ${data.embargoTime}
+- 주제/제목: ${data.title}
+- 부제목: ${data.subtitle}
+- 주요 내용 메모: ${data.mainContent}
+- 추진 배경 메모: ${data.background}
+- 세부 내용 메모: ${data.details}
+- 기대 효과 메모: ${data.effects}
+- 담당자/연락처: ${data.contact}`;
 
             const apiKey = ""; // Runtime automatically handles empty key for Gemini API
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
@@ -383,7 +586,7 @@ ${keyPoints}
             };
 
             try {
-                // Retry wrapper with exponential backoff
+                // Exponential Backoff 로직 (통신 안정성 확보)
                 let response;
                 let delay = 1000;
                 for (let i = 0; i < 3; i++) {
@@ -395,126 +598,96 @@ ${keyPoints}
                         });
                         if (response.ok) break;
                     } catch (e) {
-                        if (i === 2) throw e;
+                        if (i === 2) throw e; // 3번 실패시 에러 던짐
                     }
                     await new Promise(res => setTimeout(res, delay));
                     delay *= 2;
                 }
 
+                if (!response.ok) throw new Error("API 연동 오류");
+
                 const result = await response.json();
                 const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
 
                 if (generatedText) {
-                    document.getElementById('outputContent').textContent = generatedText;
-                    statusTag.textContent = "AI 완성";
-                    statusTag.className = "text-xs px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full font-semibold";
-                    showMessage("✨ Gemini AI가 고품격 보도자료 작성을 완료했습니다!");
+                    resultTextDiv.textContent = generatedText;
+                    showMessage("✨ AI가 보도자료를 완벽하게 작성했습니다!");
                 } else {
                     throw new Error("생성된 결과가 없습니다.");
                 }
             } catch (error) {
                 console.error(error);
-                // Fallback to local formatter if API fails or network issue
-                generateStandardFormat();
-                showMessage("AI 연동 오류로 기본 문맥 조합 방식으로 전환하여 작성했습니다.", true);
+                showMessage("AI 생성 중 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", true);
             } finally {
-                loadingOverlay.classList.add('hidden');
+                // UI 복구
+                loadingOverlay.style.display = 'none';
+                resultTextDiv.style.opacity = '1';
                 btnAi.disabled = false;
-                btnAi.classList.remove('opacity-50');
+                btnAi.style.opacity = '1';
             }
         }
 
-        // Standard Rule-based Generation (Fallback or Simple Mode)
-        function generateStandardFormat() {
-            const org = document.getElementById('organization').value.trim() || '○○기관';
-            const dept = document.getElementById('department').value.trim() || '담당부서';
-            const title = document.getElementById('title').value.trim() || '보도자료 제목';
-            const keyPoints = document.getElementById('keyPoints').value.trim() || '주요 내용';
-            const contact = document.getElementById('contact').value.trim() || '담당자 연락처';
-            const releaseDate = document.getElementById('releaseDate').value;
-            const embargoTime = document.getElementById('embargoTime').value;
+        // 사용자가 입력한 그대로 조합하는 기능 (AI와 완전히 분리)
+        function generateSimple() {
+            const data = getFormData();
+            if (!validateForm(data)) return;
+            
+            const resultTextDiv = document.getElementById('resultText');
+            const releaseDate = new Date(data.releaseDate);
+            const formattedDate = `${releaseDate.getFullYear()}. ${(releaseDate.getMonth() + 1).toString().padStart(2, '0')}. ${releaseDate.getDate().toString().padStart(2, '0')}`;
+            
+            let pressRelease = `보  도  자  료\n\n배포일시: ${formattedDate}\n보도시점: ${data.embargoTime}\n담당부서: ${data.department}\n\n${data.title}`;
 
-            const formattedDate = formatDate(releaseDate);
+            if (data.subtitle) pressRelease += `\n- ${data.subtitle} -`;
+            pressRelease += `\n\n\n□ ${data.mainContent}\n\n`;
+            if (data.background) pressRelease += `□ (추진 배경)\n  - ${data.background}\n\n`;
+            if (data.details) pressRelease += `□ (주요 내용)\n  - ${data.details}\n\n`;
+            if (data.effects) pressRelease += `□ (기대 효과)\n  - ${data.effects}\n\n`;
 
-            const resultText = `보  도  자  료
+            pressRelease += `\n※ 기타 자세한 사항은 담당부서로 문의하시기 바랍니다.\n\n[문의] ${data.contact}\n\n                                    ${data.organization}`;
 
-배포일시: ${formattedDate}
-보도시점: ${embargoTime}
-담당부서: ${dept}
-
-${title}
-- ${org}, 주요 추진 사업 및 정책 개요 발표 -
-
-
-□ ${org} ${dept}는 다음과 같이 주요 정책 및 사업을 추진합니다.
-
-  ${keyPoints.split('\n').join('\n  ')}
-
-
-※ 기타 자세한 사항은 담당부서로 문의하시기 바랍니다.
-
-[문의] ${contact}
-
-
-                                    ${org}`;
-
-            document.getElementById('outputContent').textContent = resultText;
-            const statusTag = document.getElementById('statusTag');
-            statusTag.textContent = "기본 조합";
-            statusTag.className = "text-xs px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold";
-        }
-
-        function formatDate(dateStr) {
-            if (!dateStr) return new Date().toLocaleDateString('ko-KR');
-            const d = new Date(dateStr);
-            return `${d.getFullYear()}. ${(d.getMonth() + 1).toString().padStart(2, '0')}. ${d.getDate().toString().padStart(2, '0')}.`;
+            resultTextDiv.textContent = pressRelease;
+            showMessage("입력하신 문맥을 그대로 조합하여 배치했습니다.");
         }
 
         function clearForm() {
-            document.getElementById('pressForm').reset();
+            document.getElementById('pressReleaseForm').reset();
             document.getElementById('releaseDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('outputContent').textContent = `보도자료를 생성하려면 왼쪽 양식을 작성한 후 [✨ AI 보도자료 자동 작성] 버튼을 누르세요.
-
-💡 입력 양식이 복잡하다면 '예시 샘플 불러오기' 버튼을 클릭해 테스트해보세요.`;
-            
-            const statusTag = document.getElementById('statusTag');
-            statusTag.textContent = "대기 중";
-            statusTag.className = "text-xs px-2.5 py-1 bg-slate-200 text-slate-600 rounded-full font-semibold";
-            
-            showMessage('입력폼이 초기화되었습니다.');
+            document.getElementById('resultText').textContent = `보도자료를 생성하려면 왼쪽 양식을 작성하고 [✨ AI 보도자료 자동 작성] 버튼을 클릭하세요.`;
+            showMessage('입력 내용이 모두 초기화되었습니다.', false);
         }
 
         function copyToClipboard() {
-            const content = document.getElementById('outputContent').textContent;
+            const content = document.getElementById('resultText').textContent;
             if (content.includes('보도자료를 생성하려면')) {
-                showMessage('먼저 보도자료를 생성해 주세요.', true);
+                showMessage('복사할 보도자료가 없습니다. 먼저 생성해주세요.', true);
                 return;
             }
-
-            const textArea = document.createElement('textarea');
-            textArea.value = content;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
+            
+            navigator.clipboard.writeText(content).then(function() {
+                showMessage('📋 보도자료가 클립보드에 복사되었습니다.');
+            }).catch(function(err) {
+                const textArea = document.createElement('textarea');
+                textArea.value = content;
+                document.body.appendChild(textArea);
+                textArea.select();
                 document.execCommand('copy');
-                showMessage('📋 보도자료가 클립보드에 복사되었습니다!');
-            } catch (err) {
-                showMessage('복사 중 오류가 발생했습니다.', true);
-            }
-            document.body.removeChild(textArea);
+                document.body.removeChild(textArea);
+                showMessage('📋 보도자료가 클립보드에 복사되었습니다.');
+            });
         }
 
         function downloadAsWord() {
-            const content = document.getElementById('outputContent').textContent;
+            const content = document.getElementById('resultText').textContent;
             if (content.includes('보도자료를 생성하려면')) {
-                showMessage('먼저 보도자료를 생성해 주세요.', true);
+                showMessage('다운로드할 보도자료가 없습니다. 먼저 생성해주세요.', true);
                 return;
             }
 
-            const title = document.getElementById('title').value.trim() || '보도자료';
+            const title = document.getElementById('title').value || '보도자료';
             const today = new Date().toISOString().split('T')[0];
             const htmlContent = content.replace(/\n/g, '<br>');
-
+            
             const htmlDoc = `
 <!DOCTYPE html>
 <html>
@@ -522,13 +695,7 @@ ${title}
     <meta charset="UTF-8">
     <title>${title}</title>
     <style>
-        body { 
-            font-family: '맑은 고딕', 'Malgun Gothic', 'Batang', serif; 
-            line-height: 1.8; 
-            margin: 50px;
-            font-size: 11pt;
-            color: #111;
-        }
+        body { font-family: '맑은 고딕', 'Malgun Gothic', 'Batang', sans-serif; line-height: 1.8; margin: 40px; font-size: 12pt; }
         .content { white-space: pre-wrap; }
     </style>
 </head>
@@ -546,7 +713,7 @@ ${title}
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            showMessage('📄 워드 문서(.doc) 다운로드가 완료되었습니다.');
+            showMessage('📄 워드 파일(.doc) 다운로드가 완료되었습니다.');
         }
     </script>
 </body>
