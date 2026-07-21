@@ -1,6 +1,7 @@
 ---
-title: 업무가 빨라지는 프롬프트 3가지
-url: https://www.youtube.com/
+title: 퓨샷 프롬프팅(Few-Shot) 가이드
+url: https://youtu.be/6u4S_AmpmGc?si=2Ef88GA_LN9RM1U-
+thumbnail: ''
+date: ''
 order: 3
-thumbnail: ""
 ---
