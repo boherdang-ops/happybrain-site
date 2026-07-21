@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
+import { videoThumb, bgImage } from '../lib/media.js';
 
 const fmtDate = (d) => new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(d).replace(/\.\s?$/, '').replace(/\.\s?/g, '.');
 
@@ -71,7 +72,7 @@ const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.
     <div class="book-row">
       {books.map((b) => (
         <a class="book" href={b.data.link || '/books/'}>
-          <span class="book-cover" style={b.data.cover ? `background-image:url(${b.data.cover})` : ''}>
+          <span class="book-cover" style={bgImage(b.data.cover)}>
             {!b.data.cover && <span class="book-cover-title">{b.data.title}</span>}
           </span>
           <span class="book-info">
@@ -95,7 +96,7 @@ const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.
     <div class="video-row">
       {videos.map((v) => (
         <a class="video" href={v.data.url} target="_blank" rel="noopener">
-          <span class="video-thumb" style={v.data.thumbnail ? `background-image:url(${v.data.thumbnail})` : ''}>
+          <span class="video-thumb" style={bgImage(videoThumb(v.data))}>
             <span class="play" aria-hidden="true">▶</span>
           </span>
           <span class="video-title">{v.data.title}</span>

@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getCollection } from 'astro:content';
+import { videoThumb, bgImage } from '../../lib/media.js';
 
 const videos = (await getCollection('videos')).sort((a, b) => a.data.order - b.data.order);
 ---
@@ -17,7 +18,7 @@ const videos = (await getCollection('videos')).sort((a, b) => a.data.order - b.d
     <div class="grid">
       {videos.map((v) => (
         <a class="video" href={v.data.url} target="_blank" rel="noopener">
-          <span class="thumb" style={v.data.thumbnail ? `background-image:url(${v.data.thumbnail})` : ''}>
+          <span class="thumb" style={bgImage(videoThumb(v.data))}>
             <span class="play" aria-hidden="true">▶</span>
           </span>
           <span class="title">{v.data.title}</span>

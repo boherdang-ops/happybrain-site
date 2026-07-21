@@ -1,18 +1,9 @@
 {
-  "email": "beacon_korea@naver.com",
+  "email": "hello@example.com",
   "note": "교육 일정, 대상, 규모를 함께 적어 보내주시면 더 빠르게 도와드릴 수 있습니다.",
   "channels": [
-    {
-      "label": "브런치",
-      "href": "https://brunch.co.kr/ready"
-    },
-    {
-      "label": "유튜브",
-      "href": "https://www.youtube.com/@%ED%95%B4%ED%94%BC%EB%B8%8C%EB%A0%88%EC%9D%B8-q7l"
-    },
-    {
-      "label": "네이버 블로그",
-      "href": "https://blog.naver.com/PostList.naver?blogId=beacon_korea&widgetTypeCall=true&parentCategoryNo=79&topReferer=https%3A%2F%2Fwww.naver.com%2F&trackingCode=naver_main&directAccess=true"
-    }
+    { "label": "브런치", "href": "https://brunch.co.kr/" },
+    { "label": "유튜브", "href": "https://www.youtube.com/" },
+    { "label": "네이버 블로그", "href": "https://blog.naver.com/" }
   ]
 }

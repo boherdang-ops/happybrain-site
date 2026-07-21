@@ -1,7 +1,6 @@
 ---
-title: 샷 프롬프팅(Few-Shot) 가이드
-url: https://youtu.be/6u4S_AmpmGc?si=lNWjAbQFJ7wgwvB_
-thumbnail: /uploads/스크린샷_21-7-2026_112752_www.youtube.com.jpeg
-date: ''
-order: 2
+title: 업무가 빨라지는 프롬프트 3가지
+url: https://www.youtube.com/
+order: 3
+thumbnail: ""
 ---

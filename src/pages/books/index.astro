@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
+import { bgImage } from '../../lib/media.js';
 
 const books = (await getCollection('books')).sort((a, b) => a.data.order - b.data.order);
 const rendered = await Promise.all(books.map(async (b) => ({ ...b, Content: (await render(b)).Content })));
@@ -18,7 +19,7 @@ const rendered = await Promise.all(books.map(async (b) => ({ ...b, Content: (awa
     <div class="books">
       {rendered.map((b) => (
         <article class="book-item">
-          <div class="cover" style={b.data.cover ? `background-image:url(${b.data.cover})` : ''}>
+          <div class="cover" style={bgImage(b.data.cover)}>
             {!b.data.cover && <span class="cover-title">{b.data.title}</span>}
           </div>
           <div class="detail">
