@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공무원 범용 PCF 프롬프트 스튜디오</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* Custom Scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        
+        /* Smooth tab transition */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chip {
+            transition: all 0.2s;
+        }
+        .chip:active {
+            transform: scale(0.95);
+        }
+
+        /* Modal Animation */
+        .modal-enter {
+            animation: modalFadeIn 0.2s ease-out forwards;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        /* Markdown Styles for Coaching Result */
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; color: #1e293b; }
+        .markdown-body h2 { font-size: 1.25em; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3em; }
+        .markdown-body p { margin-bottom: 1em; line-height: 1.6; }
+        .markdown-body ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1em; }
+        .markdown-body li { margin-bottom: 0.25em; }
+        .markdown-body strong { color: #0f172a; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm z-10 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg">
+                <i data-lucide="bot" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">공무원 범용 PCF 프롬프트 스튜디오</h1>
+                <p class="text-xs text-slate-500 mt-0.5">컨텍스트 엔지니어링 기반 완벽한 AI 지시문 작성 도구</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
+        
+        <!-- Left Panel: Editor -->
+        <section class="w-full md:w-1/2 flex flex-col h-full bg-white border-r border-slate-200 z-0">
+            <!-- Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50 shrink-0">
+                <button onclick="switchTab('step1')" id="tab-step1" class="flex-1 py-4 px-6 text-center font-semibold text-blue-600 border-b-2 border-blue-600 bg-white transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="layout-template" class="w-5 h-5"></i>
+                    STEP 1: 사전 맥락 설계
+                </button>
+                <button onclick="switchTab('step2')" id="tab-step2" class="flex-1 py-4 px-6 text-center font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="terminal-square" class="w-5 h-5"></i>
+                    STEP 2: PCF 지시 조립
+                </button>
+            </div>
+
+            <!-- Editor Content Area -->
+            <div class="flex-1 overflow-y-auto p-6 scroll-smooth">
+                
+                <!-- STEP 1 Content -->
+                <div id="content-step1" class="tab-content active space-y-8">
+                    
+                    <!-- Who -->
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                            <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">Who</span>
+                            나의 역할
+                        </label>
+                        <textarea id="input-who" rows="2" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow resize-none text-sm" placeholder="예: 저는 00시청 기획예산과에서 근무하는 주무관입니다."></textarea>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <button onclick="addPreset('input-who', '기획담당 주무관')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">기획담당 주무관</button>
+                            <button onclick="addPreset('input-who', '예산 편성 담당자')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">예산 편성 담당자</button>
+                            <button onclick="addPreset('input-who', '민원 처리 담당자')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">민원 처리 담당자</button>
+                            <button onclick="addPreset('input-who', '신규 사업 총괄 책임자')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">신규 사업 총괄 책임자</button>
+                        </div>
+                    </div>
+
+                    <!-- What -->
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                            <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">What</span>
+                            현재 과업
+                        </label>
+                        <textarea id="input-what" rows="2" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow resize-none text-sm" placeholder="무엇을 만들어야 하는지 작성하세요."></textarea>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <button onclick="addPreset('input-what', '내년도 신규 정책 기획안 초안 작성')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">신규 정책 기획안 작성</button>
+                            <button onclick="addPreset('input-what', '의원 요구자료 및 예상 Q&A 작성')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">의원 요구자료/Q&A</button>
+                            <button onclick="addPreset('input-what', '지역 주민 대상 안내문 및 보도자료 배포')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">주민 안내문/보도자료</button>
+                            <button onclick="addPreset('input-what', '연구용역 결과보고서 요약 및 시사점 도출')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">보고서 요약/시사점</button>
+                        </div>
+                    </div>
+
+                    <!-- Why 1 -->
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                            <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">Why 1</span>
+                            추진 배경
+                        </label>
+                        <textarea id="input-why1" rows="2" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow resize-none text-sm" placeholder="이 일을 왜 해야 하는지 (상황, 지시, 법령 등)"></textarea>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <button onclick="addPreset('input-why1', '기관장(상급자)의 특별 지시사항 이행')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">상급자 특별 지시</button>
+                            <button onclick="addPreset('input-why1', '기존 연례 반복 업무의 효율적 개선 필요')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">연례 반복업무 개선</button>
+                            <button onclick="addPreset('input-why1', '상위 법령 개정(신규 제정)에 따른 후속 조치')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">법령 개정 후속조치</button>
+                            <button onclick="addPreset('input-why1', '지역 주민의 지속적인 민원 제기 및 요구 해결')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">지속적인 민원 해결</button>
+                        </div>
+                    </div>
+
+                    <!-- Why 2 -->
+                    <div class="space-y-2 pb-6">
+                        <label class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                            <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">Why 2</span>
+                            당면한 한계
+                        </label>
+                        <textarea id="input-why2" rows="2" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow resize-none text-sm" placeholder="현재 겪고 있는 어려움이나 제약사항"></textarea>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <button onclick="addPreset('input-why2', '관련 선행 사례나 참고할 만한 기초 데이터 부족')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">선행 사례/데이터 부족</button>
+                            <button onclick="addPreset('input-why2', '촉박한 제출 기한 (오늘 중으로 보고 필요)')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">촉박한 제출 기한</button>
+                            <button onclick="addPreset('input-why2', '사업 예산이 매우 한정되어 있어 비용 효율성 중요')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">한정된 예산</button>
+                            <button onclick="addPreset('input-why2', '다양한 이해관계자가 얽혀 있어 갈등 조정 난해')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700">복잡한 이해관계</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2 Content -->
+                <div id="content-step2" class="tab-content space-y-8">
+                    
+                    <!-- P -->
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                            <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold">P</span>
+                            페르소나 부여
+                        </label>
+                        <textarea id="input-p" rows="2" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow resize-none text-sm" placeholder="AI가 취해야 할 전문적인 역할이나 성격"></textarea>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <button onclick="addPreset('input-p', '행정 실무 경험이 풍부한 20년 차 기획조정실장')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700">20년차 기획조정실장</button>
+                            <button onclick="addPreset('input-p', '시민의 입장에서 공감하고 안내하는 친절한 민원 상담관')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700">친절한 민원 상담관</button>
+                            <button onclick="addPreset('input-p', '법령 위반 여부를 꼼꼼하게 따지는 깐깐한 감사관')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700">깐깐한 감사관</button>
+                            <button onclick="addPreset('input-p', '객관적 수치를 기반으로 논리를 전개하는 데이터 분석가')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700">전문 데이터 분석가</button>
+                        </div>
+                    </div>
+
+                    <!-- C -->
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                            <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold">C</span>
+                            과업 지시 및 제약 조건
+                        </label>
+                        <textarea id="input-c" rows="4" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow resize-none text-sm" placeholder="수행할 구체적인 작업 내용과 반드시 지켜야 할 조건"></textarea>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <button onclick="addPreset('input-c', '주장의 근거가 되는 객관적 통계 수치나 관련 법령 조항을 반드시 함께 제시할 것')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700">통계/법령 근거 제시</button>
+                            <button onclick="addPreset('input-c', '감정적이거나 모호한 표현은 배제하고, 객관적이고 건조한 행정 문체를 사용할 것')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700">객관적/건조한 문체</button>
+                            <button onclick="addPreset('input-c', '해당 정책 시행 시 예상되는 부작용이나 민원 소지를 3가지 이상 예측하고 대응 방안을 포함할 것')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700">부작용 및 대응방안</button>
+                            <button onclick="addPreset('input-c', '전문 용어 사용을 지양하고 중학생 수준에서도 명확히 이해할 수 있는 쉬운 용어로 작성할 것')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700">쉬운 용어 사용</button>
+                        </div>
+                    </div>
+
+                    <!-- F -->
+                    <div class="space-y-2 pb-6">
+                        <label class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                            <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold">F</span>
+                            출력 형식
+                        </label>
+                        <textarea id="input-f" rows="3" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow resize-none text-sm" placeholder="최종 결과물의 형태 (분량, 어미, 구조 등)"></textarea>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <button onclick="addPreset('input-f', 'A4 1장 이내 분량으로 가독성 높은 개조식으로 요약하여 작성할 것')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700">A4 1장 개조식 요약</button>
+                            <button onclick="addPreset('input-f', '핵심 내용은 표 형태로 시각화하여 정리할 것 (컬럼: 항목, 주요내용, 비고)')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700">표 형태로 정리</button>
+                            <button onclick="addPreset('input-f', '모든 문장의 끝은 명사형 종결어미(~함, ~임, ~할 것)로 끝낼 것')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700">명사형 종결어미</button>
+                            <button onclick="addPreset('input-f', '마크다운(Markdown) 형식을 사용하여 대제목(#), 중제목(##), 소제목(-) 계층 구조를 명확히 할 것')" class="chip text-xs bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700">마크다운 구조화</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Right Panel: Live Viewer -->
+        <section class="w-full md:w-1/2 flex flex-col h-full bg-slate-100 overflow-hidden relative">
+            
+            <div class="bg-slate-200/50 backdrop-blur-sm border-b border-slate-300 px-6 py-3 shrink-0 flex items-center justify-between sticky top-0 z-10">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="eye" class="w-5 h-5 text-slate-600"></i>
+                    <h2 class="font-bold text-slate-800">실시간 프롬프트 뷰어</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="requestCoaching()" class="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-md shadow-sm transition-all transform hover:scale-105">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <span>AI 코칭 받기</span>
+                    </button>
+                    <div class="text-xs text-slate-500 bg-white px-2 py-1 rounded-md border border-slate-200">
+                        할루시네이션 방지 분리형
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth pb-20">
+                
+                <!-- Block 1 -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
+                        <span class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            블록 1: 사전 맥락 설정
+                        </span>
+                        <button onclick="copyBlock('block1-text', this)" class="text-xs font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 hover:text-blue-600 px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span>복사</span>
+                        </button>
+                    </div>
+                    <div class="p-4 bg-slate-900 text-slate-50 font-mono text-sm leading-relaxed overflow-x-auto">
+<pre id="block1-text" class="whitespace-pre-wrap break-words font-sans">AI 파트너, 본격적인 작업에 앞서 나의 현재 업무 배경과 맥락을 먼저 공유할게. 아래 내용을 잘 읽고 너의 시스템 컨텍스트로 설정해 줘.
+
+[나의 역할]
+-
+
+[현재 과업]
+-
+
+[추진 배경]
+-
+
+[당면한 한계]
+-
+
+위 행정 배경을 메모리에 완벽히 로드했다면, "맥락 동기화 완료"라고만 대답하고 다음 지시를 대기할 것.</pre>
+                    </div>
+                </div>
+
+                <!-- Block 2 -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
+                        <span class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                            블록 2: 본 작업 지시 (PCF)
+                        </span>
+                        <button onclick="copyBlock('block2-text', this)" class="text-xs font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 hover:text-indigo-600 px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span>복사</span>
+                        </button>
+                    </div>
+                    <div class="p-4 bg-slate-900 text-slate-50 font-mono text-sm leading-relaxed overflow-x-auto">
+<pre id="block2-text" class="whitespace-pre-wrap break-words font-sans">앞서 동기화한 나의 업무 맥락을 절대적으로 유지한 상태에서, 다음 지시사항을 수행해 줘.
+
+[페르소나 (Persona)]
+-
+
+[과업 지시 및 조건 (Context & Constraints)]
+-
+
+[출력 형식 (Format)]
+-</pre>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- AI Coaching Modal -->
+    <div id="coaching-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col modal-enter border border-slate-200">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50 rounded-t-xl shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="bg-purple-100 text-purple-600 p-1.5 rounded-lg">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">AI 프롬프트 코칭 리포트</h3>
+                </div>
+                <button onclick="closeCoachingModal()" class="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-md hover:bg-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto flex-1 bg-white">
+                <!-- Loading State -->
+                <div id="coaching-loading" class="flex flex-col items-center justify-center py-12 space-y-4">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600"></div>
+                    <p class="text-slate-500 font-medium animate-pulse">작성하신 프롬프트를 AI 코치가 꼼꼼히 분석하고 있습니다...</p>
+                </div>
+                
+                <!-- Result State -->
+                <div id="coaching-result" class="hidden markdown-body text-sm text-slate-700">
+                    <!-- Markdown content will be injected here -->
+                </div>
+
+                <!-- Error State -->
+                <div id="coaching-error" class="hidden flex flex-col items-center justify-center py-8 space-y-3 text-center">
+                    <div class="bg-red-100 text-red-500 p-3 rounded-full">
+                        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                    </div>
+                    <p class="text-red-600 font-medium">코칭 데이터를 불러오는 중 오류가 발생했습니다.</p>
+                    <p class="text-sm text-slate-500">잠시 후 다시 시도해 주세요.</p>
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-xl flex justify-end shrink-0">
+                <button onclick="closeCoachingModal()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // State object to hold form data
+        const state = {
+            who: '', what: '', why1: '', why2: '',
+            p: '', c: '', f: ''
+        };
+
+        // DOM Elements
+        const inputs = {
+            who: document.getElementById('input-who'),
+            what: document.getElementById('input-what'),
+            why1: document.getElementById('input-why1'),
+            why2: document.getElementById('input-why2'),
+            p: document.getElementById('input-p'),
+            c: document.getElementById('input-c'),
+            f: document.getElementById('input-f')
+        };
+        const block1Display = document.getElementById('block1-text');
+        const block2Display = document.getElementById('block2-text');
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            // Update Tab Buttons
+            document.getElementById('tab-step1').className = 'flex-1 py-4 px-6 text-center font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-100 transition-colors flex items-center justify-center gap-2';
+            document.getElementById('tab-step2').className = 'flex-1 py-4 px-6 text-center font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-100 transition-colors flex items-center justify-center gap-2';
+            
+            const activeTabClass = tabId === 'step1' 
+                ? 'flex-1 py-4 px-6 text-center font-semibold text-blue-600 border-b-2 border-blue-600 bg-white transition-colors flex items-center justify-center gap-2'
+                : 'flex-1 py-4 px-6 text-center font-semibold text-indigo-600 border-b-2 border-indigo-600 bg-white transition-colors flex items-center justify-center gap-2';
+            
+            document.getElementById(`tab-${tabId}`).className = activeTabClass;
+
+            // Update Content
+            document.getElementById('content-step1').classList.remove('active');
+            document.getElementById('content-step2').classList.remove('active');
+            document.getElementById(`content-${tabId}`).classList.add('active');
+        }
+
+        // Add Preset Text to Textarea
+        function addPreset(inputId, text) {
+            const el = document.getElementById(inputId);
+            const currentVal = el.value.trim();
+            
+            // If empty, just add text. If has content, append with bullet on new line.
+            if (currentVal === '') {
+                el.value = '- ' + text;
+            } else {
+                // Check if already ends with newline to avoid double spacing
+                el.value = currentVal + '\n- ' + text;
+            }
+            
+            // Trigger update
+            const key = inputId.split('-')[1];
+            state[key] = el.value;
+            updateViewer();
+            
+            // Scroll to bottom of textarea slightly
+            el.scrollTop = el.scrollHeight;
+        }
+
+        // Setup Event Listeners for textareas
+        Object.keys(inputs).forEach(key => {
+            inputs[key].addEventListener('input', (e) => {
+                state[key] = e.target.value;
+                updateViewer();
+            });
+        });
+
+        // Generate and Update Viewer Text
+        function updateViewer() {
+            // Helper to format block sections
+            const formatSection = (title, content) => {
+                const c = content.trim();
+                return `[${title}]\n${c ? c : '-'}\n`;
+            };
+
+            // Build Block 1
+            let b1 = 'AI 파트너, 본격적인 작업에 앞서 나의 현재 업무 배경과 맥락을 먼저 공유할게. 아래 내용을 잘 읽고 너의 시스템 컨텍스트로 설정해 줘.\n\n';
+            b1 += formatSection('나의 역할', state.who) + '\n';
+            b1 += formatSection('현재 과업', state.what) + '\n';
+            b1 += formatSection('추진 배경', state.why1) + '\n';
+            b1 += formatSection('당면한 한계', state.why2);
+            b1 += '\n위 행정 배경을 메모리에 완벽히 로드했다면, "맥락 동기화 완료"라고만 대답하고 다음 지시를 대기할 것.';
+            
+            block1Display.textContent = b1;
+
+            // Build Block 2
+            let b2 = '앞서 동기화한 나의 업무 맥락을 절대적으로 유지한 상태에서, 다음 지시사항을 수행해 줘.\n\n';
+            b2 += formatSection('페르소나 (Persona)', state.p) + '\n';
+            b2 += formatSection('과업 지시 및 조건 (Context & Constraints)', state.c) + '\n';
+            b2 += formatSection('출력 형식 (Format)', state.f);
+            
+            block2Display.textContent = b2;
+        }
+
+        // Copy functionality using document.execCommand (Fallback approach as requested)
+        function copyBlock(elementId, btnElement) {
+            const textToCopy = document.getElementById(elementId).textContent;
+            
+            // Create temporary textarea
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = textToCopy;
+            // Move it off-screen
+            tempTextArea.style.position = "absolute";
+            tempTextArea.style.left = "-999999px";
+            document.body.appendChild(tempTextArea);
+            
+            // Select and copy
+            tempTextArea.select();
+            tempTextArea.setSelectionRange(0, 99999); // For mobile devices
+
+            try {
+                const successful = document.execCommand('copy');
+                if(successful) {
+                    // Visual feedback
+                    const originalHtml = btnElement.innerHTML;
+                    btnElement.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-green-600"></i><span class="text-green-600">완료</span>';
+                    btnElement.classList.add('border-green-300', 'bg-green-50');
+                    lucide.createIcons();
+                    
+                    setTimeout(() => {
+                        btnElement.innerHTML = originalHtml;
+                        btnElement.classList.remove('border-green-300', 'bg-green-50');
+                        lucide.createIcons();
+                    }, 2000);
+                } else {
+                    alert('복사에 실패했습니다.');
+                }
+            } catch (err) {
+                console.error('Copy fallback failed', err);
+                alert('브라우저가 복사 기능을 지원하지 않습니다.');
+            } finally {
+                // Cleanup
+                document.body.removeChild(tempTextArea);
+            }
+        }
+
+        // --- AI Coaching Logic ---
+        
+        const apiKey = ""; // Gemini API Key (Runtime injected)
+        const modal = document.getElementById('coaching-modal');
+        const loadingEl = document.getElementById('coaching-loading');
+        const resultEl = document.getElementById('coaching-result');
+        const errorEl = document.getElementById('coaching-error');
+
+        function openCoachingModal() {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeCoachingModal() {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        async function fetchWithRetry(url, options, maxRetries = 5) {
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delays[i]));
+                }
+            }
+        }
+
+        async function requestCoaching() {
+            // Check if there is any content to review
+            const hasContent = Object.values(state).some(val => val.trim().length > 0);
+            if (!hasContent) {
+                alert("코칭을 받기 전에 좌측 에디터에 내용을 먼저 작성해 주세요.");
+                return;
+            }
+
+            openCoachingModal();
+            
+            // UI State reset
+            loadingEl.classList.remove('hidden');
+            resultEl.classList.add('hidden');
+            errorEl.classList.add('hidden');
+            resultEl.innerHTML = '';
+
+            const currentPrompt = `
+[사전 맥락]
+- 역할(Who): ${state.who || '(미작성)'}
+- 과업(What): ${state.what || '(미작성)'}
+- 추진 배경(Why1): ${state.why1 || '(미작성)'}
+- 당면한 한계(Why2): ${state.why2 || '(미작성)'}
+
+[작업 지시]
+- 페르소나(P): ${state.p || '(미작성)'}
+- 과업 지시 및 제약 조건(C): ${state.c || '(미작성)'}
+- 출력 형식(F): ${state.f || '(미작성)'}
+`;
+
+            const systemInstruction = `당신은 공무원들의 프롬프트 작성을 돕는 1타 AI 프롬프트 엔지니어링 코치입니다.
+사용자가 작성한 프롬프트 컨텍스트와 지시사항을 분석하여 공무원 실무에 적합한 피드백을 제공하세요.
+다음 구조에 따라 답변을 작성해 주세요 (반드시 마크다운 형식 사용):
+
+## 💡 잘 작성된 점 (칭찬)
+- 
+
+## 🔍 개선이 필요한 점 (코칭)
+- (모호한 표현, 구체성 부족, 놓친 제약조건 등을 날카롭게 짚어주세요. 미작성된 항목이 있다면 채우도록 가이드하세요.)
+
+## 🎁 코치의 추천 프롬프트 조각
+- (현재 내용을 바탕으로 바로 복사해서 붙여넣을 수 있는 더 나아진 문장이나 제약조건 예시를 제안해주세요.)`;
+
+            const payload = {
+                contents: [{ parts: [{ text: currentPrompt }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] }
+            };
+
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const data = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const feedbackText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (feedbackText) {
+                    loadingEl.classList.add('hidden');
+                    resultEl.innerHTML = marked.parse(feedbackText);
+                    resultEl.classList.remove('hidden');
+                } else {
+                    throw new Error("No text found in response");
+                }
+            } catch (error) {
+                loadingEl.classList.add('hidden');
+                errorEl.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
