@@ -1,6 +1,7 @@
 ---
-title: 해피브레인 채널 소개
-url: https://www.youtube.com/
+title: 2026년형 프롬프트 엔지니어링 가이드
+url: https://youtu.be/US4Cdy2IKYM?si=roSdwD1uAvg5sJzE
+thumbnail: /uploads/스크린샷_21-7-2026_11296_www.youtube.com.jpeg
+date: ''
 order: 1
-thumbnail: ""
 ---
