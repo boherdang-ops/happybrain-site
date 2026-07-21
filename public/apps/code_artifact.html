@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공무원 보도자료 자동 생성기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 80vh;
+        }
+
+        .input-section {
+            padding: 40px;
+            background: #f8fafc;
+            border-right: 2px solid #e2e8f0;
+            overflow-y: auto;
+        }
+
+        .output-section {
+            padding: 40px;
+            background: white;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .date-time-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102,126,234,0.3);
+        }
+
+        .btn-clear {
+            background: #f1f5f9;
+            color: #475569;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-clear:hover {
+            background: #e2e8f0;
+        }
+
+        .output-content {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 30px;
+            min-height: 500px;
+            white-space: pre-wrap;
+            font-family: 'Times New Roman', serif;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .output-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-copy, .btn-download {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-copy {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-download {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-copy:hover, .btn-download:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tips-section {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .tips-section h3 {
+            color: #92400e;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .tips-section ul {
+            color: #92400e;
+            padding-left: 20px;
+        }
+
+        .tips-section li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .template-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .template-btn {
+            padding: 12px;
+            background: #e0e7ff;
+            border: 2px solid #c7d2fe;
+            border-radius: 8px;
+            color: #3730a3;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .template-btn:hover {
+            background: #c7d2fe;
+            transform: translateY(-1px);
+        }
+
+        .info-box {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 10;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .info-box.success {
+            background-color: #10b981;
+        }
+
+        .info-box.error {
+            background-color: #ef4444;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-section {
+                border-right: none;
+                border-bottom: 2px solid #e2e8f0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .input-section, .output-section {
+                padding: 20px;
+            }
+            
+            .date-time-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .template-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📰 공무원 보도자료 자동 생성기</h1>
+            <p>표준 양식과 가이드라인을 반영한 전문적인 보도자료 작성</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <div class="tips-section">
+                    <h3>💡 작성 가이드</h3>
+                    <ul>
+                        <li>제목은 핵심 내용을 명확하고 간결하게 표현</li>
+                        <li>리드문은 5W1H(누가, 언제, 어디서, 무엇을, 왜, 어떻게) 포함</li>
+                        <li>정책 배경과 기대효과를 구체적으로 기술</li>
+                        <li>담당자 연락처는 정확하게 입력</li>
+                    </ul>
+                </div>
+
+                <div class="template-buttons">
+                    <button class="template-btn" onclick="loadTemplate('policy')">정책 발표</button>
+                    <button class="template-btn" onclick="loadTemplate('event')">행사 개최</button>
+                    <button class="template-btn" onclick="loadTemplate('budget')">예산 편성</button>
+                    <button class="template-btn" onclick="loadTemplate('welfare')">복지 확대</button>
+                </div>
+
+                <form id="pressReleaseForm">
+                    <div class="form-group">
+                        <label for="organization">기관명</label>
+                        <input type="text" id="organization" placeholder="예: ○○시청, ○○부, ○○청" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="title">보도자료 제목</label>
+                        <input type="text" id="title" placeholder="예: ○○시, 청년 주거 지원 정책 대폭 확대" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subtitle">부제목 (선택)</label>
+                        <input type="text" id="subtitle" placeholder="예: 월 최대 20만원 임차료 지원, 대상자 2배 확대">
+                    </div>
+
+                    <div class="date-time-group">
+                        <div class="form-group">
+                            <label for="releaseDate">배포일시</label>
+                            <input type="date" id="releaseDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="embargoTime">보도시점</label>
+                            <select id="embargoTime">
+                                <option value="즉시">즉시 보도 가능</option>
+                                <option value="해제후">보도 해제 후</option>
+                                <option value="특정시간">특정 시간 이후</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="department">담당부서</label>
+                        <input type="text" id="department" placeholder="예: 주거복지과, 기획예산실" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mainContent">주요 내용</label>
+                        <textarea id="mainContent" placeholder="정책의 핵심 내용, 추진 배경, 주요 특징을 구체적으로 작성해주세요." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="background">추진 배경</label>
+                        <textarea id="background" placeholder="정책 추진의 필요성, 현황 분석, 문제점 등을 작성해주세요."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="details">세부 내용</label>
+                        <textarea id="details" placeholder="지원 대상, 지원 내용, 신청 방법, 일정 등 구체적인 내용을 작성해주세요."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="effects">기대 효과</label>
+                        <textarea id="effects" placeholder="정책으로 인한 긍정적 변화, 수혜 대상, 파급 효과 등을 작성해주세요."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact">담당자 연락처</label>
+                        <input type="text" id="contact" placeholder="예: 홍길동 주거복지과장 (☎ 02-000-0000)" required>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn btn-generate" onclick="generatePressRelease()">보도자료 생성</button>
+                        <button type="button" class="btn btn-clear" onclick="clearForm()">입력 초기화</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="output-section">
+                <div id="infoBox" class="info-box"></div>
+                <h2 style="margin-bottom: 20px; color: #2d3748;">📄 생성된 보도자료</h2>
+                <div id="outputContent" class="output-content">
+보도자료를 생성하려면 왼쪽 양식을 작성하고 '보도자료 생성' 버튼을 클릭하세요.
+
+💡 템플릿 버튼을 클릭하면 샘플 데이터가 자동으로 입력됩니다.
+                </div>
+                <div class="output-actions">
+                    <button class="btn-copy" onclick="copyToClipboard()">📋 복사</button>
+                    <button class="btn-download" onclick="downloadAsWord()">📄 워드로 다운로드</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 오늘 날짜를 기본값으로 설정
+        document.getElementById('releaseDate').value = new Date().toISOString().split('T')[0];
+
+        // 템플릿 데이터
+        const templates = {
+            policy: {
+                organization: "○○시청",
+                title: "○○시, 청년 주거 지원 정책 대폭 확대",
+                subtitle: "월 최대 20만원 임차료 지원, 대상자 2배 확대",
+                department: "주거복지과",
+                mainContent: `○○시가 청년층의 주거비 부담 완화를 위해 기존 청년 주거 지원 정책을 대폭 확대한다고 발표했습니다.
+
+이번 정책 확대로 만 19세부터 34세까지의 청년에게 월 최대 20만원의 임차료를 지원하며, 지원 대상자를 기존 500명에서 1,000명으로 2배 확대합니다.
+
+지원 기간은 최대 2년이며, 소득 기준은 기준 중위소득 120% 이하로 설정했습니다.`,
+                background: `최근 급등한 임대료로 인해 청년층의 주거비 부담이 가계소득의 30%를 넘어서면서 사회적 문제로 대두되고 있습니다.
+
+○○시 청년 실태조사 결과, 응답자의 67%가 주거비 부담으로 인한 경제적 어려움을 호소했으며, 특히 사회초년생의 경우 월 소득의 40% 이상을 주거비로 지출하는 것으로 나타났습니다.`,
+                details: `□ 지원 대상: 만 19세~34세 청년 (기준 중위소득 120% 이하)
+□ 지원 내용: 월 임차료의 50% (최대 20만원)
+□ 지원 기간: 최대 24개월
+□ 신청 방법: ○○시 홈페이지 온라인 신청
+□ 신청 기간: 2025년 10월 1일 ~ 10월 31일
+□ 필요 서류: 임대차계약서, 소득증명서, 주민등록등본`,
+                effects: `이번 정책 확대로 연간 약 1,000명의 청년이 혜택을 받을 것으로 예상되며, 청년층의 주거비 부담을 연평균 240만원 경감할 수 있을 것으로 기대됩니다.
+
+또한 청년층의 지역 정착을 유도하여 지역 경제 활성화와 인구 유입 효과도 동시에 기대할 수 있습니다.`,
+                contact: "홍길동 주거복지과장 (☎ 02-000-0000)"
+            },
+            event: {
+                organization: "○○시청",
+                title: "○○시, '2025 시민과 함께하는 녹색도시 축제' 개최",
+                subtitle: "10월 15일~17일, 시민공원에서 환경보호 체험행사 진행",
+                department: "환경정책과",
+                mainContent: `○○시가 시민들과 함께 환경보호의 중요성을 알리고 탄소중립 실천 문화를 확산하기 위해 '2025 시민과 함께하는 녹색도시 축제'를 개최한다고 발표했습니다.
+
+축제는 10월 15일(화)부터 17일(목)까지 3일간 시민공원 일원에서 진행되며, 다양한 환경 체험 프로그램과 전시, 공연이 펼쳐집니다.`,
+                background: `기후변화 대응과 탄소중립 실현을 위해 시민들의 적극적인 참여와 실천이 필요한 시점에서, ○○시는 환경보호에 대한 시민 인식 제고와 실천 문화 확산을 위해 이번 축제를 기획했습니다.`,
+                details: `□ 행사명: 2025 시민과 함께하는 녹색도시 축제
+□ 일시: 2025년 10월 15일(화) ~ 17일(목), 오전 10시 ~ 오후 6시
+□ 장소: 시민공원 및 주변 일원
+□ 주요 프로그램:
+  - 친환경 제품 체험관 운영
+  - 업사이클링 공예 체험
+  - 탄소중립 실천 캠페인
+  - 환경보호 퀴즈대회
+  - 친환경 먹거리 장터
+□ 참가비: 무료`,
+                effects: `이번 축제를 통해 시민들의 환경보호 의식을 높이고, 일상에서 실천할 수 있는 구체적인 방법을 제시함으로써 지속가능한 녹색도시 조성에 기여할 것으로 기대됩니다.
+
+또한 지역 환경단체와 소상공인들의 참여를 통해 지역사회 상생 효과도 창출할 예정입니다.`,
+                contact: "이영희 환경정책과장 (☎ 02-000-1111)"
+            },
+            budget: {
+                organization: "○○시청",
+                title: "○○시, 2026년 예산안 총 1조 2,000억 원 편성",
+                subtitle: "복지·교육 분야 20% 증액, 신규 일자리 창출에 집중 투자",
+                department: "기획예산실",
+                mainContent: `○○시가 2026년도 예산안을 전년 대비 8.5% 증가한 총 1조 2,000억 원 규모로 편성했다고 발표했습니다.
+
+이번 예산안은 '시민이 행복한 포용도시'를 목표로 복지·교육 분야에 20% 증액 편성하고, 신규 일자리 창출과 지역경제 활성화에 집중 투자하는 것이 특징입니다.`,
+                background: `코로나19 장기화로 인한 경제적 어려움과 사회적 양극화 심화, 저출산·고령화 등 사회구조 변화에 선제적으로 대응하기 위해 시민 중심의 예산 편성이 필요한 상황입니다.
+
+특히 포스트 코로나 시대를 대비한 미래 성장동력 확보와 시민 삶의 질 향상을 위한 투자 확대가 시급한 과제로 대두되었습니다.`,
+                details: `□ 2026년 예산 규모: 1조 2,000억 원 (전년 대비 8.5%↑)
+□ 분야별 편성 내역:
+  - 사회복지: 4,800억 원 (40.0%)
+  - 교육: 1,440억 원 (12.0%)
+  - 도시개발: 1,200억 원 (10.0%)
+  - 일자리창출: 960억 원 (8.0%)
+  - 기타: 3,600억 원 (30.0%)
+□ 주요 신규사업:
+  - 청년 창업 지원센터 건립
+  - 어르신 통합돌봄서비스 확대
+  - 스마트 교육환경 구축`,
+                effects: `이번 예산 편성을 통해 약 5,000개의 신규 일자리가 창출될 것으로 예상되며, 복지사각지대 해소와 교육환경 개선으로 시민 만족도 향상이 기대됩니다.
+
+또한 지역 내 소상공인과 중소기업에 대한 지원 확대로 지역경제 활성화에도 크게 기여할 것으로 전망됩니다.`,
+                contact: "박철수 기획예산실장 (☎ 02-000-2222)"
+            },
+            welfare: {
+                organization: "○○시청",
+                title: "○○시, 독거어르신 돌봄서비스 24시간 체계로 확대",
+                subtitle: "AI 기반 응급상황 감지 시스템 도입, 생활지원사 2배 증원",
+                department: "노인복지과",
+                mainContent: `○○시가 독거어르신의 안전과 건강을 지키기 위해 기존 돌봄서비스를 24시간 체계로 확대 운영한다고 발표했습니다.
+
+AI 기반 응급상황 감지 시스템을 도입하고 생활지원사를 기존 50명에서 100명으로 2배 증원하여 더욱 촘촘한 돌봄망을 구축합니다.`,
+                background: `○○시 내 독거어르신이 전체 노인인구의 35%인 2만 8천명에 달하고, 이 중 70%가 만성질환을 앓고 있어 체계적인 돌봄서비스의 필요성이 대두되었습니다.
+
+특히 코로나19 이후 사회적 고립감이 심화되고 응급상황 발생 시 신속한 대응이 어려운 상황이 지속되면서 24시간 돌봄체계 구축이 시급한 과제였습니다.`,
+                details: `□ 서비스 대상: 만 65세 이상 독거어르신 (소득·재산 기준 충족)
+□ 서비스 내용:
+  - 24시간 응급상황 모니터링
+  - 주 3회 이상 안전확인 및 생활지원
+  - 건강상태 체크 및 복약 관리
+  - 말벗서비스 및 정서적 지원
+□ AI 감지 시스템: 집 안 움직임 감지, 이상상황 자동 알림
+□ 운영 방식: 3교대 24시간 상시 대기
+□ 이용 방법: 읍면동 주민센터 또는 콜센터 신청`,
+                effects: `24시간 돌봄체계 구축으로 응급상황 발생 시 대응시간을 기존 30분에서 10분 이내로 단축할 수 있을 것으로 예상됩니다.
+
+또한 정기적인 안전확인과 건강관리를 통해 독거어르신의 고독감 해소와 건강한 노후생활 지원이 가능할 것으로 기대됩니다.`,
+                contact: "김영수 노인복지과장 (☎ 02-000-3333)"
+            }
+        };
+
+        const showMessage = (message, isError = false) => {
+            const infoBox = document.getElementById('infoBox');
+            infoBox.textContent = message;
+            infoBox.classList.remove('success', 'error');
+            infoBox.classList.add(isError ? 'error' : 'success');
+            infoBox.style.display = 'block';
+            
+            setTimeout(() => {
+                infoBox.style.display = 'none';
+            }, 3000);
+        };
+
+        function loadTemplate(type) {
+            const template = templates[type];
+            if (template) {
+                Object.keys(template).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.value = template[key];
+                    }
+                });
+            }
+        }
+
+        function generatePressRelease() {
+            const form = document.getElementById('pressReleaseForm');
+            
+            // 필수 항목 체크
+            const requiredFields = ['organization', 'title', 'department', 'mainContent', 'contact'];
+            for (let field of requiredFields) {
+                const element = document.getElementById(field);
+                if (!element.value.trim()) {
+                    showMessage(`${element.previousElementSibling.textContent}를 입력해주세요.`, true);
+                    element.focus();
+                    return;
+                }
+            }
+
+            const data = {
+                organization: document.getElementById('organization').value,
+                title: document.getElementById('title').value,
+                subtitle: document.getElementById('subtitle').value,
+                releaseDate: document.getElementById('releaseDate').value,
+                embargoTime: document.getElementById('embargoTime').value,
+                department: document.getElementById('department').value,
+                mainContent: document.getElementById('mainContent').value,
+                background: document.getElementById('background').value,
+                details: document.getElementById('details').value,
+                effects: document.getElementById('effects').value,
+                contact: document.getElementById('contact').value
+            };
+
+            const pressRelease = generatePressReleaseText(data);
+            document.getElementById('outputContent').textContent = pressRelease;
+        }
+
+        function generatePressReleaseText(data) {
+            const releaseDate = new Date(data.releaseDate);
+            const formattedDate = `${releaseDate.getFullYear()}. ${(releaseDate.getMonth() + 1).toString().padStart(2, '0')}. ${releaseDate.getDate().toString().padStart(2, '0')}`;
+            
+            let pressRelease = `보  도  자  료
+
+배포일시: ${formattedDate}
+보도시점: ${data.embargoTime}
+담당부서: ${data.department}
+
+${data.title}`;
+
+            if (data.subtitle) {
+                pressRelease += `
+- ${data.subtitle} -`;
+            }
+
+            pressRelease += `
+
+
+□ ${data.mainContent}
+
+`;
+
+            if (data.background) {
+                pressRelease += `□ (추진 배경) ${data.background}
+
+`;
+            }
+
+            if (data.details) {
+                pressRelease += `□ (주요 내용) ${data.details}
+
+`;
+            }
+
+            if (data.effects) {
+                pressRelease += `□ (기대 효과) ${data.effects}
+
+`;
+            }
+
+            pressRelease += `
+
+※ 기타 자세한 사항은 담당부서로 문의하시기 바랍니다.
+
+[문의] ${data.contact}
+
+
+                                    ${data.organization}`;
+
+            return pressRelease;
+        }
+
+        function clearForm() {
+            // 입력 초기화 팝업 대신 즉시 초기화
+            const form = document.getElementById('pressReleaseForm');
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.value = ''; // 모든 입력 필드를 빈 문자열로 초기화
+            });
+            
+            // 오늘 날짜를 기본값으로 다시 설정
+            document.getElementById('releaseDate').value = new Date().toISOString().split('T')[0];
+            
+            // 출력 영역도 초기화
+            document.getElementById('outputContent').textContent = `보도자료를 생성하려면 왼쪽 양식을 작성하고 '보도자료 생성' 버튼을 클릭하세요.
+
+💡 템플릿 버튼을 클릭하면 샘플 데이터가 자동으로 입력됩니다.`;
+            
+            // 자동저장 데이터도 초기화
+            autoSaveData = {};
+            
+            // 생성 버튼 상태 초기화
+            const generateBtn = document.querySelector('.btn-generate');
+            generateBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            generateBtn.textContent = '보도자료 생성';
+            showMessage('입력 내용이 초기화되었습니다.', false);
+        }
+
+        function copyToClipboard() {
+            const content = document.getElementById('outputContent').textContent;
+            if (content.includes('보도자료를 생성하려면')) {
+                showMessage('먼저 보도자료를 생성해주세요.', true);
+                return;
+            }
+            
+            navigator.clipboard.writeText(content).then(function() {
+                showMessage('보도자료가 클립보드에 복사되었습니다.');
+            }).catch(function(err) {
+                // 대체 방법
+                const textArea = document.createElement('textarea');
+                textArea.value = content;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showMessage('보도자료가 클립보드에 복사되었습니다.');
+            });
+        }
+
+        function downloadAsWord() {
+            const content = document.getElementById('outputContent').textContent;
+            if (content.includes('보도자료를 생성하려면')) {
+                showMessage('먼저 보도자료를 생성해주세요.', true);
+                return;
+            }
+
+            const title = document.getElementById('title').value || '보도자료';
+            const today = new Date().toISOString().split('T')[0];
+            
+            // HTML 형식으로 변환
+            const htmlContent = content.replace(/\n/g, '<br>');
+            
+            const htmlDoc = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${title}</title>
+    <style>
+        body { 
+            font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; 
+            line-height: 1.8; 
+            margin: 40px;
+            font-size: 12pt;
+        }
+        .header {
+            text-align: center;
+            font-weight: bold;
+            font-size: 18pt;
+            margin-bottom: 30px;
+        }
+        .content {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">${htmlContent}</div>
+</body>
+</html>`;
+
+            const blob = new Blob([htmlDoc], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `보도자료_${title}_${today}.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showMessage('워드 파일 다운로드가 시작되었습니다.');
+        }
+
+        // 자동 저장 기능 (로컬스토리지 대신 변수 사용)
+        let autoSaveData = {};
+        
+        function autoSave() {
+            const inputs = document.querySelectorAll('#pressReleaseForm input, #pressReleaseForm select, #pressReleaseForm textarea');
+            inputs.forEach(input => {
+                autoSaveData[input.id] = input.value;
+            });
+        }
+
+        function loadAutoSave() {
+            Object.keys(autoSaveData).forEach(key => {
+                const element = document.getElementById(key);
+                if (element && autoSaveData[key]) {
+                    element.value = autoSaveData[key];
+                }
+            });
+        }
+
+        // 입력 시 자동 저장
+        document.addEventListener('input', autoSave);
+        
+        // 엔터 키 처리 (textarea 제외)
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                generatePressRelease();
+            }
+        });
+
+        // 실시간 미리보기 (옵션)
+        function enableRealTimePreview() {
+            const inputs = document.querySelectorAll('#pressReleaseForm input, #pressReleaseForm select, #pressReleaseForm textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    if (this.value.trim()) {
+                        // 자동 생성은 부담스러우니 주요 필드만 체크
+                        const requiredFields = ['organization', 'title', 'mainContent'];
+                        const allFilled = requiredFields.every(field => 
+                            document.getElementById(field).value.trim()
+                        );
+                        
+                        if (allFilled) {
+                            // 실시간 미리보기 활성화 표시
+                            document.querySelector('.btn-generate').style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                            document.querySelector('.btn-generate').textContent = '📝 실시간 업데이트 중';
+                        }
+                    }
+                });
+            });
+        }
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            // 오늘 날짜 설정
+            document.getElementById('releaseDate').value = new Date().toISOString().split('T')[0];
+            
+            // 자동저장 데이터 로드
+            loadAutoSave();
+            
+            // 선택적: 실시간 미리보기 활성화
+            // enableRealTimePreview();
+        });
+    </script>
+</body>
+</html>
