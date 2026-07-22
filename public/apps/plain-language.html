@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>공공언어 순화기</title>
+<meta name="description" content="어려운 행정 문장을 국립국어원 '쉬운 공공언어' 원칙에 따라 주민이 이해하기 쉬운 말로 다시 써 주는 도구." />
+<style>
+  :root{
+    --ink:#1b2a4a; --navy:#1f3864; --navy-deep:#16233f; --blue:#2e5fa3;
+    --gold:#b8863b; --paper:#faf9f6; --paper-2:#f2eee4; --paper-on-navy:#ece7db;
+    --muted:#6b7385; --line:#e5ddce; --red:#b03636;
+    --serif:'Noto Serif KR',serif;
+    --sans:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,'Malgun Gothic',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --radius:5px; --fs:16px;
+    --card:#fff; --card-line:var(--line); --chip:var(--paper-2);
+    --bg:var(--paper); --text:var(--ink); --sub:var(--muted);
+  }
+  html[data-theme="dark"]{
+    --bg:#111b2e; --text:#e6e9f0; --sub:#9aa6bd; --card:#1a2740;
+    --card-line:#2b3a5c; --chip:#22314e; --line:#2b3a5c; --paper-2:#22314e;
+    --gold:#d0a45a; --blue:#7aa3d8; --red:#f0a0a0;
+  }
+  html[data-fs="lg"]{ --fs:18.5px; }
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ font-size:var(--fs); -webkit-text-size-adjust:100%; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.6;
+    -webkit-font-smoothing:antialiased; transition:background .2s,color .2s; }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none!important; animation:none!important; } }
+  .serif{ font-family:var(--serif); }
+  .wrap{ width:100%; max-width:1080px; margin-inline:auto; padding:0 clamp(1rem,4vw,1.75rem); }
+
+  header.top{ background:var(--navy-deep); color:var(--paper-on-navy); padding:1.4rem 0 1.5rem; }
+  header.top .eyebrow{ font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gold); display:inline-flex; align-items:center; gap:.5rem; margin-bottom:.5rem; }
+  header.top .eyebrow::before{ content:""; width:1.5rem; height:1px; background:var(--gold); }
+  header.top h1{ font-family:var(--serif); font-weight:700; color:#fff; margin:0; font-size:clamp(1.4rem,4vw,1.9rem); }
+  header.top p.lead{ margin:.45rem 0 0; color:var(--paper-on-navy); font-size:.92rem; max-width:56ch; }
+  .toolbar{ display:flex; gap:.5rem; margin-top:1rem; flex-wrap:wrap; }
+  .tbtn{ font:inherit; font-size:.82rem; cursor:pointer; border:1px solid #33436a; background:transparent;
+    color:var(--paper-on-navy); padding:.4rem .7rem; border-radius:var(--radius); }
+  .tbtn:hover{ border-color:var(--gold); color:#fff; }
+  .tbtn.help{ border-color:var(--gold); color:#fff; background:rgba(184,134,59,.16); }
+  .tbtn.help:hover{ background:rgba(184,134,59,.3); }
+
+  main{ padding:1.3rem 0 3rem; }
+  .cols{ display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; align-items:start; }
+  @media (max-width:820px){ .cols{ grid-template-columns:1fr; } }
+  .panel{ background:var(--card); border:1px solid var(--card-line); border-radius:8px; padding:1rem 1rem 1.1rem; }
+  .panel h2{ font-family:var(--serif); font-size:1.08rem; margin:0 0 .7rem; }
+  label.fl{ display:block; font-size:.76rem; color:var(--sub); margin:.55rem 0 .28rem; font-weight:600; }
+  select, textarea{ width:100%; font:inherit; font-size:.92rem; padding:.55rem .65rem; border:1.5px solid var(--card-line);
+    border-radius:var(--radius); background:var(--bg); color:var(--text); }
+  select:focus, textarea:focus{ outline:none; border-color:var(--blue); }
+  textarea#src{ min-height:300px; line-height:1.7; resize:vertical; }
+  textarea#out{ min-height:300px; line-height:1.75; resize:vertical; }
+  .btn{ font:inherit; font-size:.9rem; cursor:pointer; border:1px solid var(--card-line); background:var(--card);
+    color:var(--text); padding:.6rem .95rem; border-radius:var(--radius); }
+  .btn:hover:not(:disabled){ border-color:var(--gold); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .btn.primary{ background:var(--navy); color:#fff; border-color:var(--navy); font-weight:600; }
+  .btn.primary:hover:not(:disabled){ background:var(--blue); border-color:var(--blue); }
+  .btnrow{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.9rem; }
+  .msg{ font-size:.8rem; margin-top:.5rem; min-height:1.1em; } .msg.err{ color:var(--red); } .msg.ok{ color:var(--sub); }
+  .warn{ font-size:.78rem; color:var(--sub); background:var(--paper-2); border-left:3px solid #c0562e; padding:.55rem .85rem; border-radius:4px; margin-top:.8rem; }
+  .warn b{ color:var(--text); }
+  .changes{ margin-top:.9rem; background:var(--bg); border:1px solid var(--card-line); border-left:3px solid var(--gold); border-radius:6px; padding:.7rem .9rem; font-size:.86rem; white-space:pre-wrap; line-height:1.65; }
+  .changes .ttl{ font-family:var(--serif); font-weight:600; font-size:.92rem; margin-bottom:.35rem; }
+  .spin{ display:inline-block; width:1rem; height:1rem; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:sp .7s linear infinite; vertical-align:-2px; margin-right:.4rem; }
+  @keyframes sp{ to{ transform:rotate(360deg); } }
+
+  /* modal */
+  .modal-bg{ display:none; position:fixed; inset:0; z-index:50; background:rgba(16,23,40,.55); padding:1rem; overflow-y:auto; }
+  .modal-bg.on{ display:flex; align-items:flex-start; justify-content:center; }
+  .modal{ background:var(--card); color:var(--text); width:100%; max-width:600px; border-radius:8px; margin:2.5rem auto; padding:1.4rem; border:1px solid var(--card-line); }
+  .modal h2{ font-family:var(--serif); font-size:1.25rem; margin:0 0 1rem; }
+  .modal .foot{ display:flex; justify-content:flex-end; margin-top:1.3rem; }
+  .help-content{ font-size:.93rem; line-height:1.7; }
+  .help-content .hlead{ color:var(--sub); margin:0 0 1rem; }
+  .help-content h3{ font-family:var(--serif); font-size:1.03rem; margin:1.1rem 0 .45rem; padding-bottom:.3rem; border-bottom:1px solid var(--card-line); }
+  .help-content ul{ margin:.4rem 0 .6rem; padding-left:1.3rem; } .help-content li{ margin:.3rem 0; }
+  .help-note{ background:var(--paper-2); border-left:3px solid var(--gold); border-radius:4px; padding:.8rem 1rem; margin-top:1.1rem; }
+  .help-note b{ display:block; margin-bottom:.3rem; } .help-note li{ font-size:.87rem; color:var(--sub); }
+
+  .toast{ position:fixed; left:50%; bottom:2rem; transform:translateX(-50%) translateY(1rem); z-index:60;
+    background:var(--navy-deep); color:#fff; padding:.6rem 1.1rem; border-radius:999px; font-size:.85rem; opacity:0; pointer-events:none; transition:opacity .2s,transform .2s; }
+  .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
+  footer{ border-top:1px solid var(--line); color:var(--sub); font-size:.78rem; padding:1.4rem 0 2rem; text-align:center; margin-top:2rem; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">공공언어 순화기</p>
+    <h1 class="serif">어려운 행정문장을, 쉬운 말로</h1>
+    <p class="lead">국립국어원 '쉬운 공공언어' 원칙에 따라 주민이 바로 이해하는 문장으로 다시 씁니다. 뜻은 그대로, 말만 쉽게.</p>
+    <div class="toolbar">
+      <button class="tbtn help" id="btnHelp" type="button">❓ 도움말</button>
+      <button class="tbtn" id="btnTheme" type="button">🌙 다크</button>
+      <button class="tbtn" id="btnFont" type="button">🔎 큰 글씨</button>
+      <button class="tbtn" id="btnSample" type="button">📋 예시 넣기</button>
+      <button class="tbtn" id="btnClear" type="button">🗑 비우기</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="cols">
+      <div class="panel">
+        <h2 class="serif">1. 원문 넣기</h2>
+        <label class="fl" for="aud">누가 읽나요 (대상 독자)</label>
+        <select id="aud">
+          <option value="resident">일반 주민</option>
+          <option value="senior">어르신</option>
+          <option value="youth">청소년·청년</option>
+          <option value="easy">다문화·외국인 (쉬운 한국어)</option>
+          <option value="notice">게시·안내문 (행동 안내 중심)</option>
+        </select>
+        <label class="fl" for="src">순화할 원문</label>
+        <textarea id="src" placeholder="어려운 행정 문장·공문·안내문을 붙여넣으세요."></textarea>
+        <div class="btnrow">
+          <button class="btn primary" id="btnRun" type="button">✨ 쉬운 말로 바꾸기</button>
+        </div>
+        <div class="msg" id="msg"></div>
+        <div class="warn"><b>⚠️ 개인정보는 빼고 넣으세요.</b> 입력한 글은 외부 AI(Google Gemini)로 전송됩니다.</div>
+      </div>
+
+      <div class="panel">
+        <h2 class="serif">2. 쉽게 고친 글</h2>
+        <textarea id="out" placeholder="여기에 쉬운 말로 바꾼 글이 나옵니다. 직접 수정할 수 있습니다."></textarea>
+        <div class="btnrow">
+          <button class="btn" id="btnCopy" type="button" disabled>📋 복사</button>
+          <button class="btn" id="btnDl" type="button" disabled>⬇ 다운로드(.txt)</button>
+        </div>
+        <div class="changes" id="changes" hidden><div class="ttl">주요 순화</div><div id="changesBody"></div></div>
+        <div class="warn"><b>확인:</b> AI 초안입니다. 뜻이 바뀌지 않았는지, 빠진 정보가 없는지 확인하고 쓰세요.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- 도움말 -->
+<div class="modal-bg" id="helpBg">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="hTitle">
+    <h2 id="hTitle" class="serif">이렇게 쓰세요</h2>
+    <div class="help-content">
+      <p class="hlead">어려운 공문·안내문을 넣으면 국립국어원 '쉬운 공공언어' 원칙에 따라 쉽게 다시 써 줍니다. 뜻은 유지하고 말만 바꿉니다.</p>
+      <h3>순서</h3>
+      <ol>
+        <li><b>대상 독자</b>를 고릅니다(주민·어르신·다문화 등에 따라 난이도가 달라집니다).</li>
+        <li>원문을 붙여넣고 <b>✨ 쉬운 말로 바꾸기</b>.</li>
+        <li>오른쪽 결과와 아래 <b>주요 순화</b>(어려운말→쉬운말)를 확인하고 복사해서 씁니다.</li>
+      </ol>
+      <h3>어떤 원칙으로 바꾸나</h3>
+      <ul>
+        <li>어려운 한자어·외래어를 쉬운 우리말로 (금일→오늘, 제고→높임)</li>
+        <li>일본어 투·번역 투, 이중피동 제거 · 문장은 짧고 능동형으로</li>
+        <li>권위적 표현을 정중·배려하는 표현으로 · 정보는 빠짐없이 유지</li>
+      </ul>
+      <div class="help-note">
+        <b>⚠️ 꼭 알아두세요</b>
+        <ul>
+          <li>텍스트는 외부 AI로 전송됩니다. 개인정보는 빼고 넣으세요.</li>
+          <li>순화 과정에서 <b>뜻이 바뀌거나 정보가 빠지지 않았는지</b> 꼭 확인하세요.</li>
+          <li>이 앱은 <b>홈페이지에 올린 뒤</b> 작동합니다(AI 호출). 로컬 파일로 열면 안 됩니다.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot"><button class="btn primary" id="hClose" type="button">시작하기</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<footer><div class="wrap">바이브 코딩으로 만든 행정지원앱 · AI 처리는 Google Gemini · 뜻 보존 확인 필수<br />한국공공자치연구원 AI행정혁신연구소</div></footer>
+
+<script>
+(function(){
+  "use strict";
+  const LS="plainlang-v1", THEME="plainlang-theme", FS="plainlang-fs", SEEN="plainlang-seen";
+  const $=s=>document.querySelector(s);
+  let busy=false;
+
+  const AUD={
+    resident:"일반 성인 주민이 읽는 글이다. 표준적이면서도 친근하고 명확하게.",
+    senior:"어르신이 읽는 글이다. 더 쉬운 낱말과 짧은 문장으로, 따뜻하고 공손하게. 어려운 한자어는 반드시 풀어 쓸 것.",
+    youth:"청소년·청년이 읽는 글이다. 딱딱한 관공서 말투를 덜어 간결하고 친근하게 쓰되 정보는 정확히.",
+    easy:"한국어가 서툰 다문화·외국인 주민이 읽는 글이다. 아주 쉬운 낱말과 짧은 문장만 쓰고, 어려운 한자어·관용표현을 피하며 필요하면 쉽게 풀어 설명할 것.",
+    notice:"게시·안내문이다. 읽는 사람이 '무엇을 언제까지 어떻게 해야 하는지' 행동이 분명히 드러나게 쓸 것."
+  };
+  function SYSTEM(audKey){
+    return [
+      "너는 국립국어원 '쉬운 공공언어 쓰기' 지침에 정통한 공공언어 전문가야. 아래 [원문]을 뜻은 그대로 유지하면서 읽는 사람이 쉽게 이해할 수 있는 공공언어로 다시 써.",
+      "[순화 원칙]",
+      "- 어려운 한자어·외래어·행정 전문용어를 쉬운 우리말로 (예: 금일→오늘, 익일→다음 날, 제고→높임, 소요되다→걸리다/들다, 구비→갖춤, 제반→여러)",
+      "- 일본어 투·번역 투 표현과 이중피동 제거 (예: ~에 있어서, ~로 인하여 남용, ~되어지다)",
+      "- 한 문장에 한 가지 뜻만 담고 문장을 짧고 명확하게, 되도록 능동형으로",
+      "- 권위적·일방적 표현을 정중하고 배려하는 표현으로 (예: ~하기 바람 → ~해 주시기 바랍니다)",
+      "- 명사만 늘어놓지 말고 서술어로 자연스럽게 풀 것",
+      "- 차별적·비하 표현 배제",
+      "- 가장 중요한 원칙: 내용·사실·정보(무엇을·언제·어디서·어떻게·왜)를 바꾸거나 빠뜨리지 말 것. 순화는 표현만 바꾸는 것이다.",
+      "[대상 독자] "+AUD[audKey],
+      "[출력 형식] 아래 두 부분을 이 순서와 머리말 그대로 출력:",
+      "[쉽게 고친 글]",
+      "(여기에 순화한 전체 문장)",
+      "[주요 순화]",
+      "- 어려운 표현 → 쉬운 표현 (대표적인 것 3~7개만)"
+    ].join("\n");
+  }
+
+  async function callAI(system, user){
+    const res=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemPrompt:system,userPrompt:user})});
+    let data={}; try{ data=await res.json(); }catch(e){}
+    if(!res.ok || data.error) throw new Error(data.error || `요청 실패 (${res.status})`);
+    return (data.text||"").trim();
+  }
+  function splitResult(text){
+    const marker="[주요 순화]";
+    const i=text.indexOf(marker);
+    let main, notes="";
+    if(i>=0){ main=text.slice(0,i); notes=text.slice(i+marker.length).trim(); }
+    else main=text;
+    main=main.replace(/^\s*\[쉽게 고친 글\]\s*/,"").trim();
+    return {main, notes};
+  }
+
+  async function run(){
+    if(busy) return;
+    if(!$("#src").value.trim()){ toast("순화할 원문을 넣어주세요"); $("#src").focus(); return; }
+    busy=true; setLoading(true); setMsg("");
+    try{
+      const text=await callAI(SYSTEM($("#aud").value), $("#src").value.trim());
+      const {main,notes}=splitResult(text);
+      $("#out").value=main; enableOut(main.length>0);
+      if(notes){ $("#changesBody").textContent=notes; $("#changes").hidden=false; } else $("#changes").hidden=true;
+      setMsg("쉽게 고쳤어요. 뜻이 바뀌지 않았는지 확인하세요.","ok"); save();
+      toast("순화 완료");
+    }catch(e){ setMsg("⚠ "+e.message,"err"); }
+    finally{ busy=false; setLoading(false); }
+  }
+  function setLoading(on){ const b=$("#btnRun"); b.disabled=on; b.innerHTML= on?'<span class="spin"></span>바꾸는 중…':'✨ 쉬운 말로 바꾸기'; }
+  function setMsg(t,k){ const m=$("#msg"); m.textContent=t||""; m.className="msg"+(k?(" "+k):""); }
+  function enableOut(on){ $("#btnCopy").disabled=!on; $("#btnDl").disabled=!on; }
+
+  $("#out").addEventListener("input", ()=>{ enableOut($("#out").value.trim().length>0); save(); });
+
+  function copyText(t){ if(!t) return;
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(()=>toast("복사했어요")).catch(()=>fb(t)); } else fb(t); }
+  function fb(t){ const ta=document.createElement("textarea"); ta.value=t; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); toast("복사했어요");}catch(e){toast("복사 실패");} document.body.removeChild(ta); }
+  $("#btnCopy").addEventListener("click", ()=>copyText($("#out").value.trim()));
+  $("#btnDl").addEventListener("click", ()=>{ const t=$("#out").value.trim(); if(!t) return;
+    const blob=new Blob([t],{type:"text/plain;charset=utf-8"}); const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob); a.download="공공언어_순화문.txt"; a.click(); URL.revokeObjectURL(a.href); toast("다운로드했어요"); });
+
+  const SAMPLE="본 안내문은 금일 자로 시행되는 청년 창업 지원 사업에 관하여 제반 사항을 통보하고자 작성되었으며, 신청을 희망하는 주민께서는 익일까지 관련 서류를 구비하여 방문 접수하여 주시기 바랍니다. 미제출 시 지원 대상에서 제외될 수 있음을 유념하시기 바랍니다.";
+  $("#btnSample").addEventListener("click", ()=>{ $("#src").value=SAMPLE; $("#aud").value="resident"; save(); toast("예시를 넣었어요 · 변환을 눌러보세요"); });
+  $("#btnClear").addEventListener("click", ()=>{ if(!confirm("입력과 결과를 모두 지울까요?")) return;
+    $("#src").value=""; $("#out").value=""; $("#aud").value="resident"; $("#changes").hidden=true; setMsg(""); enableOut(false); save(); toast("비웠어요"); });
+
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify({aud:$("#aud").value, src:$("#src").value, out:$("#out").value})); }catch(e){} }
+  function restore(){ try{ const p=JSON.parse(localStorage.getItem(LS)||"null"); if(!p) return;
+    $("#aud").value=p.aud||"resident"; $("#src").value=p.src||""; $("#out").value=p.out||"";
+    if($("#out").value.trim()) enableOut(true); }catch(e){} }
+  ["aud","src"].forEach(id=>$("#"+id).addEventListener("input", save));
+
+  const hb=$("#helpBg");
+  const openHelp=()=>{ hb.classList.add("on"); setTimeout(()=>$("#hClose").focus(),50); };
+  const closeHelp=()=>hb.classList.remove("on");
+  $("#btnHelp").addEventListener("click", openHelp);
+  $("#hClose").addEventListener("click", closeHelp);
+  hb.addEventListener("click", e=>{ if(e.target===hb) closeHelp(); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape"&&hb.classList.contains("on")) closeHelp(); });
+
+  const root=document.documentElement;
+  function applyTheme(t){ root.setAttribute("data-theme",t); $("#btnTheme").textContent=t==="dark"?"☀ 라이트":"🌙 다크"; }
+  function applyFs(f){ if(f==="lg")root.setAttribute("data-fs","lg"); else root.removeAttribute("data-fs"); $("#btnFont").textContent=f==="lg"?"🔎 보통 글씨":"🔎 큰 글씨"; }
+  applyTheme(localStorage.getItem(THEME)==="dark"?"dark":"light");
+  applyFs(localStorage.getItem(FS)==="lg"?"lg":"n");
+  $("#btnTheme").addEventListener("click", ()=>{ const t=root.getAttribute("data-theme")==="dark"?"light":"dark"; applyTheme(t); localStorage.setItem(THEME,t); });
+  $("#btnFont").addEventListener("click", ()=>{ const f=root.getAttribute("data-fs")==="lg"?"n":"lg"; applyFs(f); localStorage.setItem(FS,f); });
+
+  let tt; function toast(m){ const el=$("#toast"); el.textContent=m; el.classList.add("on"); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("on"),1900); }
+
+  $("#btnRun").addEventListener("click", run);
+  restore();
+  try{ if(!localStorage.getItem(SEEN)){ openHelp(); localStorage.setItem(SEEN,"1"); } }catch(e){}
+})();
+</script>
+</body>
+</html>
