@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>처리기한·근무일 계산기</title>
+<meta name="description" content="접수일과 기한을 넣으면 공휴일·주말을 빼고 만료일과 D-day를 계산해 주는 도구. 모든 처리는 브라우저 안에서만." />
+<style>
+  :root{
+    --ink:#1b2a4a; --navy:#1f3864; --navy-deep:#16233f; --blue:#2e5fa3;
+    --gold:#b8863b; --paper:#faf9f6; --paper-2:#f2eee4; --paper-on-navy:#ece7db;
+    --muted:#6b7385; --line:#e5ddce; --red:#b03636; --green:#2f7d5b;
+    --serif:'Noto Serif KR',serif;
+    --sans:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,'Malgun Gothic',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --radius:5px; --fs:16px;
+    --card:#fff; --card-line:var(--line); --chip:var(--paper-2);
+    --bg:var(--paper); --text:var(--ink); --sub:var(--muted);
+  }
+  html[data-theme="dark"]{
+    --bg:#111b2e; --text:#e6e9f0; --sub:#9aa6bd; --card:#1a2740;
+    --card-line:#2b3a5c; --chip:#22314e; --line:#2b3a5c; --paper-2:#22314e;
+    --gold:#d0a45a; --blue:#7aa3d8; --red:#f0a0a0; --green:#7fd0aa;
+  }
+  html[data-fs="lg"]{ --fs:18.5px; }
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ font-size:var(--fs); -webkit-text-size-adjust:100%; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.6;
+    -webkit-font-smoothing:antialiased; transition:background .2s,color .2s; }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none!important; animation:none!important; } }
+  .serif{ font-family:var(--serif); }
+  .wrap{ width:100%; max-width:900px; margin-inline:auto; padding:0 clamp(1rem,4vw,1.75rem); }
+
+  header.top{ background:var(--navy-deep); color:var(--paper-on-navy); padding:1.4rem 0 1.5rem; }
+  header.top .eyebrow{ font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gold); display:inline-flex; align-items:center; gap:.5rem; margin-bottom:.5rem; }
+  header.top .eyebrow::before{ content:""; width:1.5rem; height:1px; background:var(--gold); }
+  header.top h1{ font-family:var(--serif); font-weight:700; color:#fff; margin:0; font-size:clamp(1.4rem,4vw,1.9rem); }
+  header.top p.lead{ margin:.45rem 0 0; color:var(--paper-on-navy); font-size:.92rem; max-width:52ch; }
+  .toolbar{ display:flex; gap:.5rem; margin-top:1rem; flex-wrap:wrap; }
+  .tbtn{ font:inherit; font-size:.82rem; cursor:pointer; border:1px solid #33436a; background:transparent;
+    color:var(--paper-on-navy); padding:.4rem .7rem; border-radius:var(--radius); }
+  .tbtn:hover{ border-color:var(--gold); color:#fff; }
+  .tbtn.help{ border-color:var(--gold); color:#fff; background:rgba(184,134,59,.16); }
+  .tbtn.help:hover{ background:rgba(184,134,59,.3); }
+
+  main{ padding:1.3rem 0 3rem; }
+  .modeTabs{ display:flex; gap:.4rem; margin-bottom:1.1rem; flex-wrap:wrap; }
+  .mtab{ font:inherit; font-size:.88rem; cursor:pointer; border:1px solid var(--card-line); background:var(--card);
+    color:var(--text); padding:.55rem 1rem; border-radius:999px; }
+  .mtab.on{ background:var(--navy); color:#fff; border-color:var(--navy); }
+  .panel{ background:var(--card); border:1px solid var(--card-line); border-radius:8px; padding:1.1rem 1.1rem 1.2rem; margin-bottom:1.1rem; }
+  .panel h2{ font-family:var(--serif); font-size:1.05rem; margin:0 0 .8rem; }
+
+  .row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:.8rem; align-items:end; }
+  label.fl{ display:block; font-size:.76rem; color:var(--sub); margin-bottom:.3rem; font-weight:600; }
+  input[type=date], input[type=number], input[type=text], select{ width:100%; font:inherit; font-size:.95rem; padding:.55rem .65rem;
+    border:1.5px solid var(--card-line); border-radius:var(--radius); background:var(--bg); color:var(--text); }
+  input:focus, select:focus{ outline:none; border-color:var(--blue); }
+  .opts{ display:flex; gap:1.2rem; flex-wrap:wrap; margin-top:.8rem; }
+  .chk{ font-size:.85rem; color:var(--sub); display:inline-flex; align-items:center; gap:.4rem; cursor:pointer; }
+  .btn{ font:inherit; font-size:.92rem; cursor:pointer; border:1px solid var(--card-line); background:var(--card);
+    color:var(--text); padding:.6rem 1rem; border-radius:var(--radius); }
+  .btn:hover{ border-color:var(--gold); }
+  .btn.primary{ background:var(--navy); color:#fff; border-color:var(--navy); font-weight:600; }
+  .btn.primary:hover{ background:var(--blue); border-color:var(--blue); }
+  .btnrow{ margin-top:1rem; }
+
+  /* 결과 */
+  .result{ margin-top:1.1rem; }
+  .big{ background:var(--bg); border:1px solid var(--card-line); border-left:4px solid var(--navy); border-radius:8px; padding:1.1rem 1.2rem; }
+  .big .lbl{ font-size:.78rem; color:var(--sub); }
+  .big .date{ font-family:var(--serif); font-size:1.7rem; font-weight:700; margin:.2rem 0; }
+  .big .dday{ font-family:var(--mono); font-size:1rem; font-weight:600; }
+  .dday.past{ color:var(--red); } .dday.today{ color:var(--gold); } .dday.future{ color:var(--green); }
+  .cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:.6rem; margin-top:.8rem; }
+  .mini{ background:var(--bg); border:1px solid var(--card-line); border-radius:6px; padding:.6rem .7rem; }
+  .mini .k{ font-size:.72rem; color:var(--sub); } .mini .v{ font-family:var(--mono); font-size:1.05rem; font-weight:600; margin-top:.15rem; }
+
+  .note{ font-size:.78rem; color:var(--sub); margin-top:.9rem; }
+
+  /* 공휴일 관리 */
+  .hyear{ display:flex; gap:.4rem; margin-bottom:.8rem; align-items:center; flex-wrap:wrap; }
+  .hlist{ display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:.9rem; }
+  .htag{ font-size:.8rem; background:var(--chip); border:1px solid var(--card-line); border-radius:999px; padding:.25rem .6rem .25rem .7rem;
+    display:inline-flex; align-items:center; gap:.4rem; }
+  .htag.wknd{ opacity:.6; }
+  .htag .d{ font-family:var(--mono); color:var(--blue); }
+  .htag button{ background:none; border:none; color:var(--sub); cursor:pointer; font-size:.9rem; line-height:1; padding:0 .1rem; }
+  .htag button:hover{ color:var(--red); }
+  .addh{ display:grid; grid-template-columns:auto 1fr auto; gap:.5rem; align-items:end; }
+  @media (max-width:520px){ .addh{ grid-template-columns:1fr; } }
+  .warn{ font-size:.78rem; color:var(--sub); background:var(--paper-2); border-left:3px solid var(--gold); padding:.55rem .8rem; border-radius:4px; margin-top:.9rem; }
+
+  /* modal */
+  .modal-bg{ display:none; position:fixed; inset:0; z-index:50; background:rgba(16,23,40,.55); padding:1rem; overflow-y:auto; }
+  .modal-bg.on{ display:flex; align-items:flex-start; justify-content:center; }
+  .modal{ background:var(--card); color:var(--text); width:100%; max-width:600px; border-radius:8px; margin:2.5rem auto; padding:1.4rem; border:1px solid var(--card-line); }
+  .modal h2{ font-family:var(--serif); font-size:1.25rem; margin:0 0 1rem; }
+  .modal .foot{ display:flex; justify-content:flex-end; margin-top:1.3rem; }
+  .help-content{ font-size:.93rem; line-height:1.7; }
+  .help-content .hlead{ color:var(--sub); margin:0 0 1rem; }
+  .help-content h3{ font-family:var(--serif); font-size:1.03rem; margin:1.1rem 0 .45rem; padding-bottom:.3rem; border-bottom:1px solid var(--card-line); }
+  .help-content ul,.help-content ol{ margin:.4rem 0 .6rem; padding-left:1.3rem; }
+  .help-content li{ margin:.3rem 0; }
+  .help-note{ background:var(--paper-2); border-left:3px solid var(--gold); border-radius:4px; padding:.8rem 1rem; margin-top:1.1rem; }
+  .help-note b{ display:block; margin-bottom:.3rem; }
+  .help-note li{ font-size:.87rem; color:var(--sub); }
+
+  .toast{ position:fixed; left:50%; bottom:2rem; transform:translateX(-50%) translateY(1rem); z-index:60;
+    background:var(--navy-deep); color:#fff; padding:.6rem 1.1rem; border-radius:999px; font-size:.85rem; opacity:0; pointer-events:none; transition:opacity .2s,transform .2s; }
+  .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
+  footer{ border-top:1px solid var(--line); color:var(--sub); font-size:.78rem; padding:1.4rem 0 2rem; text-align:center; margin-top:2rem; }
+  .hidden{ display:none; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">처리기한·근무일 계산기</p>
+    <h1 class="serif">공휴일 빼고, 며칠 남았나</h1>
+    <p class="lead">접수일과 기한을 넣으면 주말·공휴일을 빼고 만료일과 D-day를 계산합니다. 2026년 공휴일 내장(대체공휴일·지방선거일 포함).</p>
+    <div class="toolbar">
+      <button class="tbtn help" id="btnHelp" type="button">❓ 도움말</button>
+      <button class="tbtn" id="btnTheme" type="button">🌙 다크</button>
+      <button class="tbtn" id="btnFont" type="button">🔎 큰 글씨</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="modeTabs">
+      <button class="mtab on" data-m="deadline" type="button">기한 계산</button>
+      <button class="mtab" data-m="between" type="button">기간(일수) 계산</button>
+      <button class="mtab" data-m="holidays" type="button">공휴일 관리</button>
+    </div>
+
+    <!-- MODE: 기한 계산 -->
+    <section id="mDeadline">
+      <div class="panel">
+        <h2 class="serif">접수일부터 기한 계산</h2>
+        <div class="row">
+          <div><label class="fl" for="dStart">접수일(기산일)</label><input id="dStart" type="date" /></div>
+          <div><label class="fl" for="dN">처리기한</label><input id="dN" type="number" min="1" value="7" /></div>
+          <div><label class="fl" for="dUnit">기간 단위</label>
+            <select id="dUnit"><option value="biz">근무일(주말·공휴일 제외)</option><option value="cal">달력일(전부 포함)</option></select>
+          </div>
+        </div>
+        <div class="opts">
+          <label class="chk"><input type="checkbox" id="dFirst" /> 접수일(초일)을 1일째로 포함</label>
+        </div>
+        <div class="btnrow"><button class="btn primary" id="dCalc" type="button">📅 만료일 계산</button></div>
+        <div class="result hidden" id="dResult">
+          <div class="big">
+            <div class="lbl">처리기한 만료일</div>
+            <div class="date" id="dDate">—</div>
+            <div class="dday" id="dDday">—</div>
+          </div>
+          <div class="cards" id="dCards"></div>
+          <div class="note" id="dNote"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODE: 기간 계산 -->
+    <section id="mBetween" class="hidden">
+      <div class="panel">
+        <h2 class="serif">두 날짜 사이 기간</h2>
+        <div class="row">
+          <div><label class="fl" for="bStart">시작일</label><input id="bStart" type="date" /></div>
+          <div><label class="fl" for="bEnd">종료일</label><input id="bEnd" type="date" /></div>
+        </div>
+        <div class="opts">
+          <label class="chk"><input type="checkbox" id="bIncl" checked /> 시작일·종료일 모두 포함(양끝 포함)</label>
+        </div>
+        <div class="btnrow"><button class="btn primary" id="bCalc" type="button">🧮 기간 계산</button></div>
+        <div class="result hidden" id="bResult">
+          <div class="cards" id="bCards"></div>
+          <div class="note" id="bNote"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODE: 공휴일 관리 -->
+    <section id="mHolidays" class="hidden">
+      <div class="panel">
+        <h2 class="serif">공휴일 관리</h2>
+        <div class="hyear">
+          <label class="fl" style="margin:0" for="hYear">연도</label>
+          <select id="hYear" style="width:auto"></select>
+          <span class="note" style="margin:0">회색은 주말과 겹친 날 · ✕로 제외, 아래에서 추가</span>
+        </div>
+        <div class="hlist" id="hList"></div>
+        <div class="addh">
+          <div><label class="fl" for="hDate">추가할 날짜</label><input id="hDate" type="date" /></div>
+          <div><label class="fl" for="hName">이름</label><input id="hName" type="text" placeholder="예: 임시공휴일" /></div>
+          <div><button class="btn" id="hAdd" type="button">＋ 추가</button></div>
+        </div>
+        <div class="warn">
+          2026년 공휴일은 관공서 기준으로 내장돼 있습니다(대체공휴일 4회 + 6/3 지방선거일 포함). <b>2027년 설·추석 등 음력 공휴일과 새로 지정되는 임시공휴일은 반드시 확인 후 수정</b>하세요. 추가·제외한 내용은 이 브라우저에 저장됩니다.
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- 도움말 -->
+<div class="modal-bg" id="helpBg">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="hTitle">
+    <h2 id="hTitle" class="serif">이렇게 쓰세요</h2>
+    <div class="help-content">
+      <p class="hlead">민원·공문 처리기한이 언제 끝나는지, 주말·공휴일을 빼고 정확히 계산합니다.</p>
+      <h3>기한 계산</h3>
+      <ul>
+        <li>접수일과 처리기한(일수)을 넣고, <b>근무일</b>(주말·공휴일 제외) 또는 <b>달력일</b>(전부 포함)을 고릅니다.</li>
+        <li>만료일·요일과 오늘 기준 D-day가 나옵니다.</li>
+        <li>'초일 포함'은 규정에 따라 켜세요(민법상 초일불산입이 기본이라 기본값은 꺼짐).</li>
+      </ul>
+      <h3>기간(일수) 계산</h3>
+      <ul><li>두 날짜를 넣으면 총 달력일·근무일·주말·공휴일 수를 나눠 보여줍니다.</li></ul>
+      <h3>공휴일 관리</h3>
+      <ul><li>내장된 공휴일을 연도별로 확인하고, <b>임시공휴일을 추가</b>하거나 틀린 날을 <b>제외</b>할 수 있습니다.</li></ul>
+      <div class="help-note">
+        <b>⚠️ 꼭 알아두세요</b>
+        <ul>
+          <li>처리기한 산정 방식(근무일/달력일, 초일 산입 여부)은 <b>업무 근거 규정마다 다릅니다.</b> 규정을 확인해 옵션을 맞추세요.</li>
+          <li>2027년 이후 음력 공휴일과 임시공휴일은 공식 월력요항으로 확인 후 수정하세요.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot"><button class="btn primary" id="hClose" type="button">시작하기</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<footer><div class="wrap">바이브 코딩으로 만든 행정지원앱 · 설치 없이 브라우저에서 · 데이터는 내 기기에만<br />한국공공자치연구원 AI행정혁신연구소</div></footer>
+
+<script>
+(function(){
+  "use strict";
+  const LS="deadline-holidays-v1", THEME="deadline-theme", FS="deadline-fs", SEEN="deadline-seen";
+  const $=s=>document.querySelector(s);
+  const WD=["일","월","화","수","목","금","토"];
+
+  // 내장 공휴일 (관공서 기준). 2026 확정 / 2027 잠정(음력·임시 확인 요망)
+  const BUILTIN={
+    "2026-01-01":"신정","2026-02-16":"설날 연휴","2026-02-17":"설날","2026-02-18":"설날 연휴",
+    "2026-03-01":"삼일절","2026-03-02":"대체공휴일(삼일절)","2026-05-01":"근로자의 날","2026-05-05":"어린이날",
+    "2026-05-24":"부처님오신날","2026-05-25":"대체공휴일(부처님오신날)","2026-06-03":"지방선거일","2026-06-06":"현충일",
+    "2026-07-17":"제헌절","2026-08-15":"광복절","2026-08-17":"대체공휴일(광복절)",
+    "2026-09-24":"추석 연휴","2026-09-25":"추석","2026-09-26":"추석 연휴",
+    "2026-10-03":"개천절","2026-10-05":"대체공휴일(개천절)","2026-10-09":"한글날","2026-12-25":"성탄절",
+    "2027-01-01":"신정","2027-02-08":"설날 연휴(확인)","2027-02-09":"설날(확인)","2027-03-01":"삼일절",
+    "2027-05-01":"근로자의 날","2027-05-05":"어린이날","2027-06-06":"현충일","2027-07-17":"제헌절",
+    "2027-08-15":"광복절","2027-08-16":"대체공휴일(광복절)","2027-09-14":"추석 연휴(확인)","2027-09-15":"추석(확인)",
+    "2027-09-16":"추석 연휴(확인)","2027-10-03":"개천절","2027-10-04":"대체공휴일(개천절)","2027-10-09":"한글날",
+    "2027-10-11":"대체공휴일(한글날)","2027-12-25":"성탄절","2027-12-27":"대체공휴일(성탄절)"
+  };
+  let custom={}, excluded={};
+  (function load(){ try{ const p=JSON.parse(localStorage.getItem(LS)||"null"); if(p){ custom=p.custom||{}; excluded=p.excluded||{}; } }catch(e){} })();
+  function saveH(){ try{ localStorage.setItem(LS, JSON.stringify({custom,excluded})); }catch(e){} }
+
+  function pad(n){ return String(n).padStart(2,"0"); }
+  function iso(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function parseISO(s){ const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); }
+  function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+  function fmtK(d){ return d.getFullYear()+". "+(d.getMonth()+1)+". "+d.getDate()+".("+WD[d.getDay()]+")"; }
+
+  function isHoliday(d){ const s=iso(d); if(excluded[s]) return false; return (s in BUILTIN)||(s in custom); }
+  function holidayName(d){ const s=iso(d); if(excluded[s]) return null; return custom[s]||BUILTIN[s]||null; }
+  function isWeekend(d){ const g=d.getDay(); return g===0||g===6; }
+  function isNonWork(d){ return isWeekend(d)||isHoliday(d); }
+
+  /* ===== 기한 계산 ===== */
+  function calcDeadline(start, n, unit, incFirst){
+    if(unit==="cal"){ return addDays(start, incFirst? n-1 : n); }
+    // 근무일
+    let cur=new Date(start), count=0;
+    if(incFirst && !isNonWork(cur)){ count=1; if(count>=n) return cur; }
+    let guard=0;
+    while(count<n && guard<20000){ cur=addDays(cur,1); if(!isNonWork(cur)) count++; guard++; }
+    return cur;
+  }
+  function bizBetween(a,b){ // a<b, 경계 포함 여부는 호출측. 여기선 (a, b] 근무일 수
+    let c=0, cur=new Date(a);
+    while(cur<b){ cur=addDays(cur,1); if(!isNonWork(cur)) c++; }
+    return c;
+  }
+
+  $("#dCalc").addEventListener("click", ()=>{
+    const sv=$("#dStart").value; if(!sv){ toast("접수일을 선택하세요"); return; }
+    const n=parseInt($("#dN").value,10); if(!(n>=1)){ toast("기한(일수)을 입력하세요"); return; }
+    const start=parseISO(sv), unit=$("#dUnit").value, incFirst=$("#dFirst").checked;
+    const end=calcDeadline(start, n, unit, incFirst);
+    $("#dDate").textContent=fmtK(end);
+    // D-day
+    const today=new Date(); today.setHours(0,0,0,0);
+    const diff=Math.round((end - today)/86400000);
+    const dd=$("#dDday");
+    if(diff>0){ dd.textContent="D-"+diff+" (오늘부터 "+diff+"일 남음)"; dd.className="dday future"; }
+    else if(diff===0){ dd.textContent="D-DAY (오늘이 만료일)"; dd.className="dday today"; }
+    else { dd.textContent="D+"+(-diff)+" (기한 "+(-diff)+"일 지남)"; dd.className="dday past"; }
+    // 부가 정보
+    const remBiz = end>today ? bizBetween(today,end) : -bizBetween(end,today);
+    const totalCal = Math.round((end-start)/86400000);
+    const cards=[
+      ["만료일 요일", WD[end.getDay()]+"요일"],
+      ["오늘부터 남은 근무일", (remBiz>=0?remBiz:("지남 "+(-remBiz)))+"일"],
+      ["접수~만료 달력일", totalCal+"일"]
+    ];
+    if(isNonWork(end)){ cards.push(["주의","만료일이 휴일"]); }
+    $("#dCards").innerHTML=cards.map(([k,v])=>`<div class="mini"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
+    let note = unit==="biz" ? "근무일 기준: 주말과 공휴일을 제외하고 계산했습니다." : "달력일 기준: 주말·공휴일을 포함해 계산했습니다.";
+    note += incFirst ? " (접수일 포함)" : " (접수일 다음날부터 기산)";
+    if(isNonWork(end)) note += " · 만료일이 휴일이면 실무상 다음 근무일까지로 보는 경우가 있으니 규정을 확인하세요.";
+    $("#dNote").textContent=note;
+    $("#dResult").classList.remove("hidden");
+  });
+
+  /* ===== 기간(일수) 계산 ===== */
+  $("#bCalc").addEventListener("click", ()=>{
+    const s=$("#bStart").value, e=$("#bEnd").value;
+    if(!s||!e){ toast("두 날짜를 모두 선택하세요"); return; }
+    let a=parseISO(s), b=parseISO(e);
+    if(a>b){ const t=a;a=b;b=t; }
+    const incl=$("#bIncl").checked;
+    let totalCal=Math.round((b-a)/86400000)+(incl?1:0);
+    let biz=0,wknd=0,hol=0;
+    let cur=new Date(a), last=new Date(b);
+    // 반복 범위: incl이면 [a,b], 아니면 (a,b) — 여기선 [a,b] 스캔 후 경계 조정
+    const startScan = incl? new Date(a) : addDays(a,1);
+    const endScan = incl? new Date(b) : addDays(b,-1);
+    for(let d=new Date(startScan); d<=endScan; d=addDays(d,1)){
+      if(isWeekend(d)) wknd++; else if(isHoliday(d)) hol++; else biz++;
+    }
+    const scanCal = incl? totalCal : Math.max(0, totalCal);
+    $("#bCards").innerHTML=[
+      ["총 달력일", scanCal+"일"],
+      ["근무일", biz+"일"],
+      ["주말", wknd+"일"],
+      ["공휴일", hol+"일"]
+    ].map(([k,v])=>`<div class="mini"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
+    $("#bNote").textContent = (incl?"양끝 날짜를 모두 포함":"양끝 날짜를 제외") + "해 계산했습니다. 공휴일은 주말과 겹치면 주말로 셉니다.";
+    $("#bResult").classList.remove("hidden");
+  });
+
+  /* ===== 공휴일 관리 ===== */
+  function effectiveForYear(y){
+    const set={};
+    Object.keys(BUILTIN).forEach(k=>{ if(k.startsWith(y+"-") && !excluded[k]) set[k]=BUILTIN[k]; });
+    Object.keys(custom).forEach(k=>{ if(k.startsWith(y+"-") && !excluded[k]) set[k]=custom[k]; });
+    return Object.keys(set).sort().map(k=>({date:k,name:set[k]}));
+  }
+  function renderHolidays(){
+    const y=$("#hYear").value;
+    const items=effectiveForYear(y);
+    $("#hList").innerHTML = items.length ? items.map(it=>{
+      const d=parseISO(it.date), wk=isWeekend(d);
+      return `<span class="htag${wk?' wknd':''}"><span class="d">${it.date.slice(5)}</span> (${WD[d.getDay()]}) ${esc(it.name)}<button data-x="${it.date}" title="제외">✕</button></span>`;
+    }).join("") : '<span class="note">등록된 공휴일이 없습니다. 아래에서 추가하세요.</span>';
+  }
+  function fillYears(){
+    const ys=new Set(); Object.keys(BUILTIN).forEach(k=>ys.add(k.slice(0,4))); Object.keys(custom).forEach(k=>ys.add(k.slice(0,4)));
+    ys.add(String(new Date().getFullYear()));
+    const arr=[...ys].sort();
+    $("#hYear").innerHTML=arr.map(y=>`<option value="${y}">${y}년</option>`).join("");
+    $("#hYear").value = arr.includes("2026")?"2026":arr[0];
+  }
+  $("#hYear").addEventListener("change", renderHolidays);
+  $("#hList").addEventListener("click", e=>{
+    const b=e.target.closest("[data-x]"); if(!b) return;
+    const date=b.getAttribute("data-x");
+    if(custom[date]) delete custom[date]; else excluded[date]=1;
+    saveH(); renderHolidays(); toast("제외했어요");
+  });
+  $("#hAdd").addEventListener("click", ()=>{
+    const dt=$("#hDate").value; if(!dt){ toast("날짜를 선택하세요"); return; }
+    const nm=$("#hName").value.trim()||"공휴일";
+    if(excluded[dt]) delete excluded[dt];
+    custom[dt]=nm; saveH();
+    $("#hYear").value=dt.slice(0,4); renderHolidays();
+    $("#hDate").value=""; $("#hName").value=""; toast("추가했어요");
+  });
+  function esc(s){ return String(s==null?"":s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+  /* ===== 모드 전환 ===== */
+  document.querySelectorAll(".mtab").forEach(t=>t.addEventListener("click", ()=>{
+    const m=t.getAttribute("data-m");
+    document.querySelectorAll(".mtab").forEach(x=>x.classList.toggle("on", x===t));
+    $("#mDeadline").classList.toggle("hidden", m!=="deadline");
+    $("#mBetween").classList.toggle("hidden", m!=="between");
+    $("#mHolidays").classList.toggle("hidden", m!=="holidays");
+    if(m==="holidays") renderHolidays();
+  }));
+
+  /* ===== 도움말 / 테마 / 글씨 ===== */
+  const hb=$("#helpBg");
+  const openHelp=()=>{ hb.classList.add("on"); setTimeout(()=>$("#hClose").focus(),50); };
+  const closeHelp=()=>hb.classList.remove("on");
+  $("#btnHelp").addEventListener("click", openHelp);
+  $("#hClose").addEventListener("click", closeHelp);
+  hb.addEventListener("click", e=>{ if(e.target===hb) closeHelp(); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape"&&hb.classList.contains("on")) closeHelp(); });
+
+  const root=document.documentElement;
+  function applyTheme(t){ root.setAttribute("data-theme",t); $("#btnTheme").textContent=t==="dark"?"☀ 라이트":"🌙 다크"; }
+  function applyFs(f){ if(f==="lg")root.setAttribute("data-fs","lg"); else root.removeAttribute("data-fs"); $("#btnFont").textContent=f==="lg"?"🔎 보통 글씨":"🔎 큰 글씨"; }
+  applyTheme(localStorage.getItem(THEME)==="dark"?"dark":"light");
+  applyFs(localStorage.getItem(FS)==="lg"?"lg":"n");
+  $("#btnTheme").addEventListener("click", ()=>{ const t=root.getAttribute("data-theme")==="dark"?"light":"dark"; applyTheme(t); localStorage.setItem(THEME,t); });
+  $("#btnFont").addEventListener("click", ()=>{ const f=root.getAttribute("data-fs")==="lg"?"n":"lg"; applyFs(f); localStorage.setItem(FS,f); });
+
+  let tt; function toast(m){ const el=$("#toast"); el.textContent=m; el.classList.add("on"); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("on"),1900); }
+
+  // 기본값: 접수일 = 오늘
+  $("#dStart").value=iso(new Date());
+  fillYears();
+  try{ if(!localStorage.getItem(SEEN)){ openHelp(); localStorage.setItem(SEEN,"1"); } }catch(e){}
+})();
+</script>
+</body>
+</html>
