@@ -124,9 +124,13 @@ collections:
         fields:
           - { name: email, label: "이메일", widget: string }
           - { name: note, label: "안내 문구", widget: text }
+      - name: site
+        label: "사이트 설정 (채널 링크)"
+        file: "src/data/site.json"
+        fields:
           - name: channels
-            label: "채널 링크"
+            label: "채널 링크 (맨 아래 푸터·연락처에 함께 반영)"
             widget: list
             fields:
-              - { name: label, label: "이름 (예: 브런치)", widget: string }
-              - { name: href, label: "링크 주소", widget: string }
+              - { name: label, label: "이름 (예: 유튜브)", widget: string }
+              - { name: href, label: "링크 주소 (내 채널 주소)", widget: string }

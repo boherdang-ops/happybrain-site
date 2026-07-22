@@ -1,0 +1,7 @@
+{
+  "channels": [
+    { "label": "브런치", "href": "https://brunch.co.kr/" },
+    { "label": "유튜브", "href": "https://www.youtube.com/" },
+    { "label": "네이버 블로그", "href": "https://blog.naver.com/" }
+  ]
+}

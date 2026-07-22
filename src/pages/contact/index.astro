@@ -1,8 +1,10 @@
 ---
 import Base from '../../layouts/Base.astro';
 import contact from '../../data/contact.json';
+import site from '../../data/site.json';
 
-const { email, note, channels } = contact;
+const { email, note } = contact;
+const channels = site.channels;
 ---
 <Base title="강의·문의" description="지자체 AI 교육, 강연, 컨설팅 문의.">
   <section class="page-head">
