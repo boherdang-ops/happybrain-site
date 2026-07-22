@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>공문서 셀프 점검기</title>
+<meta name="description" content="공문·보고서 초안을 붙여넣으면 자주 틀리는 맞춤법·행정 순화어·이중피동·군더더기를 규칙으로 잡아 표시합니다. 모든 처리는 브라우저 안에서만." />
+<style>
+  :root{
+    --ink:#1b2a4a; --navy:#1f3864; --navy-deep:#16233f; --blue:#2e5fa3;
+    --gold:#b8863b; --paper:#faf9f6; --paper-2:#f2eee4; --paper-on-navy:#ece7db;
+    --muted:#6b7385; --line:#e5ddce; --red:#c0392b; --amber:#b8863b; --gray:#8a93a5;
+    --serif:'Noto Serif KR',serif;
+    --sans:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,'Malgun Gothic',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --radius:5px; --fs:16px;
+    --card:#fff; --card-line:var(--line); --chip:var(--paper-2);
+    --bg:var(--paper); --text:var(--ink); --sub:var(--muted);
+  }
+  html[data-theme="dark"]{
+    --bg:#111b2e; --text:#e6e9f0; --sub:#9aa6bd; --card:#1a2740;
+    --card-line:#2b3a5c; --chip:#22314e; --line:#2b3a5c; --paper-2:#22314e;
+    --gold:#d0a45a; --blue:#7aa3d8; --red:#e57368; --amber:#d0a45a; --gray:#9aa6bd;
+  }
+  html[data-fs="lg"]{ --fs:18.5px; }
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ font-size:var(--fs); -webkit-text-size-adjust:100%; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.6;
+    -webkit-font-smoothing:antialiased; transition:background .2s,color .2s; }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none!important; animation:none!important; } }
+  .serif{ font-family:var(--serif); }
+  .wrap{ width:100%; max-width:1120px; margin-inline:auto; padding:0 clamp(1rem,4vw,1.75rem); }
+
+  header.top{ background:var(--navy-deep); color:var(--paper-on-navy); padding:1.4rem 0 1.5rem; }
+  header.top .eyebrow{ font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gold); display:inline-flex; align-items:center; gap:.5rem; margin-bottom:.5rem; }
+  header.top .eyebrow::before{ content:""; width:1.5rem; height:1px; background:var(--gold); }
+  header.top h1{ font-family:var(--serif); font-weight:700; color:#fff; margin:0; font-size:clamp(1.4rem,4vw,1.9rem); }
+  header.top p.lead{ margin:.45rem 0 0; color:var(--paper-on-navy); font-size:.92rem; max-width:56ch; }
+  .toolbar{ display:flex; gap:.5rem; margin-top:1rem; flex-wrap:wrap; }
+  .tbtn{ font:inherit; font-size:.82rem; cursor:pointer; border:1px solid #33436a; background:transparent;
+    color:var(--paper-on-navy); padding:.4rem .7rem; border-radius:var(--radius); }
+  .tbtn:hover{ border-color:var(--gold); color:#fff; }
+  .tbtn.help{ border-color:var(--gold); color:#fff; background:rgba(184,134,59,.16); }
+  .tbtn.help:hover{ background:rgba(184,134,59,.3); }
+
+  main{ padding:1.3rem 0 3rem; }
+  .cols{ display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; align-items:start; }
+  @media (max-width:860px){ .cols{ grid-template-columns:1fr; } }
+  .panel{ background:var(--card); border:1px solid var(--card-line); border-radius:8px; padding:1rem 1rem 1.1rem; }
+  .panel h2{ font-family:var(--serif); font-size:1.05rem; margin:0 0 .6rem; }
+  .panel .sub{ font-size:.8rem; color:var(--sub); margin:0 0 .7rem; }
+  textarea#src{ width:100%; min-height:320px; font:inherit; font-size:.92rem; line-height:1.7; resize:vertical;
+    padding:.75rem .85rem; border:1.5px solid var(--card-line); border-radius:var(--radius); background:var(--bg); color:var(--text); }
+  textarea#src:focus{ outline:none; border-color:var(--blue); }
+  .btn{ font:inherit; font-size:.9rem; cursor:pointer; border:1px solid var(--card-line); background:var(--card);
+    color:var(--text); padding:.6rem .95rem; border-radius:var(--radius); }
+  .btn:hover:not(:disabled){ border-color:var(--gold); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .btn.primary{ background:var(--navy); color:#fff; border-color:var(--navy); font-weight:600; }
+  .btn.primary:hover{ background:var(--blue); border-color:var(--blue); }
+  .btnrow{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.8rem; }
+
+  .summary{ display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:.8rem; }
+  .pill{ font-size:.8rem; padding:.3rem .7rem; border-radius:999px; border:1px solid var(--card-line); font-family:var(--mono); }
+  .pill.err{ color:var(--red); border-color:var(--red); }
+  .pill.rec{ color:var(--amber); border-color:var(--amber); }
+  .pill.ref{ color:var(--gray); border-color:var(--gray); }
+
+  .preview{ white-space:pre-wrap; word-break:break-word; font-size:.92rem; line-height:1.9; background:var(--bg);
+    border:1px solid var(--card-line); border-radius:var(--radius); padding:.9rem 1rem; max-height:340px; overflow-y:auto; margin-bottom:.9rem; }
+  .preview.placeholder{ color:var(--sub); }
+  mark{ background:transparent; padding:0 1px; border-radius:2px; cursor:pointer; border-bottom:2px solid; color:inherit; }
+  mark.lv-err{ border-color:var(--red); background:rgba(192,57,43,.08); }
+  mark.lv-rec{ border-color:var(--amber); background:rgba(184,134,59,.10); }
+  mark.lv-ref{ border-color:var(--gray); background:rgba(138,147,165,.10); }
+  mark.active{ outline:2px solid var(--blue); outline-offset:1px; }
+
+  .issues{ list-style:none; margin:0; padding:0; max-height:460px; overflow-y:auto; }
+  .iss{ border:1px solid var(--card-line); border-left-width:4px; border-radius:6px; padding:.6rem .75rem; margin-bottom:.5rem; cursor:pointer; }
+  .iss.lv-err{ border-left-color:var(--red); }
+  .iss.lv-rec{ border-left-color:var(--amber); }
+  .iss.lv-ref{ border-left-color:var(--gray); }
+  .iss.active{ background:var(--paper-2); }
+  .iss .badge{ font-family:var(--mono); font-size:.68rem; padding:.1rem .4rem; border-radius:3px; background:var(--chip); color:var(--sub); }
+  .iss .orig{ font-weight:600; }
+  .iss .arrow{ color:var(--sub); }
+  .iss .sug{ color:var(--blue); font-weight:600; }
+  .iss .d{ font-size:.8rem; color:var(--sub); margin-top:.25rem; }
+  .clean{ text-align:center; color:var(--sub); padding:2rem 1rem; }
+  .clean .big{ font-family:var(--serif); font-size:1.1rem; color:var(--green,#2f7d5b); }
+
+  .warn{ font-size:.78rem; color:var(--sub); background:var(--paper-2); border-left:3px solid var(--gold); padding:.55rem .8rem; border-radius:4px; margin-top:.9rem; }
+
+  /* modal */
+  .modal-bg{ display:none; position:fixed; inset:0; z-index:50; background:rgba(16,23,40,.55); padding:1rem; overflow-y:auto; }
+  .modal-bg.on{ display:flex; align-items:flex-start; justify-content:center; }
+  .modal{ background:var(--card); color:var(--text); width:100%; max-width:600px; border-radius:8px; margin:2.5rem auto; padding:1.4rem; border:1px solid var(--card-line); }
+  .modal h2{ font-family:var(--serif); font-size:1.25rem; margin:0 0 1rem; }
+  .modal .foot{ display:flex; justify-content:flex-end; margin-top:1.3rem; }
+  .help-content{ font-size:.93rem; line-height:1.7; }
+  .help-content .hlead{ color:var(--sub); margin:0 0 1rem; }
+  .help-content h3{ font-family:var(--serif); font-size:1.03rem; margin:1.1rem 0 .45rem; padding-bottom:.3rem; border-bottom:1px solid var(--card-line); }
+  .help-content ul{ margin:.4rem 0 .6rem; padding-left:1.3rem; } .help-content li{ margin:.3rem 0; }
+  .help-note{ background:var(--paper-2); border-left:3px solid var(--gold); border-radius:4px; padding:.8rem 1rem; margin-top:1.1rem; }
+  .help-note b{ display:block; margin-bottom:.3rem; } .help-note li{ font-size:.87rem; color:var(--sub); }
+
+  .toast{ position:fixed; left:50%; bottom:2rem; transform:translateX(-50%) translateY(1rem); z-index:60;
+    background:var(--navy-deep); color:#fff; padding:.6rem 1.1rem; border-radius:999px; font-size:.85rem; opacity:0; pointer-events:none; transition:opacity .2s,transform .2s; }
+  .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
+  footer{ border-top:1px solid var(--line); color:var(--sub); font-size:.78rem; padding:1.4rem 0 2rem; text-align:center; margin-top:2rem; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">공문서 셀프 점검기</p>
+    <h1 class="serif">올리기 전에, 스스로 점검</h1>
+    <p class="lead">자주 틀리는 맞춤법·행정 순화어·이중피동·군더더기·공문 날짜표기를 규칙으로 찾아 표시합니다. AI가 아니라 규칙이라 무료·즉시.</p>
+    <div class="toolbar">
+      <button class="tbtn help" id="btnHelp" type="button">❓ 도움말</button>
+      <button class="tbtn" id="btnTheme" type="button">🌙 다크</button>
+      <button class="tbtn" id="btnFont" type="button">🔎 큰 글씨</button>
+      <button class="tbtn" id="btnSample" type="button">📋 예시 넣기</button>
+      <button class="tbtn" id="btnClear" type="button">🗑 비우기</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="cols">
+      <div class="panel">
+        <h2 class="serif">1. 점검할 글</h2>
+        <p class="sub">공문·보고서·안내문 초안을 붙여넣으세요.</p>
+        <textarea id="src" placeholder="여기에 점검할 문서를 붙여넣으세요."></textarea>
+        <div class="btnrow">
+          <button class="btn primary" id="btnCheck" type="button">🔍 점검하기</button>
+          <button class="btn" id="btnAutofix" type="button" disabled>✎ 확실한 맞춤법만 자동수정 복사</button>
+        </div>
+        <div class="warn">모든 점검은 이 브라우저 안에서만 이뤄집니다(외부 전송 없음). 규칙 기반이라 <b>모든 오류를 잡지는 못하고, 문맥상 맞는 표현을 잘못 짚을 수도</b> 있습니다. 최종 판단은 사람이 하세요.</div>
+      </div>
+
+      <div class="panel">
+        <h2 class="serif">2. 점검 결과</h2>
+        <div class="summary" id="summary"></div>
+        <div class="preview placeholder" id="preview">왼쪽에 글을 넣고 <b>점검하기</b>를 눌러 보세요.</div>
+        <ul class="issues" id="issues"></ul>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- 도움말 -->
+<div class="modal-bg" id="helpBg">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="hTitle">
+    <h2 id="hTitle" class="serif">이렇게 쓰세요</h2>
+    <div class="help-content">
+      <p class="hlead">공문·보고서를 붙여넣고 점검하면, 문제로 보이는 곳에 색 밑줄이 그어지고 오른쪽에 목록으로 정리됩니다. 항목을 누르면 본문에서 위치가 강조됩니다.</p>
+      <h3>표시 색</h3>
+      <ul>
+        <li><b style="color:var(--red)">빨강(오류)</b> — 명백한 맞춤법 오류</li>
+        <li><b style="color:var(--amber)">노랑(권장)</b> — 어려운 한자어·이중피동·군더더기 등 다듬으면 좋은 표현</li>
+        <li><b style="color:var(--gray)">회색(참고)</b> — 공문 날짜표기·띄어쓰기 등 형식 참고</li>
+      </ul>
+      <h3>자동 수정</h3>
+      <ul><li><b>확실한 맞춤법만 자동수정 복사</b>는 오탐 위험이 없는 명백한 맞춤법(예: 몇일→며칠)만 고쳐 클립보드에 복사합니다. 순화어·띄어쓰기는 문맥이 필요해 자동 수정하지 않습니다.</li></ul>
+      <div class="help-note">
+        <b>⚠️ 꼭 알아두세요</b>
+        <ul>
+          <li>규칙 기반이라 <b>완벽하지 않습니다.</b> 맞는 표현을 잘못 짚거나, 못 잡는 오류도 있습니다.</li>
+          <li>순화어·표기 규칙은 기관 지침과 다를 수 있으니, 제안은 참고로만 쓰고 최종 판단은 직접 하세요.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot"><button class="btn primary" id="hClose" type="button">시작하기</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<footer><div class="wrap">바이브 코딩으로 만든 행정지원앱 · 규칙 기반 · 데이터는 내 기기에만<br />한국공공자치연구원 AI행정혁신연구소</div></footer>
+
+<script>
+(function(){
+  "use strict";
+  const LS="doccheck-v1", THEME="doccheck-theme", FS="doccheck-fs", SEEN="doccheck-seen";
+  const $=s=>document.querySelector(s);
+
+  // 규칙: {cat, level(err|rec|ref), re, sug(문자열,$n 가능), desc, autofix?}
+  const RULES=[
+    // === 맞춤법(오류) ===
+    {cat:"맞춤법",level:"err",re:/몇일/g,sug:"며칠",desc:"'몇+일'은 '며칠'로 적습니다.",autofix:true},
+    {cat:"맞춤법",level:"err",re:/오랫만/g,sug:"오랜만",desc:"'오랜만'이 바른 표기입니다.",autofix:true},
+    {cat:"맞춤법",level:"err",re:/왠만/g,sug:"웬만",desc:"'웬만하다'가 바른 표기입니다.",autofix:true},
+    {cat:"맞춤법",level:"err",re:/금새/g,sug:"금세",desc:"'금세(=금시에)'가 바른 표기입니다.",autofix:true},
+    {cat:"맞춤법",level:"err",re:/갯수/g,sug:"개수",desc:"'개수'로 적습니다(사이시옷 없음).",autofix:true},
+    {cat:"맞춤법",level:"err",re:/하십시요/g,sug:"하십시오",desc:"명령형 종결은 '-시오'입니다.",autofix:true},
+    {cat:"맞춤법",level:"err",re:/되요/g,sug:"돼요",desc:"'되어요'의 준말은 '돼요'입니다.",autofix:true},
+    {cat:"맞춤법",level:"err",re:/할께/g,sug:"할게",desc:"'-ㄹ게'로 적습니다(된소리 표기 아님).",autofix:true},
+    {cat:"맞춤법",level:"err",re:/갈께/g,sug:"갈게",desc:"'-ㄹ게'로 적습니다.",autofix:true},
+    {cat:"맞춤법",level:"err",re:/줄께/g,sug:"줄게",desc:"'-ㄹ게'로 적습니다.",autofix:true},
+    {cat:"맞춤법",level:"err",re:/참석율/g,sug:"참석률",desc:"받침(ㄱ) 뒤에서는 '률'로 적습니다.",autofix:true},
+    {cat:"맞춤법",level:"err",re:/신청율/g,sug:"신청률",desc:"받침(ㅇ) 뒤에서는 '률'로 적습니다.",autofix:true},
+    {cat:"맞춤법",level:"err",re:/확율/g,sug:"확률",desc:"'확률'이 바른 표기입니다.",autofix:true},
+    {cat:"맞춤법",level:"err",re:/성공율/g,sug:"성공률",desc:"받침(ㅇ) 뒤에서는 '률'로 적습니다.",autofix:true},
+    {cat:"맞춤법",level:"err",re:/데이타/g,sug:"데이터",desc:"외래어 표기는 '데이터'입니다.",autofix:true},
+    {cat:"맞춤법",level:"err",re:/컨텐츠/g,sug:"콘텐츠",desc:"외래어 표기는 '콘텐츠'입니다.",autofix:true},
+
+    // === 행정 순화어(권장) ===
+    {cat:"순화어",level:"rec",re:/금일/g,sug:"오늘",desc:"어려운 한자어입니다. '오늘'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/익일/g,sug:"다음 날",desc:"'다음 날'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/명일/g,sug:"내일",desc:"'내일'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/작일/g,sug:"어제",desc:"'어제'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/금번/g,sug:"이번",desc:"'이번'으로 쉽게."},
+    {cat:"순화어",level:"rec",re:/향후/g,sug:"앞으로",desc:"'앞으로'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/필히/g,sug:"반드시",desc:"'반드시'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/상기와 같/g,sug:"위와 같",desc:"'상기'는 '위'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/하기와 같/g,sug:"아래와 같",desc:"'하기'는 '아래'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/별첨/g,sug:"붙임",desc:"공문서에서는 '붙임'을 씁니다."},
+    {cat:"순화어",level:"rec",re:/기 제출/g,sug:"이미 제출",desc:"'기(旣)'는 '이미'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/소요되/g,sug:"걸리/들",desc:"'소요되다'는 '걸리다·들다'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/제고/g,sug:"높임",desc:"'제고하다'는 '높이다'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/감안하/g,sug:"고려하/헤아리",desc:"'감안하다'는 '고려하다'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/개소/g,sug:"곳",desc:"'개소'는 '곳·군데'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/익월/g,sug:"다음 달",desc:"'다음 달'로 쉽게."},
+    {cat:"순화어",level:"rec",re:/통보하/g,sug:"알리",desc:"'통보하다'는 '알리다'로 부드럽게."},
+    {cat:"일본식",level:"rec",re:/에 있어서?/g,sug:"에서 / 할 때",desc:"'~에 있어(서)'는 일본식. '~에서/~할 때'로."},
+    {cat:"일본식",level:"rec",re:/에 다름 아니다/g,sug:"와 같다",desc:"'~에 다름 아니다'는 일본식. '~와 같다'로."},
+
+    // === 이중부정(권장) ===
+    {cat:"이중부정",level:"rec",re:/지\s*않을\s*수\s*없/g,sug:"(긍정으로)",desc:"이중부정은 뜻이 흐려집니다. 긍정문으로 바꾸세요."},
+    {cat:"이중부정",level:"rec",re:/없지\s*않/g,sug:"있다/많다",desc:"이중부정입니다. 긍정으로 쓰면 명확합니다."},
+
+    // === 이중피동(권장) ===
+    {cat:"이중피동",level:"rec",re:/되어지/g,sug:"되",desc:"'되+어지다'는 이중피동입니다. '되다'로."},
+    {cat:"이중피동",level:"rec",re:/보여지/g,sug:"보이",desc:"'보여지다'는 이중피동입니다. '보이다'로."},
+    {cat:"이중피동",level:"rec",re:/쓰여지/g,sug:"쓰이/쓰",desc:"'쓰여지다'는 이중피동입니다. '쓰이다'로."},
+    {cat:"이중피동",level:"rec",re:/불려지/g,sug:"불리",desc:"'불려지다'는 이중피동입니다. '불리다'로."},
+    {cat:"이중피동",level:"rec",re:/잊혀지/g,sug:"잊히",desc:"'잊혀지다'는 이중피동입니다. '잊히다'로."},
+    {cat:"이중피동",level:"rec",re:/모여지/g,sug:"모이",desc:"'모여지다'는 이중피동입니다. '모이다'로."},
+    {cat:"이중피동",level:"rec",re:/담겨지/g,sug:"담기",desc:"'담겨지다'는 이중피동입니다. '담기다'로."},
+
+    // === 군더더기·중복(권장) ===
+    {cat:"군더더기",level:"rec",re:/접수받/g,sug:"접수하",desc:"'접수'에 '받다' 뜻이 있어 '접수받다'는 겹말입니다."},
+    {cat:"군더더기",level:"rec",re:/인수받/g,sug:"인수하",desc:"'인수받다'는 겹말입니다. '인수하다'로."},
+    {cat:"군더더기",level:"rec",re:/미리 예약/g,sug:"예약",desc:"'예약'에 '미리' 뜻이 있어 겹말입니다."},
+    {cat:"군더더기",level:"rec",re:/미리 예고/g,sug:"예고",desc:"'예고'에 '미리' 뜻이 있어 겹말입니다."},
+    {cat:"군더더기",level:"rec",re:/다시 재([가-힣])/g,sug:"재$1",desc:"'재-'에 '다시' 뜻이 있어 겹말입니다."},
+    {cat:"군더더기",level:"rec",re:/새로 신설/g,sug:"신설",desc:"'신설'에 '새로' 뜻이 있어 겹말입니다."},
+    {cat:"군더더기",level:"rec",re:/가장 최(적|고|선|상)/g,sug:"최$1",desc:"'최-'에 '가장' 뜻이 있어 겹말입니다."},
+    {cat:"군더더기",level:"rec",re:/서로 상호/g,sug:"상호/서로",desc:"'상호'와 '서로'는 같은 뜻입니다. 하나만."},
+    {cat:"군더더기",level:"rec",re:/지속적으로 계속/g,sug:"지속적으로",desc:"'지속'과 '계속'이 겹칩니다. 하나만."},
+    {cat:"군더더기",level:"rec",re:/약\s*([\d,]+)\s*여/g,sug:"약 $1 또는 $1여",desc:"'약'과 '여'는 둘 다 어림수. 하나만 쓰세요."},
+
+    // === 띄어쓰기·공문 표기(참고) ===
+    {cat:"띄어쓰기",level:"ref",re:/(할|볼|줄|될|갈|올|들|살|알|물|늘|만들)수(있|없)/g,sug:"$1 수 $2",desc:"의존명사 '수'는 앞말과 띄어 씁니다."},
+    {cat:"띄어쓰기",level:"ref",re:/(할|한|볼|본|올|온|될|된|갈|간|줄)것/g,sug:"$1 것",desc:"의존명사 '것'은 앞말과 띄어 씁니다."},
+    {cat:"공문표기",level:"ref",re:/((?:19|20)\d{2})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/g,sug:"$1. $2. $3.",desc:"공문서 날짜는 온점 표기('2026. 7. 23.')가 원칙입니다."}
+  ];
+
+  const LEVEL={err:{name:"오류",cls:"err"},rec:{name:"권장",cls:"rec"},ref:{name:"참고",cls:"ref"}};
+  const RANK={err:0,rec:1,ref:2};
+
+  function esc(s){ return String(s==null?"":s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+  function sugText(rule, matched){
+    if(rule.sug==null) return null;
+    if(rule.sug.indexOf("$")>=0){ try{ return matched.replace(new RegExp(rule.re.source), rule.sug); }catch(e){ return rule.sug; } }
+    return rule.sug;
+  }
+
+  let placed=[];
+  function check(){
+    const text=$("#src").value;
+    if(!text.trim()){ toast("점검할 글을 넣어주세요"); return; }
+    // 매치 수집
+    const all=[];
+    for(const rule of RULES){
+      rule.re.lastIndex=0; let m, guard=0;
+      while((m=rule.re.exec(text)) && guard<5000){
+        guard++;
+        if(m[0]===""){ rule.re.lastIndex++; continue; }
+        all.push({start:m.index, end:m.index+m[0].length, orig:m[0], cat:rule.cat, level:rule.level, sug:sugText(rule,m[0]), desc:rule.desc});
+      }
+    }
+    // 정렬 + 겹침 제거(앞선·높은 등급 우선)
+    all.sort((a,b)=> a.start-b.start || RANK[a.level]-RANK[b.level] || (b.end-b.start)-(a.end-a.start));
+    placed=[]; let lastEnd=-1;
+    for(const mt of all){ if(mt.start>=lastEnd){ placed.push(mt); lastEnd=mt.end; } }
+    // 하이라이트
+    let html="", pos=0;
+    placed.forEach((mt,idx)=>{
+      html+=esc(text.slice(pos,mt.start));
+      html+=`<mark class="lv-${LEVEL[mt.level].cls}" data-i="${idx}">`+esc(mt.orig)+`</mark>`;
+      pos=mt.end;
+    });
+    html+=esc(text.slice(pos));
+    const pv=$("#preview"); pv.classList.remove("placeholder"); pv.innerHTML=html;
+    // 요약
+    const c={err:0,rec:0,ref:0}; placed.forEach(m=>c[m.level]++);
+    $("#summary").innerHTML =
+      `<span class="pill err">오류 ${c.err}</span><span class="pill rec">권장 ${c.rec}</span><span class="pill ref">참고 ${c.ref}</span>`;
+    // 목록
+    const box=$("#issues");
+    if(placed.length===0){
+      box.innerHTML='<div class="clean"><div class="big">✓ 걸린 표현이 없습니다</div>규칙에 잡히는 문제를 찾지 못했어요. (모든 오류를 잡는 건 아닙니다)</div>';
+    } else {
+      box.innerHTML=placed.map((mt,idx)=>{
+        const L=LEVEL[mt.level];
+        const sug = mt.sug ? ` <span class="arrow">→</span> <span class="sug">${esc(mt.sug)}</span>` : "";
+        return `<li class="iss lv-${L.cls}" data-i="${idx}"><span class="badge">${L.name}·${esc(mt.cat)}</span> <span class="orig">${esc(mt.orig)}</span>${sug}<div class="d">${esc(mt.desc)}</div></li>`;
+      }).join("");
+    }
+    $("#btnAutofix").disabled = !placed.some(m=>false); // 아래에서 autofix 규칙 존재로 재판단
+    $("#btnAutofix").disabled = !hasAutofixHit(text);
+    save();
+    toast(placed.length? placed.length+"곳을 표시했어요" : "걸린 표현이 없어요");
+  }
+
+  function hasAutofixHit(text){
+    return RULES.some(r=>{ if(!r.autofix) return false; r.re.lastIndex=0; return r.re.test(text); });
+  }
+
+  // 상호 강조(목록 ↔ 본문)
+  function activate(idx){
+    document.querySelectorAll(".iss.active,mark.active").forEach(el=>el.classList.remove("active"));
+    const li=$(`.iss[data-i="${idx}"]`), mk=$(`mark[data-i="${idx}"]`);
+    if(li){ li.classList.add("active"); }
+    if(mk){ mk.classList.add("active"); mk.scrollIntoView({block:"nearest",behavior:"smooth"}); }
+    if(li){ li.scrollIntoView({block:"nearest",behavior:"smooth"}); }
+  }
+  $("#issues").addEventListener("click", e=>{ const li=e.target.closest(".iss"); if(li) activate(+li.dataset.i); });
+  $("#preview").addEventListener("click", e=>{ const mk=e.target.closest("mark"); if(mk) activate(+mk.dataset.i); });
+
+  // 확실한 맞춤법만 자동수정 복사
+  $("#btnAutofix").addEventListener("click", ()=>{
+    let text=$("#src").value, n=0;
+    RULES.filter(r=>r.autofix).forEach(r=>{ text=text.replace(r.re, (m)=>{ n++; return r.sug; }); });
+    if(n===0){ toast("자동수정할 맞춤법이 없어요"); return; }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(()=>toast(n+"곳 고친 글을 복사했어요")).catch(()=>fb(text,n));
+    } else fb(text,n);
+  });
+  function fb(t,n){ const ta=document.createElement("textarea"); ta.value=t; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); toast(n+"곳 고친 글을 복사했어요");}catch(e){toast("복사 실패");} document.body.removeChild(ta); }
+
+  const SAMPLE="금일 회의 결과를 하기와 같이 통보하오니, 참석율을 높이기 위해 노력하지 않을 수 없습니다. 관련 자료는 익일까지 제출하여 주시기 바라며, 미리 예약된 회의실에서 진행될 것으로 보여집니다. 신청서는 별첨 양식에 맞춰 작성하시고, 2026년 7월 23일 까지 접수받겠습니다. 필히 기한을 지켜 주시고, 궁금한 사항은 담당자에게 문의하시기 바랍니다.";
+  $("#btnSample").addEventListener("click", ()=>{ $("#src").value=SAMPLE; check(); });
+  $("#btnClear").addEventListener("click", ()=>{
+    $("#src").value=""; placed=[]; $("#summary").innerHTML="";
+    $("#preview").className="preview placeholder"; $("#preview").innerHTML='왼쪽에 글을 넣고 <b>점검하기</b>를 눌러 보세요.';
+    $("#issues").innerHTML=""; $("#btnAutofix").disabled=true; save(); toast("비웠어요");
+  });
+
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify({src:$("#src").value})); }catch(e){} }
+  function restore(){ try{ const p=JSON.parse(localStorage.getItem(LS)||"null"); if(p&&p.src){ $("#src").value=p.src; } }catch(e){} }
+  $("#src").addEventListener("input", save);
+
+  const hb=$("#helpBg");
+  const openHelp=()=>{ hb.classList.add("on"); setTimeout(()=>$("#hClose").focus(),50); };
+  const closeHelp=()=>hb.classList.remove("on");
+  $("#btnHelp").addEventListener("click", openHelp);
+  $("#hClose").addEventListener("click", closeHelp);
+  hb.addEventListener("click", e=>{ if(e.target===hb) closeHelp(); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape"&&hb.classList.contains("on")) closeHelp(); });
+
+  const root=document.documentElement;
+  function applyTheme(t){ root.setAttribute("data-theme",t); $("#btnTheme").textContent=t==="dark"?"☀ 라이트":"🌙 다크"; }
+  function applyFs(f){ if(f==="lg")root.setAttribute("data-fs","lg"); else root.removeAttribute("data-fs"); $("#btnFont").textContent=f==="lg"?"🔎 보통 글씨":"🔎 큰 글씨"; }
+  applyTheme(localStorage.getItem(THEME)==="dark"?"dark":"light");
+  applyFs(localStorage.getItem(FS)==="lg"?"lg":"n");
+  $("#btnTheme").addEventListener("click", ()=>{ const t=root.getAttribute("data-theme")==="dark"?"light":"dark"; applyTheme(t); localStorage.setItem(THEME,t); });
+  $("#btnFont").addEventListener("click", ()=>{ const f=root.getAttribute("data-fs")==="lg"?"n":"lg"; applyFs(f); localStorage.setItem(FS,f); });
+
+  let tt; function toast(m){ const el=$("#toast"); el.textContent=m; el.classList.add("on"); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("on"),1900); }
+
+  $("#btnCheck").addEventListener("click", check);
+  restore();
+  try{ if(!localStorage.getItem(SEEN)){ openHelp(); localStorage.setItem(SEEN,"1"); } }catch(e){}
+})();
+</script>
+</body>
+</html>
