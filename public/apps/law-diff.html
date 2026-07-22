@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>신구조문 대비표 보조</title>
+<meta name="description" content="현행 조문과 개정안을 붙여넣으면 변경 부분을 자동으로 대조해 신·구조문 대비표 초안을 만들어 줍니다. 모든 처리는 브라우저 안에서만." />
+<style>
+  :root{
+    --ink:#1b2a4a; --navy:#1f3864; --navy-deep:#16233f; --blue:#2e5fa3;
+    --gold:#b8863b; --paper:#faf9f6; --paper-2:#f2eee4; --paper-on-navy:#ece7db;
+    --muted:#6b7385; --line:#e5ddce; --red:#b03636;
+    --serif:'Noto Serif KR',serif;
+    --sans:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,'Malgun Gothic',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --radius:5px; --fs:16px;
+    --card:#fff; --card-line:var(--line); --chip:var(--paper-2);
+    --bg:var(--paper); --text:var(--ink); --sub:var(--muted);
+  }
+  html[data-theme="dark"]{
+    --bg:#111b2e; --text:#e6e9f0; --sub:#9aa6bd; --card:#1a2740;
+    --card-line:#2b3a5c; --chip:#22314e; --line:#2b3a5c; --paper-2:#22314e;
+    --gold:#d0a45a; --blue:#7aa3d8; --red:#f0a0a0;
+  }
+  html[data-fs="lg"]{ --fs:18.5px; }
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ font-size:var(--fs); -webkit-text-size-adjust:100%; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.6;
+    -webkit-font-smoothing:antialiased; transition:background .2s,color .2s; }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none!important; animation:none!important; } }
+  .serif{ font-family:var(--serif); }
+  .wrap{ width:100%; max-width:1180px; margin-inline:auto; padding:0 clamp(1rem,4vw,1.75rem); }
+
+  header.top{ background:var(--navy-deep); color:var(--paper-on-navy); padding:1.4rem 0 1.5rem; }
+  header.top .eyebrow{ font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gold); display:inline-flex; align-items:center; gap:.5rem; margin-bottom:.5rem; }
+  header.top .eyebrow::before{ content:""; width:1.5rem; height:1px; background:var(--gold); }
+  header.top h1{ font-family:var(--serif); font-weight:700; color:#fff; margin:0; font-size:clamp(1.4rem,4vw,1.9rem); }
+  header.top p.lead{ margin:.45rem 0 0; color:var(--paper-on-navy); font-size:.92rem; max-width:56ch; }
+  .toolbar{ display:flex; gap:.5rem; margin-top:1rem; flex-wrap:wrap; }
+  .tbtn{ font:inherit; font-size:.82rem; cursor:pointer; border:1px solid #33436a; background:transparent;
+    color:var(--paper-on-navy); padding:.4rem .7rem; border-radius:var(--radius); }
+  .tbtn:hover{ border-color:var(--gold); color:#fff; }
+  .tbtn.help{ border-color:var(--gold); color:#fff; background:rgba(184,134,59,.16); }
+  .tbtn.help:hover{ background:rgba(184,134,59,.3); }
+
+  main{ padding:1.3rem 0 3rem; }
+  .cols{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; align-items:start; }
+  @media (max-width:760px){ .cols{ grid-template-columns:1fr; } }
+  .panel{ background:var(--card); border:1px solid var(--card-line); border-radius:8px; padding:1rem 1rem 1.1rem; }
+  .panel h2{ font-family:var(--serif); font-size:1.05rem; margin:0 0 .6rem; }
+  .panel h2 .badge{ font-family:var(--sans); font-size:.68rem; font-weight:600; padding:.1rem .45rem; border-radius:3px; vertical-align:2px; margin-left:.4rem; }
+  .badge.cur{ background:var(--chip); color:var(--sub); }
+  .badge.new{ background:rgba(46,95,163,.14); color:var(--blue); }
+  textarea{ width:100%; min-height:260px; font:inherit; font-size:.9rem; line-height:1.65; resize:vertical;
+    padding:.7rem .8rem; border:1.5px solid var(--card-line); border-radius:var(--radius); background:var(--bg); color:var(--text); }
+  textarea:focus{ outline:none; border-color:var(--blue); }
+
+  .controls{ display:flex; gap:.7rem; align-items:center; flex-wrap:wrap; margin:1.1rem 0; }
+  .btn{ font:inherit; font-size:.9rem; cursor:pointer; border:1px solid var(--card-line); background:var(--card);
+    color:var(--text); padding:.6rem .95rem; border-radius:var(--radius); }
+  .btn:hover{ border-color:var(--gold); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .btn.primary{ background:var(--navy); color:#fff; border-color:var(--navy); font-weight:600; }
+  .btn.primary:hover:not(:disabled){ background:var(--blue); border-color:var(--blue); }
+  .seg{ display:inline-flex; border:1px solid var(--card-line); border-radius:var(--radius); overflow:hidden; }
+  .seg button{ font:inherit; font-size:.8rem; cursor:pointer; border:none; background:var(--card); color:var(--text); padding:.5rem .8rem; }
+  .seg button.on{ background:var(--navy); color:#fff; }
+  .modehint{ font-size:.76rem; color:var(--sub); }
+
+  .result-head{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem; margin-bottom:.7rem; }
+  .result-head h2{ font-family:var(--serif); font-size:1.15rem; margin:0; }
+  .legend{ font-size:.76rem; color:var(--sub); display:flex; gap:.9rem; flex-wrap:wrap; }
+  .legend u{ color:var(--blue); text-decoration-color:var(--blue); text-underline-offset:2px; }
+  .legend del{ color:var(--red); }
+
+  .tableWrap{ overflow-x:auto; border:1px solid var(--card-line); border-radius:8px; }
+  table.dtable{ width:100%; border-collapse:collapse; font-size:.88rem; background:var(--card); }
+  table.dtable th, table.dtable td{ border:1px solid var(--card-line); padding:.6rem .75rem; vertical-align:top;
+    white-space:pre-wrap; word-break:break-word; line-height:1.65; }
+  table.dtable th{ background:var(--chip); font-family:var(--serif); font-weight:600; width:50%; text-align:center; }
+  table.dtable u{ text-decoration:underline; text-decoration-color:var(--blue); color:var(--blue); text-underline-offset:2px; }
+  table.dtable del{ text-decoration:line-through; color:var(--red); }
+  table.dtable td.tag{ text-align:center; color:var(--sub); font-family:var(--mono); font-size:.8rem; }
+  tr.rowchg td{ background:rgba(184,134,59,.06); }
+  html[data-theme="dark"] tr.rowchg td{ background:rgba(208,164,90,.08); }
+
+  .placeholder{ color:var(--sub); text-align:center; padding:2.5rem 1rem; }
+  .stat{ font-family:var(--mono); font-size:.76rem; color:var(--sub); margin-top:.6rem; }
+  .btnrow{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.9rem; }
+
+  .warn{ font-size:.78rem; color:var(--sub); background:var(--paper-2); border-left:3px solid var(--gold);
+    padding:.55rem .8rem; border-radius:4px; margin-top:1rem; }
+
+  /* modal */
+  .modal-bg{ display:none; position:fixed; inset:0; z-index:50; background:rgba(16,23,40,.55); padding:1rem; overflow-y:auto; }
+  .modal-bg.on{ display:flex; align-items:flex-start; justify-content:center; }
+  .modal{ background:var(--card); color:var(--text); width:100%; max-width:600px; border-radius:8px; margin:2.5rem auto;
+    padding:1.4rem; border:1px solid var(--card-line); }
+  .modal h2{ font-family:var(--serif); font-size:1.25rem; margin:0 0 1rem; }
+  .modal .foot{ display:flex; justify-content:flex-end; margin-top:1.3rem; }
+  .help-content{ font-size:.93rem; line-height:1.7; }
+  .help-content .hlead{ color:var(--sub); margin:0 0 1rem; }
+  .help-content h3{ font-family:var(--serif); font-size:1.03rem; margin:1.1rem 0 .45rem; padding-bottom:.3rem; border-bottom:1px solid var(--card-line); }
+  .help-content ul,.help-content ol{ margin:.4rem 0 .6rem; padding-left:1.3rem; }
+  .help-content li{ margin:.3rem 0; }
+  .help-note{ background:var(--paper-2); border-left:3px solid var(--gold); border-radius:4px; padding:.8rem 1rem; margin-top:1.1rem; }
+  .help-note b{ display:block; margin-bottom:.3rem; }
+  .help-note li{ font-size:.87rem; color:var(--sub); }
+
+  .toast{ position:fixed; left:50%; bottom:2rem; transform:translateX(-50%) translateY(1rem); z-index:60;
+    background:var(--navy-deep); color:#fff; padding:.6rem 1.1rem; border-radius:999px; font-size:.85rem;
+    opacity:0; pointer-events:none; transition:opacity .2s,transform .2s; }
+  .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  footer{ border-top:1px solid var(--line); color:var(--sub); font-size:.78rem; padding:1.4rem 0 2rem; text-align:center; margin-top:2rem; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">신구조문 대비표 보조</p>
+    <h1 class="serif">현행과 개정안을 넣으면, 대비표가 나옵니다</h1>
+    <p class="lead">글자 단위로 정확히 대조해 바뀐 부분만 밑줄·취소선으로 표시합니다. AI가 아니라 계산이라, 틀리지 않습니다.</p>
+    <div class="toolbar">
+      <button class="tbtn help" id="btnHelp" type="button">❓ 도움말</button>
+      <button class="tbtn" id="btnTheme" type="button">🌙 다크</button>
+      <button class="tbtn" id="btnFont" type="button">🔎 큰 글씨</button>
+      <button class="tbtn" id="btnSample" type="button">📋 예시 넣기</button>
+      <button class="tbtn" id="btnClear" type="button">🗑 비우기</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="cols">
+      <div class="panel">
+        <h2 class="serif">현행 조문 <span class="badge cur">현 행</span></h2>
+        <textarea id="oldText" placeholder="현행 조례·규정 조문을 붙여넣으세요.&#10;예) 제1조(목적) 이 조례는 …"></textarea>
+      </div>
+      <div class="panel">
+        <h2 class="serif">개정안 <span class="badge new">개 정 안</span></h2>
+        <textarea id="newText" placeholder="개정하려는 조문을 붙여넣으세요.&#10;예) 제1조(목적) 이 조례는 …"></textarea>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn primary" id="btnRun" type="button">⇄ 대비표 생성</button>
+      <span class="seg" role="group" aria-label="표시 방식">
+        <button id="modeOfficial" class="on" type="button">제출용(개정안 밑줄)</button>
+        <button id="modeReview" type="button">검토용(현행 취소선+개정안 밑줄)</button>
+      </span>
+      <span class="modehint" id="modehint">제출용: 현행은 그대로, 개정안의 새 내용만 밑줄</span>
+    </div>
+
+    <div class="result-head">
+      <h2 class="serif">대비표</h2>
+      <div class="legend"><span><u>밑줄</u> = 신설·변경</span><span><del>취소선</del> = 삭제</span></div>
+    </div>
+    <div class="tableWrap" id="tableWrap">
+      <div class="placeholder">현행과 개정안을 넣고 <b>⇄ 대비표 생성</b>을 눌러 보세요.</div>
+    </div>
+    <div class="stat" id="stat"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="btnCopy" type="button" disabled>📋 표 복사(한글 붙여넣기)</button>
+      <button class="btn" id="btnDownload" type="button" disabled>⬇ HTML 다운로드</button>
+    </div>
+    <div class="warn">
+      모든 처리는 이 브라우저 안에서만 이뤄지고, 어디로도 전송되지 않습니다. 자동 대조는 <b>초안</b>이니, 조·항 정렬과 표현은 제출 전 반드시 확인하세요.
+    </div>
+  </div>
+</main>
+
+<!-- 도움말 -->
+<div class="modal-bg" id="helpBg">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="hTitle">
+    <h2 id="hTitle" class="serif">이렇게 쓰세요</h2>
+    <div class="help-content">
+      <p class="hlead">현행 조문과 개정안을 나란히 넣으면, 두 텍스트를 글자 단위로 비교해 <b>신·구조문 대비표</b> 초안을 만들어 줍니다. AI가 아니라 정확한 계산(diff)이라 없는 변경을 지어내지 않습니다.</p>
+      <h3>순서</h3>
+      <ol>
+        <li>왼쪽에 <b>현행</b>, 오른쪽에 <b>개정안</b> 조문을 붙여넣습니다.</li>
+        <li><b>⇄ 대비표 생성</b>을 누릅니다.</li>
+        <li>표시 방식을 고릅니다 — <b>제출용</b>(개정안 밑줄만) / <b>검토용</b>(현행 취소선까지).</li>
+        <li><b>📋 표 복사</b>로 한글(HWP)·워드에 붙여넣으면 표와 밑줄이 그대로 들어갑니다.</li>
+      </ol>
+      <h3>자동 인식</h3>
+      <ul>
+        <li><b>제○조</b> 단위로 끊어 같은 조끼리 짝지어 비교합니다.</li>
+        <li>개정안에만 있는 조 → <b>&lt;신설&gt;</b>, 현행에만 있는 조 → <b>&lt;삭제&gt;</b>로 표시됩니다.</li>
+        <li>'제○조'가 없는 일반 텍스트는 문단·줄 단위로 비교합니다.</li>
+      </ul>
+      <div class="help-note">
+        <b>⚠️ 꼭 알아두세요</b>
+        <ul>
+          <li>자동 정렬은 초안입니다. 조 번호가 바뀌거나 순서가 크게 달라지면 <b>짝이 어긋날 수 있으니</b> 확인하세요.</li>
+          <li>한글에 붙여넣은 뒤 표 서식(열 너비·밑줄)은 문서 양식에 맞게 다듬으세요.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot"><button class="btn primary" id="hClose" type="button">시작하기</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer><div class="wrap">바이브 코딩으로 만든 행정지원앱 · 설치 없이 브라우저에서 · 데이터는 내 기기에만<br />한국공공자치연구원 AI행정혁신연구소</div></footer>
+
+<script>
+(function(){
+  "use strict";
+  const LS="lawdiff-v1", THEME="lawdiff-theme", FS="lawdiff-fs", SEEN="lawdiff-seen";
+  const $=s=>document.querySelector(s);
+  let mode="official"; // official | review
+  let lastRows=null;
+
+  const SAMPLE_OLD=`제1조(목적) 이 조례는 ○○군 청년의 창업 지원을 통하여 지역 정착을 촉진함을 목적으로 한다.
+제2조(정의) 이 조례에서 "청년"이란 19세 이상 39세 이하인 사람을 말한다.
+제3조(지원 대상) 지원 대상은 관내에 6개월 이상 계속하여 거주한 청년으로 한다.
+제5조(지원 한도) 1인당 지원 한도는 500만원으로 한다.`;
+  const SAMPLE_NEW=`제1조(목적) 이 조례는 ○○군 청년의 창업과 정착을 지원하여 지역 활력을 높임을 목적으로 한다.
+제2조(정의) 이 조례에서 "청년"이란 19세 이상 45세 이하인 사람을 말한다.
+제3조(지원 대상) 지원 대상은 관내에 3개월 이상 계속하여 거주한 청년으로 한다.
+제4조(우선 지원) 다자녀 가구 청년은 우선하여 지원할 수 있다.`;
+
+  /* ===== diff 엔진 (LCS) ===== */
+  function lcsDiff(a, b){
+    const n=a.length, m=b.length;
+    // 너무 큰 경우 보호: 라인/블록 단위라 보통 문제 없음
+    if(n*m > 6000000){
+      // 폴백: 앞뒤 공통 접두/접미만 처리하고 가운데는 통째 교체
+      return [{t:'del',v:a.join('')},{t:'ins',v:b.join('')}];
+    }
+    const dp=[]; for(let i=0;i<=n;i++){ dp.push(new Int32Array(m+1)); }
+    for(let i=n-1;i>=0;i--) for(let j=m-1;j>=0;j--)
+      dp[i][j]= a[i]===b[j] ? dp[i+1][j+1]+1 : (dp[i+1][j]>=dp[i][j+1]?dp[i+1][j]:dp[i][j+1]);
+    const ops=[]; let i=0,j=0;
+    while(i<n&&j<m){
+      if(a[i]===b[j]){ ops.push({t:'eq',v:a[i]}); i++; j++; }
+      else if(dp[i+1][j]>=dp[i][j+1]){ ops.push({t:'del',v:a[i]}); i++; }
+      else { ops.push({t:'ins',v:b[j]}); j++; }
+    }
+    while(i<n) ops.push({t:'del',v:a[i++]});
+    while(j<m) ops.push({t:'ins',v:b[j++]});
+    return ops;
+  }
+  function tokenize(s){ return s.match(/[가-힣]+|[A-Za-z0-9]+|\s+|[^\s]/g) || []; }
+
+  function splitBlocks(text){
+    const t=(text||"").trim();
+    if(!t) return [];
+    if(/제\s*\d+\s*조/.test(t)){
+      return t.split(/(?=제\s*\d+\s*조)/).map(s=>s.trim()).filter(Boolean);
+    }
+    const byBlank=t.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+    if(byBlank.length>1) return byBlank;
+    return t.split(/\n/).map(s=>s.trim()).filter(Boolean);
+  }
+  function keyOf(block){
+    const m=block.match(/제\s*(\d+)\s*조(?:의\s*(\d+))?/);
+    if(m) return "J"+m[1]+(m[2]?("-"+m[2]):"");
+    return "T:"+block.replace(/\s+/g,"").slice(0,14);
+  }
+  function alignBlocks(oldB, newB){
+    const ak=oldB.map(keyOf), bk=newB.map(keyOf);
+    const ops=lcsDiff(ak, bk);
+    const rows=[]; let i=0,j=0;
+    for(const op of ops){
+      if(op.t==='eq'){ rows.push({old:oldB[i], neu:newB[j]}); i++; j++; }
+      else if(op.t==='del'){ rows.push({old:oldB[i], neu:null}); i++; }
+      else { rows.push({old:null, neu:newB[j]}); j++; }
+    }
+    return rows;
+  }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+  // 한 쌍(현행/개정안)을 diff → {oldHtml,newHtml,changed}
+  function renderPair(oldText, newText){
+    const ops=lcsDiff(tokenize(oldText||""), tokenize(newText||""));
+    let oldHtml="", newHtml="", changed=false;
+    for(const o of ops){
+      const v=esc(o.v);
+      if(o.t==='eq'){ oldHtml+=v; newHtml+=v; }
+      else if(o.t==='del'){ changed=true; oldHtml += (mode==='review'? '<del>'+v+'</del>' : v); }
+      else { changed=true; newHtml += '<u>'+v+'</u>'; }
+    }
+    return {oldHtml, newHtml, changed};
+  }
+
+  function buildRows(){
+    const oldB=splitBlocks($("#oldText").value);
+    const newB=splitBlocks($("#newText").value);
+    if(oldB.length===0 && newB.length===0) return null;
+    const aligned=alignBlocks(oldB, newB);
+    return aligned.map(r=>{
+      if(r.old && r.neu){
+        const d=renderPair(r.old, r.neu);
+        return {type:'chg', old:d.oldHtml, neu:d.newHtml, changed:d.changed};
+      } else if(!r.old && r.neu){
+        const d=renderPair("", r.neu);
+        return {type:'new', old:'&lt;신설&gt;', neu:d.newHtml, changed:true};
+      } else {
+        const d=renderPair(r.old, "");
+        return {type:'del', old:d.oldHtml, neu:'&lt;삭제&gt;', changed:true};
+      }
+    });
+  }
+
+  function render(){
+    lastRows=buildRows();
+    const wrap=$("#tableWrap");
+    if(!lastRows){ wrap.innerHTML='<div class="placeholder">현행과 개정안을 모두 넣어주세요.</div>';
+      $("#stat").textContent=""; $("#btnCopy").disabled=true; $("#btnDownload").disabled=true; return; }
+    let body="";
+    let chg=0,neu=0,del=0;
+    for(const r of lastRows){
+      if(r.type==='new') neu++; else if(r.type==='del') del++; else if(r.changed) chg++;
+      const cls=(r.changed?' class="rowchg"':'');
+      const oldCell = r.type==='new' ? '<td class="tag">&lt;신설&gt;</td>' : '<td>'+r.old+'</td>';
+      const newCell = r.type==='del' ? '<td class="tag">&lt;삭제&gt;</td>' : '<td>'+r.neu+'</td>';
+      body+='<tr'+cls+'>'+oldCell+newCell+'</tr>';
+    }
+    wrap.innerHTML='<table class="dtable"><thead><tr><th>현 행</th><th>개 정 안</th></tr></thead><tbody>'+body+'</tbody></table>';
+    $("#stat").textContent=`총 ${lastRows.length}개 조·항 · 변경 ${chg} · 신설 ${neu} · 삭제 ${del}`;
+    $("#btnCopy").disabled=false; $("#btnDownload").disabled=false;
+  }
+
+  /* ===== 내보내기(인라인 스타일) ===== */
+  function exportHtml(){
+    if(!lastRows) return "";
+    const inl = h => h.replace(/<u>/g,'<u style="text-decoration:underline;color:#1d4ed8;">')
+                       .replace(/<del>/g,'<del style="text-decoration:line-through;color:#b91c1c;">');
+    const tdS='style="border:1px solid #888;padding:6px 9px;vertical-align:top;white-space:pre-wrap;width:50%;"';
+    const thS='style="border:1px solid #888;padding:6px 9px;background:#eee;text-align:center;width:50%;"';
+    let body="";
+    for(const r of lastRows){
+      const oldCell = r.type==='new' ? '<td '+tdS+' align="center">&lt;신설&gt;</td>' : '<td '+tdS+'>'+inl(r.old)+'</td>';
+      const newCell = r.type==='del' ? '<td '+tdS+' align="center">&lt;삭제&gt;</td>' : '<td '+tdS+'>'+inl(r.neu)+'</td>';
+      body+='<tr>'+oldCell+newCell+'</tr>';
+    }
+    return '<meta charset="utf-8"><table style="border-collapse:collapse;width:100%;font-family:sans-serif;font-size:14px;">'
+      +'<thead><tr><th '+thS+'>현 행</th><th '+thS+'>개 정 안</th></tr></thead><tbody>'+body+'</tbody></table>';
+  }
+  function plainText(){
+    if(!lastRows) return "";
+    const strip = h => h.replace(/<[^>]+>/g,"").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&");
+    let out="[ 현 행 ]\t[ 개 정 안 ]\n";
+    for(const r of lastRows){ out+=strip(r.old)+"\n\t"+strip(r.neu)+"\n\n"; }
+    return out;
+  }
+
+  $("#btnCopy").addEventListener("click", async ()=>{
+    if(!lastRows) return;
+    const html=exportHtml(), text=plainText();
+    try{
+      if(navigator.clipboard && window.ClipboardItem){
+        await navigator.clipboard.write([new ClipboardItem({
+          'text/html': new Blob([html],{type:'text/html'}),
+          'text/plain': new Blob([text],{type:'text/plain'})
+        })]);
+        toast("표를 복사했어요 · 한글에 붙여넣으세요");
+      } else if(navigator.clipboard){
+        await navigator.clipboard.writeText(text); toast("표(텍스트)를 복사했어요");
+      } else { throw new Error(); }
+    }catch(e){
+      const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+      document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); toast("표(텍스트)를 복사했어요");}catch(_){toast("복사 실패");}
+      document.body.removeChild(ta);
+    }
+  });
+  $("#btnDownload").addEventListener("click", ()=>{
+    if(!lastRows) return;
+    const doc='<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>신구조문 대비표</title></head><body>'
+      +'<h3 style="font-family:sans-serif;">신·구조문 대비표</h3>'+exportHtml()+'</body></html>';
+    const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="신구조문대비표.html"; a.click(); URL.revokeObjectURL(a.href);
+    toast("HTML로 저장했어요 · 한글/워드로 열면 표가 됩니다");
+  });
+
+  /* ===== 모드 전환 ===== */
+  function setMode(m){
+    mode=m;
+    $("#modeOfficial").classList.toggle("on", m==='official');
+    $("#modeReview").classList.toggle("on", m==='review');
+    $("#modehint").textContent = m==='official'
+      ? "제출용: 현행은 그대로, 개정안의 새 내용만 밑줄"
+      : "검토용: 현행의 삭제 부분은 취소선, 개정안의 새 내용은 밑줄";
+    if(lastRows) render();
+    save();
+  }
+  $("#modeOfficial").addEventListener("click", ()=>setMode('official'));
+  $("#modeReview").addEventListener("click", ()=>setMode('review'));
+
+  /* ===== 예시 / 비우기 ===== */
+  $("#btnSample").addEventListener("click", ()=>{
+    $("#oldText").value=SAMPLE_OLD; $("#newText").value=SAMPLE_NEW; render(); save();
+    toast("예시를 넣고 대비표를 만들었어요");
+  });
+  $("#btnClear").addEventListener("click", ()=>{
+    if(!confirm("입력과 대비표를 모두 지울까요?")) return;
+    $("#oldText").value=""; $("#newText").value=""; lastRows=null;
+    $("#tableWrap").innerHTML='<div class="placeholder">현행과 개정안을 넣고 <b>⇄ 대비표 생성</b>을 눌러 보세요.</div>';
+    $("#stat").textContent=""; $("#btnCopy").disabled=true; $("#btnDownload").disabled=true; save(); toast("비웠어요");
+  });
+
+  /* ===== 저장/복원 ===== */
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify({o:$("#oldText").value, n:$("#newText").value, mode})); }catch(e){} }
+  function restore(){ try{
+    const p=JSON.parse(localStorage.getItem(LS)||"null"); if(!p) return;
+    $("#oldText").value=p.o||""; $("#newText").value=p.n||"";
+    if(p.mode) setMode(p.mode);
+    if(($("#oldText").value||$("#newText").value)) render();
+  }catch(e){} }
+  ["oldText","newText"].forEach(id=>$("#"+id).addEventListener("input", save));
+
+  /* ===== 도움말 / 테마 / 글씨 ===== */
+  const hb=$("#helpBg");
+  const openHelp=()=>{ hb.classList.add("on"); setTimeout(()=>$("#hClose").focus(),50); };
+  const closeHelp=()=>hb.classList.remove("on");
+  $("#btnHelp").addEventListener("click", openHelp);
+  $("#hClose").addEventListener("click", closeHelp);
+  hb.addEventListener("click", e=>{ if(e.target===hb) closeHelp(); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape"&&hb.classList.contains("on")) closeHelp(); });
+
+  const root=document.documentElement;
+  function applyTheme(t){ root.setAttribute("data-theme",t); $("#btnTheme").textContent=t==="dark"?"☀ 라이트":"🌙 다크"; }
+  function applyFs(f){ if(f==="lg")root.setAttribute("data-fs","lg"); else root.removeAttribute("data-fs");
+    $("#btnFont").textContent=f==="lg"?"🔎 보통 글씨":"🔎 큰 글씨"; }
+  applyTheme(localStorage.getItem(THEME)==="dark"?"dark":"light");
+  applyFs(localStorage.getItem(FS)==="lg"?"lg":"n");
+  $("#btnTheme").addEventListener("click", ()=>{ const t=root.getAttribute("data-theme")==="dark"?"light":"dark"; applyTheme(t); localStorage.setItem(THEME,t); });
+  $("#btnFont").addEventListener("click", ()=>{ const f=root.getAttribute("data-fs")==="lg"?"n":"lg"; applyFs(f); localStorage.setItem(FS,f); });
+
+  let tt; function toast(m){ const el=$("#toast"); el.textContent=m; el.classList.add("on"); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("on"),1900); }
+
+  $("#btnRun").addEventListener("click", render);
+  restore();
+  try{ if(!localStorage.getItem(SEEN)){ openHelp(); localStorage.setItem(SEEN,"1"); } }catch(e){}
+})();
+</script>
+</body>
+</html>
