@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>민원 답변 초안 생성기</title>
+<meta name="description" content="민원 요지와 조치 내용을 넣으면 정중한 민원 답변서 초안을 만들어 주는 도구. 톤 선택 지원." />
+<style>
+  :root{
+    --ink:#1b2a4a; --navy:#1f3864; --navy-deep:#16233f; --blue:#2e5fa3;
+    --gold:#b8863b; --paper:#faf9f6; --paper-2:#f2eee4; --paper-on-navy:#ece7db;
+    --muted:#6b7385; --line:#e5ddce; --red:#b03636;
+    --serif:'Noto Serif KR',serif;
+    --sans:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,'Malgun Gothic',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --radius:5px; --fs:16px;
+    --card:#fff; --card-line:var(--line); --chip:var(--paper-2);
+    --bg:var(--paper); --text:var(--ink); --sub:var(--muted);
+  }
+  html[data-theme="dark"]{
+    --bg:#111b2e; --text:#e6e9f0; --sub:#9aa6bd; --card:#1a2740;
+    --card-line:#2b3a5c; --chip:#22314e; --line:#2b3a5c; --paper-2:#22314e;
+    --gold:#d0a45a; --blue:#7aa3d8; --red:#f0a0a0;
+  }
+  html[data-fs="lg"]{ --fs:18.5px; }
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ font-size:var(--fs); -webkit-text-size-adjust:100%; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.6;
+    -webkit-font-smoothing:antialiased; transition:background .2s,color .2s; }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none!important; animation:none!important; } }
+  .serif{ font-family:var(--serif); }
+  .wrap{ width:100%; max-width:1080px; margin-inline:auto; padding:0 clamp(1rem,4vw,1.75rem); }
+
+  header.top{ background:var(--navy-deep); color:var(--paper-on-navy); padding:1.4rem 0 1.5rem; }
+  header.top .eyebrow{ font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gold); display:inline-flex; align-items:center; gap:.5rem; margin-bottom:.5rem; }
+  header.top .eyebrow::before{ content:""; width:1.5rem; height:1px; background:var(--gold); }
+  header.top h1{ font-family:var(--serif); font-weight:700; color:#fff; margin:0; font-size:clamp(1.4rem,4vw,1.9rem); }
+  header.top p.lead{ margin:.45rem 0 0; color:var(--paper-on-navy); font-size:.92rem; max-width:56ch; }
+  .toolbar{ display:flex; gap:.5rem; margin-top:1rem; flex-wrap:wrap; }
+  .tbtn{ font:inherit; font-size:.82rem; cursor:pointer; border:1px solid #33436a; background:transparent;
+    color:var(--paper-on-navy); padding:.4rem .7rem; border-radius:var(--radius); }
+  .tbtn:hover{ border-color:var(--gold); color:#fff; }
+  .tbtn.help{ border-color:var(--gold); color:#fff; background:rgba(184,134,59,.16); }
+  .tbtn.help:hover{ background:rgba(184,134,59,.3); }
+
+  main{ padding:1.3rem 0 3rem; }
+  .cols{ display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; align-items:start; }
+  @media (max-width:820px){ .cols{ grid-template-columns:1fr; } }
+  .panel{ background:var(--card); border:1px solid var(--card-line); border-radius:8px; padding:1rem 1rem 1.1rem; }
+  .panel h2{ font-family:var(--serif); font-size:1.08rem; margin:0 0 .7rem; }
+  label.fl{ display:block; font-size:.76rem; color:var(--sub); margin:.6rem 0 .28rem; font-weight:600; }
+  input, select, textarea{ width:100%; font:inherit; font-size:.92rem; padding:.55rem .65rem; border:1.5px solid var(--card-line);
+    border-radius:var(--radius); background:var(--bg); color:var(--text); }
+  input:focus, select:focus, textarea:focus{ outline:none; border-color:var(--blue); }
+  textarea#gist{ min-height:120px; line-height:1.6; resize:vertical; }
+  textarea#action{ min-height:120px; line-height:1.6; resize:vertical; }
+  textarea#reply{ min-height:360px; line-height:1.75; resize:vertical; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+  @media (max-width:520px){ .grid2{ grid-template-columns:1fr; } }
+  .btn{ font:inherit; font-size:.9rem; cursor:pointer; border:1px solid var(--card-line); background:var(--card);
+    color:var(--text); padding:.6rem .95rem; border-radius:var(--radius); }
+  .btn:hover:not(:disabled){ border-color:var(--gold); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .btn.primary{ background:var(--navy); color:#fff; border-color:var(--navy); font-weight:600; }
+  .btn.primary:hover:not(:disabled){ background:var(--blue); border-color:var(--blue); }
+  .btnrow{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.9rem; }
+  .msg{ font-size:.8rem; margin-top:.5rem; min-height:1.1em; }
+  .msg.err{ color:var(--red); } .msg.ok{ color:var(--sub); }
+  .warn{ font-size:.78rem; color:var(--sub); background:var(--paper-2); border-left:3px solid #c0562e; padding:.55rem .85rem; border-radius:4px; margin-top:.8rem; }
+  .warn b{ color:var(--text); }
+  .spin{ display:inline-block; width:1rem; height:1rem; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:sp .7s linear infinite; vertical-align:-2px; margin-right:.4rem; }
+  @keyframes sp{ to{ transform:rotate(360deg); } }
+
+  /* modal */
+  .modal-bg{ display:none; position:fixed; inset:0; z-index:50; background:rgba(16,23,40,.55); padding:1rem; overflow-y:auto; }
+  .modal-bg.on{ display:flex; align-items:flex-start; justify-content:center; }
+  .modal{ background:var(--card); color:var(--text); width:100%; max-width:600px; border-radius:8px; margin:2.5rem auto; padding:1.4rem; border:1px solid var(--card-line); }
+  .modal h2{ font-family:var(--serif); font-size:1.25rem; margin:0 0 1rem; }
+  .modal .foot{ display:flex; justify-content:flex-end; margin-top:1.3rem; }
+  .help-content{ font-size:.93rem; line-height:1.7; }
+  .help-content .hlead{ color:var(--sub); margin:0 0 1rem; }
+  .help-content h3{ font-family:var(--serif); font-size:1.03rem; margin:1.1rem 0 .45rem; padding-bottom:.3rem; border-bottom:1px solid var(--card-line); }
+  .help-content ul{ margin:.4rem 0 .6rem; padding-left:1.3rem; } .help-content li{ margin:.3rem 0; }
+  .help-note{ background:var(--paper-2); border-left:3px solid var(--gold); border-radius:4px; padding:.8rem 1rem; margin-top:1.1rem; }
+  .help-note b{ display:block; margin-bottom:.3rem; } .help-note li{ font-size:.87rem; color:var(--sub); }
+
+  .toast{ position:fixed; left:50%; bottom:2rem; transform:translateX(-50%) translateY(1rem); z-index:60;
+    background:var(--navy-deep); color:#fff; padding:.6rem 1.1rem; border-radius:999px; font-size:.85rem; opacity:0; pointer-events:none; transition:opacity .2s,transform .2s; }
+  .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
+  footer{ border-top:1px solid var(--line); color:var(--sub); font-size:.78rem; padding:1.4rem 0 2rem; text-align:center; margin-top:2rem; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">민원 답변 초안 생성기</p>
+    <h1 class="serif">민원 요지를 넣으면, 답변서 초안이 나옵니다</h1>
+    <p class="lead">민원 내용과 조치 사항을 넣으면 정중한 답변서를 구조에 맞춰 작성합니다. 톤(정중·공감·단호)을 골라 상황에 맞게.</p>
+    <div class="toolbar">
+      <button class="tbtn help" id="btnHelp" type="button">❓ 도움말</button>
+      <button class="tbtn" id="btnTheme" type="button">🌙 다크</button>
+      <button class="tbtn" id="btnFont" type="button">🔎 큰 글씨</button>
+      <button class="tbtn" id="btnSample" type="button">📋 예시 넣기</button>
+      <button class="tbtn" id="btnClear" type="button">🗑 비우기</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="cols">
+      <div class="panel">
+        <h2 class="serif">1. 민원 내용 넣기</h2>
+        <label class="fl" for="gist">민원 요지 (민원인이 무엇을 요구·문의했나)</label>
+        <textarea id="gist" placeholder="예) 집 앞 가로등이 한 달째 꺼져 있어 밤에 위험함. 언제 고쳐지는지, 왜 연락이 없는지 항의."></textarea>
+        <label class="fl" for="action">답변 방향·조치 사항 (담당자가 아는 사실 — 이 내용으로만 답변합니다)</label>
+        <textarea id="action" placeholder="예) 확인 결과 안정기 고장. 부품 발주 완료, 금주 내 교체 예정. 연락 지연에 사과. 위치: ○○로 123 앞."></textarea>
+        <div class="grid2">
+          <div>
+            <label class="fl" for="tone">답변 톤</label>
+            <select id="tone">
+              <option value="standard">정중·표준</option>
+              <option value="empathy">공감·완화 (불만 민원)</option>
+              <option value="firm">단호·규정 (무리한 요구)</option>
+            </select>
+          </div>
+          <div>
+            <label class="fl" for="dept">담당부서·문의처</label>
+            <input id="dept" type="text" placeholder="예: 도시관리과 / 000-000-0000" />
+          </div>
+        </div>
+        <div class="btnrow">
+          <button class="btn primary" id="btnGen" type="button">✨ 답변서 초안 생성</button>
+        </div>
+        <div class="msg" id="genMsg"></div>
+        <div class="warn">
+          <b>⚠️ 개인정보는 빼고 넣으세요.</b> 입력한 내용은 외부 AI(Google Gemini)로 전송됩니다. 민원인 실명·주소·연락처·주민번호는 넣지 말고 <b>요지만</b> 입력하세요.
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 class="serif">2. 답변서 초안</h2>
+        <textarea id="reply" placeholder="여기에 답변서 초안이 만들어집니다. 직접 수정할 수 있습니다."></textarea>
+        <div class="btnrow">
+          <button class="btn" id="btnCopy" type="button" disabled>📋 복사</button>
+          <button class="btn" id="btnDl" type="button" disabled>⬇ 다운로드(.txt)</button>
+        </div>
+        <div class="warn">
+          <b>발송 전 반드시 확인:</b> AI 초안입니다. 사실관계·법령·기한·이름이 맞는지, 규정에 어긋나지 않는지 검토하고 발송하세요.
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- 도움말 -->
+<div class="modal-bg" id="helpBg">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="hTitle">
+    <h2 id="hTitle" class="serif">이렇게 쓰세요</h2>
+    <div class="help-content">
+      <p class="hlead">민원 요지와 담당자가 아는 조치 사항을 넣으면, 인사→요지확인→조치→안내→맺음 구조의 정중한 답변서 초안을 만들어 줍니다.</p>
+      <h3>순서</h3>
+      <ol>
+        <li><b>민원 요지</b>와 <b>답변 방향·조치 사항</b>을 넣습니다. (조치 사항에 적은 사실만으로 답변합니다)</li>
+        <li>상황에 맞는 <b>톤</b>을 고르고 <b>✨ 답변서 초안 생성</b>.</li>
+        <li>오른쪽 초안을 다듬고 <b>복사</b>해서 회신에 씁니다.</li>
+      </ol>
+      <h3>톤 고르기</h3>
+      <ul>
+        <li><b>정중·표준</b> — 일반 문의·신청 답변</li>
+        <li><b>공감·완화</b> — 불편·불만 민원에 먼저 공감</li>
+        <li><b>단호·규정</b> — 무리하거나 반복되는 요구에, 정중하되 분명하게 선을 긋기</li>
+      </ul>
+      <div class="help-note">
+        <b>⚠️ 꼭 알아두세요</b>
+        <ul>
+          <li>텍스트는 외부 AI로 전송됩니다. <b>개인정보는 빼고 요지만</b> 넣으세요.</li>
+          <li>AI는 조치 사항에 <b>없는 사실·법령을 지어내지 않도록</b> 설정돼 있지만, 발송 전 사실 확인은 필수입니다.</li>
+          <li>이 앱은 <b>홈페이지에 올린 뒤</b> 작동합니다(AI 호출). 로컬 파일로 열면 안 됩니다.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot"><button class="btn primary" id="hClose" type="button">시작하기</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<footer><div class="wrap">바이브 코딩으로 만든 행정지원앱 · AI 처리는 Google Gemini · 발송 전 사실 확인 필수<br />한국공공자치연구원 AI행정혁신연구소</div></footer>
+
+<script>
+(function(){
+  "use strict";
+  const LS="minwon-reply-v1", THEME="minwon-reply-theme", FS="minwon-reply-fs", SEEN="minwon-reply-seen";
+  const $=s=>document.querySelector(s);
+  let lastResult="", busy=false;
+
+  const TONE={
+    standard:"정중하고 신뢰감 있는 표준 공공기관 문체로 작성해.",
+    empathy:"민원인의 불편·불만에 진심으로 공감하는 표현을 앞부분에 충분히 넣고, 부드럽고 따뜻한 어조로 작성해. 방어적이거나 변명하는 인상을 주지 말 것.",
+    firm:"정중함과 예의는 끝까지 유지하되, 규정상 수용이 어려운 부분은 근거를 들어 분명하게 선을 긋고, 반복적이거나 무리한 요구에는 감정에 휩쓸리지 않는 담담하고 일관된 어조로 작성해. 가능한 대안이나 정식 절차를 안내할 것."
+  };
+
+  function SYSTEM(toneKey){
+    return [
+      "너는 대한민국 지방자치단체의 민원 담당 공무원이야. 아래 [민원 내용]과 [조치 사항]을 바탕으로 민원인에게 보낼 민원 답변서 초안을 작성해.",
+      "[구조]",
+      "① 인사말 ② 민원 요지 확인(간단히) ③ 검토 결과·조치 사항 ④ 추가 안내(필요 시 절차·기한·문의처) ⑤ 정중한 맺음말",
+      "[원칙]",
+      "- 존댓말로, 정중하고 명확하게",
+      "- [조치 사항]에 있는 사실만 사용하고, 없는 사실·수치·법령·기한은 지어내지 말 것. 꼭 필요하면 '[확인 필요]'로 표시",
+      "- 민원인을 탓하거나 감정적으로 대응하지 말 것",
+      "- 실명·주소·연락처 등 개인정보를 답변 본문에 임의로 만들어 넣지 말 것",
+      "- 문의처가 주어지면 맺음 부분에 안내",
+      "[톤] "+TONE[toneKey]
+    ].join("\n");
+  }
+  function buildUser(){
+    return [
+      "[민원 내용]", $("#gist").value.trim(),
+      "", "[조치 사항 / 답변 방향]", ($("#action").value.trim()||"(특이사항 없음 — 일반적인 접수·처리 안내로 작성)"),
+      "", "[문의처]", $("#dept").value.trim()
+    ].join("\n");
+  }
+
+  async function callAI(system, user){
+    const res=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemPrompt:system,userPrompt:user})});
+    let data={}; try{ data=await res.json(); }catch(e){}
+    if(!res.ok || data.error) throw new Error(data.error || `요청 실패 (${res.status})`);
+    return (data.text||"").trim();
+  }
+
+  async function gen(){
+    if(busy) return;
+    if(!$("#gist").value.trim()){ toast("민원 요지를 넣어주세요"); $("#gist").focus(); return; }
+    busy=true; setLoading(true); setMsg("");
+    try{
+      const text=await callAI(SYSTEM($("#tone").value), buildUser());
+      $("#reply").value=text; lastResult=text;
+      $("#btnCopy").disabled=false; $("#btnDl").disabled=false;
+      setMsg("초안을 만들었어요. 사실관계를 확인하고 다듬어 쓰세요.","ok"); save();
+      toast("답변서 초안 완성");
+    }catch(e){ setMsg("⚠ "+e.message,"err"); }
+    finally{ busy=false; setLoading(false); }
+  }
+  function setLoading(on){ const b=$("#btnGen"); b.disabled=on; b.innerHTML= on?'<span class="spin"></span>생성 중…':'✨ 답변서 초안 생성'; }
+  function setMsg(t,k){ const m=$("#genMsg"); m.textContent=t||""; m.className="msg"+(k?(" "+k):""); }
+
+  $("#reply").addEventListener("input", ()=>{ lastResult=$("#reply").value; const has=lastResult.trim().length>0;
+    $("#btnCopy").disabled=!has; $("#btnDl").disabled=!has; save(); });
+
+  function copyText(t){ if(!t) return;
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(()=>toast("복사했어요")).catch(()=>fb(t)); } else fb(t); }
+  function fb(t){ const ta=document.createElement("textarea"); ta.value=t; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); toast("복사했어요");}catch(e){toast("복사 실패");} document.body.removeChild(ta); }
+  $("#btnCopy").addEventListener("click", ()=>copyText($("#reply").value.trim()));
+  $("#btnDl").addEventListener("click", ()=>{ const t=$("#reply").value.trim(); if(!t) return;
+    const blob=new Blob([t],{type:"text/plain;charset=utf-8"}); const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob); a.download="민원답변_초안.txt"; a.click(); URL.revokeObjectURL(a.href); toast("다운로드했어요"); });
+
+  const SAMPLE={
+    gist:"집 앞 도로의 가로등이 한 달째 꺼져 있어 밤에 다니기 위험합니다. 언제 고쳐지나요? 예전에 민원을 넣었는데 연락도 없어 답답합니다.",
+    action:"확인 결과 해당 가로등 안정기 고장으로 소등 상태. 교체 부품 발주 완료, 이번 주 내 교체 예정. 그동안 진행 상황 안내가 늦어진 점 사과. 대상 위치: ○○로 123 앞.",
+    tone:"empathy", dept:"도시관리과 / 000-000-0000"
+  };
+  $("#btnSample").addEventListener("click", ()=>{ $("#gist").value=SAMPLE.gist; $("#action").value=SAMPLE.action; $("#tone").value=SAMPLE.tone; $("#dept").value=SAMPLE.dept; save(); toast("예시를 넣었어요 · 생성을 눌러보세요"); });
+  $("#btnClear").addEventListener("click", ()=>{ if(!confirm("입력과 결과를 모두 지울까요?")) return;
+    ["gist","action","dept","reply"].forEach(id=>$("#"+id).value=""); $("#tone").value="standard"; lastResult=""; setMsg("");
+    $("#btnCopy").disabled=true; $("#btnDl").disabled=true; save(); toast("비웠어요"); });
+
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify({gist:$("#gist").value, action:$("#action").value, tone:$("#tone").value, dept:$("#dept").value, reply:$("#reply").value})); }catch(e){} }
+  function restore(){ try{ const p=JSON.parse(localStorage.getItem(LS)||"null"); if(!p) return;
+    $("#gist").value=p.gist||""; $("#action").value=p.action||""; $("#tone").value=p.tone||"standard"; $("#dept").value=p.dept||""; $("#reply").value=p.reply||"";
+    if($("#reply").value.trim()){ lastResult=$("#reply").value; $("#btnCopy").disabled=false; $("#btnDl").disabled=false; } }catch(e){} }
+  ["gist","action","tone","dept"].forEach(id=>$("#"+id).addEventListener("input", save));
+
+  const hb=$("#helpBg");
+  const openHelp=()=>{ hb.classList.add("on"); setTimeout(()=>$("#hClose").focus(),50); };
+  const closeHelp=()=>hb.classList.remove("on");
+  $("#btnHelp").addEventListener("click", openHelp);
+  $("#hClose").addEventListener("click", closeHelp);
+  hb.addEventListener("click", e=>{ if(e.target===hb) closeHelp(); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape"&&hb.classList.contains("on")) closeHelp(); });
+
+  const root=document.documentElement;
+  function applyTheme(t){ root.setAttribute("data-theme",t); $("#btnTheme").textContent=t==="dark"?"☀ 라이트":"🌙 다크"; }
+  function applyFs(f){ if(f==="lg")root.setAttribute("data-fs","lg"); else root.removeAttribute("data-fs"); $("#btnFont").textContent=f==="lg"?"🔎 보통 글씨":"🔎 큰 글씨"; }
+  applyTheme(localStorage.getItem(THEME)==="dark"?"dark":"light");
+  applyFs(localStorage.getItem(FS)==="lg"?"lg":"n");
+  $("#btnTheme").addEventListener("click", ()=>{ const t=root.getAttribute("data-theme")==="dark"?"light":"dark"; applyTheme(t); localStorage.setItem(THEME,t); });
+  $("#btnFont").addEventListener("click", ()=>{ const f=root.getAttribute("data-fs")==="lg"?"n":"lg"; applyFs(f); localStorage.setItem(FS,f); });
+
+  let tt; function toast(m){ const el=$("#toast"); el.textContent=m; el.classList.add("on"); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("on"),1900); }
+
+  $("#btnGen").addEventListener("click", gen);
+  restore();
+  try{ if(!localStorage.getItem(SEEN)){ openHelp(); localStorage.setItem(SEEN,"1"); } }catch(e){}
+})();
+</script>
+</body>
+</html>
