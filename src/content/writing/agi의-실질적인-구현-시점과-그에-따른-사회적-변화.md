@@ -1,7 +1,7 @@
 ---
 title: AGI의 실질적인 구현 시점과 그에 따른 사회적 변화
 date: 2026-06-29
-category: AI 행정혁신
+category: Human Premium
 summary: AGI 시대가 도래한다 해서 행정 현장에서 인간 공무원의 역할이 축소되는 것은 결코 아닙니다. 오히려 '법적 책임성'과 '정책적 가치 판단'의 가치는 과거 그 어느 때보다 엄중해질 것입니다.
 draft: false
 ---
