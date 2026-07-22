@@ -104,6 +104,8 @@ collections:
           - { name: name, label: "이름", widget: string }
           - { name: penName, label: "필명", widget: string }
           - { name: intro, label: "소개 문단", widget: text }
+          - { name: homeHeading, label: "홈 화면 소개 제목 (비우면 '이 기록을 남기는 사람')", widget: string, required: false }
+          - { name: homeSummary, label: "홈 화면 소개 문단 (비우면 위 소개 문단 사용)", widget: text, required: false }
           - name: focus
             label: "하는 일 (카드 3개)"
             widget: list
@@ -128,9 +130,18 @@ collections:
         label: "사이트 설정 (채널 링크)"
         file: "src/data/site.json"
         fields:
+          - { name: footerName, label: "맨 아래 이름 (예: 해피브레인)", widget: string }
+          - { name: footerTagline, label: "맨 아래 소개 문구 (줄바꿈은 Enter로)", widget: text }
           - name: channels
             label: "채널 링크 (맨 아래 푸터·연락처에 함께 반영)"
             widget: list
             fields:
               - { name: label, label: "이름 (예: 유튜브)", widget: string }
               - { name: href, label: "링크 주소 (내 채널 주소)", widget: string }
+      - name: home
+        label: "홈 화면 (첫 화면 문구)"
+        file: "src/data/home.json"
+        fields:
+          - { name: heroEyebrow, label: "작은 윗줄 (예: 해피브레인 · 박상득)", widget: string }
+          - { name: heroTitle, label: "큰 제목 (줄바꿈은 Enter로)", widget: text }
+          - { name: heroLead, label: "제목 아래 설명 문구", widget: text }

@@ -1,6 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
+import about from '../data/about.json';
+import home from '../data/home.json';
 import { videoThumb, bgImage } from '../lib/media.js';
 
 const fmtDate = (d) => new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(d).replace(/\.\s?$/, '').replace(/\.\s?/g, '.');
@@ -17,13 +19,9 @@ const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.
   <!-- 히어로: 네이비 표지 -->
   <section class="cover">
     <div class="wrap cover-inner">
-      <p class="eyebrow eyebrow--gold">해피브레인 · 박상득</p>
-      <h1 class="cover-title">AI는 도구,<br />프리미엄은 사람.</h1>
-      <p class="cover-lead">
-        지자체 공무원이 AI를 실제 업무에 쓰도록 돕는 일을 합니다.
-        그 과정에서 배우고 연구한 것, 그리고 기술이 대신할 수 없는 사람의 몫에 대한 생각을
-        이곳에 차곡차곡 남깁니다.
-      </p>
+      <p class="eyebrow eyebrow--gold">{home.heroEyebrow}</p>
+      <h1 class="cover-title">{home.heroTitle.split('\n').map((line, i) => (<>{i > 0 && <br />}{line}</>))}</h1>
+      <p class="cover-lead">{home.heroLead}</p>
       <div class="cover-actions">
         <a class="btn btn--on-navy" href="/writing/">글 읽기</a>
         <a class="btn btn--on-navy" href="/about/">어떤 사람인지 보기</a>
@@ -133,14 +131,10 @@ const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.
     <div class="wrap about-grid">
       <div>
         <p class="eyebrow">About</p>
-        <h2>이 기록을 남기는 사람</h2>
+        <h2>{about.homeHeading || '이 기록을 남기는 사람'}</h2>
       </div>
       <div class="about-body">
-        <p>
-          한국공공자치연구원 연구기획본부장이자 AI행정혁신연구소장으로,
-          10년 넘게 공직자 교육 현장에 서 왔습니다. 필명 해피브레인으로
-          《출근길 3분 AI》를 썼고, 지금은 'Human Premium' 시리즈를 이어가고 있습니다.
-        </p>
+        <p>{about.homeSummary || about.intro}</p>
         <p><a href="/about/">더 자세히 보기 →</a></p>
       </div>
     </div>

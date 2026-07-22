@@ -6,8 +6,8 @@ const channels = site.channels;
 <footer class="site-footer">
   <div class="wrap grid">
     <div class="col-brand">
-      <p class="fname">해피브레인</p>
-      <p class="ftag">AI는 도구, 프리미엄은 사람.<br />지자체 행정을 위한 AI 활용을 연구하고 나눕니다.</p>
+      <p class="fname">{site.footerName}</p>
+      <p class="ftag">{site.footerTagline.split('\n').map((line, i) => (<>{i > 0 && <br />}{line}</>))}</p>
     </div>
     <nav class="col-nav" aria-label="사이트 맵">
       <p class="col-label">둘러보기</p>
