@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>민원 응대 지식 도우미</title>
+<meta name="description" content="키워드 한 번에 모범 답변 스크립트와 근거 법령을 찾는, 설치 없는 민원 응대 도구. 모든 데이터는 내 브라우저에만 저장됩니다." />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<style>
+  /* ===== 해피브레인 브랜드 토큰 계승 ===== */
+  :root{
+    --ink:#1b2a4a; --navy:#1f3864; --navy-deep:#16233f; --blue:#2e5fa3;
+    --gold:#b8863b; --paper:#faf9f6; --paper-2:#f2eee4; --paper-on-navy:#ece7db;
+    --muted:#6b7385; --line:#e5ddce;
+    --serif:'Noto Serif KR',serif;
+    --sans:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,'Malgun Gothic',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --radius:5px; --fs:16px;
+    --card:#fff; --card-line:var(--line); --chip:var(--paper-2);
+    --bg:var(--paper); --text:var(--ink); --sub:var(--muted);
+  }
+  html[data-theme="dark"]{
+    --bg:#111b2e; --text:#e6e9f0; --sub:#9aa6bd; --card:#1a2740;
+    --card-line:#2b3a5c; --chip:#22314e; --line:#2b3a5c; --paper-2:#22314e;
+    --gold:#d0a45a; --blue:#7aa3d8;
+  }
+  html[data-fs="lg"]{ --fs:18.5px; }
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ font-size:var(--fs); -webkit-text-size-adjust:100%; }
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--sans); line-height:1.65;
+    -webkit-font-smoothing:antialiased; transition:background .2s ease,color .2s ease;
+  }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none!important; animation:none!important; } }
+  .serif{ font-family:var(--serif); }
+  .wrap{ width:100%; max-width:760px; margin-inline:auto; padding:0 clamp(1rem,4vw,1.75rem); }
+
+  /* header */
+  header.top{ background:var(--navy-deep); color:var(--paper-on-navy); padding:1.5rem 0 1.7rem; }
+  header.top .eyebrow{ font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gold); display:inline-flex; align-items:center; gap:.5rem; margin-bottom:.5rem; }
+  header.top .eyebrow::before{ content:""; width:1.5rem; height:1px; background:var(--gold); }
+  header.top h1{ font-family:var(--serif); font-weight:700; color:#fff; margin:0; font-size:clamp(1.5rem,4.5vw,2rem); }
+  header.top p.lead{ margin:.5rem 0 0; color:var(--paper-on-navy); font-size:.95rem; max-width:44ch; }
+  .toolbar{ display:flex; gap:.5rem; margin-top:1.1rem; flex-wrap:wrap; }
+  .tbtn{ font:inherit; font-size:.82rem; cursor:pointer; border:1px solid #33436a; background:transparent;
+    color:var(--paper-on-navy); padding:.4rem .7rem; border-radius:var(--radius); display:inline-flex; align-items:center; gap:.35rem; }
+  .tbtn:hover{ border-color:var(--gold); color:#fff; }
+
+  /* search */
+  .searchbar{ position:sticky; top:0; z-index:20; background:var(--bg); padding:.9rem 0 .7rem;
+    border-bottom:1px solid var(--line); }
+  .searchbox{ position:relative; }
+  .searchbox input{ width:100%; font:inherit; font-size:1.05rem; padding:.85rem 2.6rem .85rem 2.6rem;
+    border:1.5px solid var(--card-line); border-radius:var(--radius); background:var(--card); color:var(--text); }
+  .searchbox input:focus{ outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(46,95,163,.15); }
+  .searchbox .ic{ position:absolute; left:.85rem; top:50%; transform:translateY(-50%); color:var(--sub); font-size:1.1rem; }
+  .searchbox .clr{ position:absolute; right:.6rem; top:50%; transform:translateY(-50%);
+    background:none; border:none; color:var(--sub); font-size:1.2rem; cursor:pointer; padding:.2rem .3rem; line-height:1; display:none; }
+  .hint{ font-size:.78rem; color:var(--sub); margin:.45rem .1rem 0; }
+  .hint b{ color:var(--gold); font-family:var(--mono); font-weight:500; }
+
+  /* results */
+  main{ padding:1rem 0 3rem; }
+  .count{ font-size:.8rem; color:var(--sub); font-family:var(--mono); margin:.2rem .1rem 1rem; }
+  .card{ background:var(--card); border:1px solid var(--card-line); border-radius:var(--radius);
+    margin-bottom:.8rem; overflow:hidden; }
+  .card > button.head{ width:100%; text-align:left; font:inherit; cursor:pointer; background:none; border:none;
+    color:var(--text); padding:1rem 1.1rem; display:flex; align-items:flex-start; gap:.7rem; }
+  .card > button.head:hover{ background:var(--paper-2); }
+  .card .chip{ flex:none; font-family:var(--mono); font-size:.66rem; letter-spacing:.03em; color:var(--navy);
+    background:var(--chip); border:1px solid var(--card-line); padding:.2rem .5rem; border-radius:3px; margin-top:.15rem; }
+  html[data-theme="dark"] .card .chip{ color:var(--paper-on-navy); }
+  .card .q{ flex:1; }
+  .card .q .title{ font-family:var(--serif); font-weight:600; font-size:1.08rem; line-height:1.4; }
+  .card .q .kw{ font-size:.76rem; color:var(--sub); margin-top:.2rem; }
+  .card .caret{ flex:none; color:var(--sub); transition:transform .18s ease; margin-top:.2rem; }
+  .card.open .caret{ transform:rotate(90deg); }
+  .body{ display:none; padding:0 1.1rem 1.1rem; border-top:1px dashed var(--card-line); }
+  .card.open .body{ display:block; }
+  .body .ans{ white-space:pre-wrap; background:var(--paper-2); border-radius:var(--radius);
+    padding:.9rem 1rem; margin:.9rem 0 .8rem; font-size:.97rem; line-height:1.7; }
+  .body .law{ font-size:.85rem; color:var(--sub); }
+  .body .law a{ color:var(--blue); }
+  .body .actions{ display:flex; gap:.5rem; margin-top:.9rem; flex-wrap:wrap; }
+  .body .actions button{ font:inherit; font-size:.82rem; cursor:pointer; border:1px solid var(--card-line);
+    background:var(--card); color:var(--text); padding:.45rem .8rem; border-radius:var(--radius); }
+  .body .actions .copy{ border-color:var(--blue); color:var(--blue); font-weight:600; }
+  .body .actions button:hover{ border-color:var(--gold); }
+
+  .empty{ text-align:center; color:var(--sub); padding:2.5rem 1rem; }
+  .empty .big{ font-family:var(--serif); font-size:1.1rem; color:var(--text); margin-bottom:.4rem; }
+
+  /* add button (fab) */
+  .fab{ position:fixed; right:1.1rem; bottom:1.1rem; z-index:30; font:inherit; font-weight:600; cursor:pointer;
+    background:var(--navy); color:#fff; border:none; border-radius:999px; padding:.85rem 1.2rem;
+    box-shadow:0 6px 20px rgba(22,35,63,.28); display:inline-flex; align-items:center; gap:.4rem; }
+  .fab:hover{ background:var(--blue); }
+
+  /* modal */
+  .modal-bg{ display:none; position:fixed; inset:0; z-index:50; background:rgba(16,23,40,.55); padding:1rem;
+    overflow-y:auto; align-items:flex-start; justify-content:center; }
+  .modal-bg.on{ display:flex; }
+  .modal{ background:var(--card); color:var(--text); width:100%; max-width:560px; border-radius:8px;
+    margin:2.5rem auto; padding:1.4rem 1.4rem 1.6rem; border:1px solid var(--card-line); }
+  .modal h2{ font-family:var(--serif); font-size:1.25rem; margin:0 0 1rem; }
+  .modal label{ display:block; font-size:.82rem; color:var(--sub); margin:.9rem 0 .3rem; font-weight:600; }
+  .modal input,.modal textarea,.modal select{ width:100%; font:inherit; font-size:.95rem; padding:.6rem .7rem;
+    border:1.5px solid var(--card-line); border-radius:var(--radius); background:var(--bg); color:var(--text); }
+  .modal input:focus,.modal textarea:focus{ outline:none; border-color:var(--blue); }
+  .modal textarea{ min-height:120px; resize:vertical; line-height:1.6; }
+  .modal .row{ display:flex; gap:.7rem; }
+  .modal .row > div{ flex:1; }
+  .modal .foot{ display:flex; gap:.6rem; justify-content:flex-end; margin-top:1.4rem; flex-wrap:wrap; }
+  .modal .foot .del{ margin-right:auto; color:#b03636; border-color:#e0b4b4; }
+  html[data-theme="dark"] .modal .foot .del{ color:#f0a0a0; border-color:#5a3030; }
+  .modal button{ font:inherit; font-size:.9rem; cursor:pointer; padding:.55rem 1rem; border-radius:var(--radius);
+    border:1px solid var(--card-line); background:var(--card); color:var(--text); }
+  .modal button.primary{ background:var(--navy); color:#fff; border-color:var(--navy); font-weight:600; }
+  .modal button.primary:hover{ background:var(--blue); border-color:var(--blue); }
+  .warn{ font-size:.78rem; color:var(--sub); background:var(--paper-2); border-left:3px solid var(--gold);
+    padding:.6rem .8rem; border-radius:4px; margin-top:1rem; }
+
+  /* toast */
+  .toast{ position:fixed; left:50%; bottom:5rem; transform:translateX(-50%) translateY(1rem); z-index:60;
+    background:var(--navy-deep); color:#fff; padding:.6rem 1.1rem; border-radius:999px; font-size:.85rem;
+    opacity:0; pointer-events:none; transition:opacity .2s ease,transform .2s ease; }
+  .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  footer{ border-top:1px solid var(--line); color:var(--sub); font-size:.78rem; padding:1.4rem 0 2rem; text-align:center; }
+  footer a{ color:var(--blue); }
+  .kbd{ font-family:var(--mono); font-size:.72rem; background:var(--chip); border:1px solid var(--card-line);
+    border-radius:3px; padding:.05rem .35rem; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">민원 응대 지식 도우미</p>
+    <h1 class="serif">묻기 전에, 먼저 찾는다</h1>
+    <p class="lead">키워드 한 번이면 모범 답변과 근거 법령이 바로 뜹니다. 전화기 든 채로, 3초 안에.</p>
+    <div class="toolbar">
+      <button class="tbtn" id="btnTheme" type="button">🌙 다크</button>
+      <button class="tbtn" id="btnFont" type="button">🔎 큰 글씨</button>
+      <button class="tbtn" id="btnExport" type="button">⬇ 내보내기</button>
+      <button class="tbtn" id="btnImport" type="button">⬆ 가져오기</button>
+      <button class="tbtn" id="btnReset" type="button">↺ 예시 복원</button>
+      <input type="file" id="fileInput" accept="application/json" hidden />
+    </div>
+  </div>
+</header>
+
+<div class="searchbar">
+  <div class="wrap">
+    <div class="searchbox">
+      <span class="ic">🔍</span>
+      <input id="q" type="search" inputmode="search" autocomplete="off"
+             placeholder="예: 소음, 주차, ㅆㄹㄱ …" aria-label="민원 키워드 검색" />
+      <button class="clr" id="clr" type="button" aria-label="지우기">✕</button>
+    </div>
+    <p class="hint">초성 검색도 됩니다 — <b>ㅈㅊ</b>만 쳐도 <b>주차</b>가 나와요.</p>
+  </div>
+</div>
+
+<main>
+  <div class="wrap">
+    <p class="count" id="count"></p>
+    <div id="list"></div>
+  </div>
+</main>
+
+<button class="fab" id="btnAdd" type="button">＋ 항목 추가</button>
+
+<!-- 편집 모달 -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <h2 id="mTitle" class="serif">항목 추가</h2>
+    <input type="hidden" id="fId" />
+    <label for="fTitle">민원 제목 *</label>
+    <input id="fTitle" type="text" placeholder="예: 장애인전용주차구역 불법주차 신고" />
+    <div class="row">
+      <div>
+        <label for="fCat">분류</label>
+        <input id="fCat" type="text" placeholder="예: 교통 / 환경 / 복지" />
+      </div>
+      <div>
+        <label for="fKw">검색 키워드 (쉼표로 구분)</label>
+        <input id="fKw" type="text" placeholder="예: 주차, 장애인, 과태료" />
+      </div>
+    </div>
+    <label for="fAns">모범 답변 스크립트 *</label>
+    <textarea id="fAns" placeholder="실제로 읽어드릴 수 있는 안내 문구를 적어 두세요."></textarea>
+    <div class="row">
+      <div>
+        <label for="fLaw">근거 법령·조례</label>
+        <input id="fLaw" type="text" placeholder="예: 도로교통법 제32조" />
+      </div>
+      <div>
+        <label for="fUrl">근거 링크 (선택)</label>
+        <input id="fUrl" type="text" placeholder="https://www.law.go.kr/법령/도로교통법" />
+      </div>
+    </div>
+    <div class="warn">
+      이 도구는 입력하신 내용을 <b>이 브라우저에만</b> 저장합니다. 서버로 전송하지 않습니다.
+      개인정보(민원인 실명·연락처·주민번호)는 넣지 마세요.
+    </div>
+    <div class="foot">
+      <button class="del" id="mDelete" type="button" hidden>삭제</button>
+      <button id="mCancel" type="button">취소</button>
+      <button class="primary" id="mSave" type="button">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  <div class="wrap">
+    바이브 코딩으로 만든 행정지원앱 · 설치 없이 브라우저에서 · 데이터는 내 기기에만 저장<br />
+    한국공공자치연구원 AI행정혁신연구소
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  const LS_KEY = "minwon-desk-v1";
+  const THEME_KEY = "minwon-desk-theme";
+  const FS_KEY = "minwon-desk-fs";
+
+  /* ---------- 초성 유틸 ---------- */
+  const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+  const CHOSET = new Set(CHO);
+  function toCho(str){
+    let r="";
+    for(const ch of str){
+      const c = ch.charCodeAt(0);
+      if(c>=0xAC00 && c<=0xD7A3){ r += CHO[Math.floor((c-0xAC00)/588)]; }
+      else { r += ch; }
+    }
+    return r;
+  }
+  const isChoQuery = q => q.length>0 && [...q].every(ch => CHOSET.has(ch) || ch===' ');
+
+  /* ---------- 예시 데이터 (사용자가 자기 지자체 기준으로 교체) ---------- */
+  const SAMPLES = [
+    {id:"s1", cat:"교통", title:"장애인전용주차구역 불법주차 신고", kw:"주차,장애인,과태료,주차구역",
+     ans:"장애인전용주차구역 불법주차는 '안전신문고' 앱 또는 홈페이지로 사진과 함께 신고하실 수 있습니다. 주차표지 미부착·부정사용 시 과태료가 부과됩니다. 현장 확인이 필요한 경우 담당 부서로 연결해 드리겠습니다.",
+     law:"장애인·노인·임산부 등의 편의증진 보장에 관한 법률 제17조", url:"https://www.law.go.kr/법령/장애인·노인·임산부등의편의증진보장에관한법률"},
+    {id:"s2", cat:"환경", title:"층간소음·생활소음 신고", kw:"소음,층간소음,시끄러움,진동",
+     ans:"공동주택 층간소음은 우선 '층간소음 이웃사이센터'(국가소음정보시스템) 상담을 안내드립니다. 사업장·공사장 등 생활소음은 관할 부서에서 소음도 측정 후 조치가 가능합니다. 발생 일시·장소를 알려주시면 접수해 드리겠습니다.",
+     law:"소음·진동관리법 / 공동주택관리법 제20조", url:"https://www.law.go.kr/법령/소음진동관리법"},
+    {id:"s3", cat:"환경", title:"쓰레기 무단투기 신고", kw:"쓰레기,무단투기,불법투기,종량제",
+     ans:"쓰레기 무단투기는 발생 장소와 사진을 확보하시면 과태료 부과가 가능합니다. 안전신문고 또는 관할 청소행정 부서로 접수해 주세요. 배출 요일·방법 안내가 필요하시면 함께 도와드리겠습니다.",
+     law:"폐기물관리법 제8조(투기 금지)", url:"https://www.law.go.kr/법령/폐기물관리법"},
+    {id:"s4", cat:"환경", title:"반려동물 목줄·배변 미수거", kw:"반려동물,개,목줄,배변,강아지",
+     ans:"공공장소에서 목줄 미착용, 배설물 미수거는 신고 대상입니다. 목격 일시·장소와 가능하면 사진을 남겨 주세요. 반복 지역은 계도·단속을 강화하도록 담당 부서에 전달하겠습니다.",
+     law:"동물보호법 제16조(등록대상동물의 관리)", url:"https://www.law.go.kr/법령/동물보호법"},
+    {id:"s5", cat:"안전", title:"도로 파손·포트홀 보수 요청", kw:"도로,포트홀,파손,보수,싱크홀",
+     ans:"도로 파손은 위치(도로명 주소)와 사진을 알려주시면 신속히 현장 확인 후 보수하겠습니다. 긴급 위험이 있는 경우 안전신문고로도 바로 신고 가능하며, 사고 위험이 크면 우선 조치됩니다.",
+     law:"도로법 제31조(도로의 유지·관리)", url:"https://www.law.go.kr/법령/도로법"},
+    {id:"s6", cat:"교통", title:"불법 주정차 신고", kw:"주정차,불법주차,견인,주차",
+     ans:"불법 주정차는 안전신문고 앱으로 동일 장소를 일정 간격(예: 1분) 이상 두고 촬영해 신고하시면 과태료 부과가 가능합니다. 소화전·교차로·횡단보도 등은 주민 신고만으로도 처리됩니다.",
+     law:"도로교통법 제32조·제33조(정차 및 주차의 금지)", url:"https://www.law.go.kr/법령/도로교통법"},
+    {id:"s7", cat:"민원행정", title:"전입신고·주민등록 정정", kw:"전입,전입신고,주민등록,정정,이사",
+     ans:"전입신고는 이사한 날부터 14일 이내에 하셔야 하며, 정부24 온라인 또는 주소지 행정복지센터에서 가능합니다. 세대주 확인이 필요한 경우가 있어, 준비 서류를 안내해 드리겠습니다.",
+     law:"주민등록법 제16조(신고의무자)", url:"https://www.law.go.kr/법령/주민등록법"},
+    {id:"s8", cat:"도시", title:"불법 광고물·간판 신고", kw:"광고물,간판,현수막,벽보,전단",
+     ans:"허가·신고 없이 설치된 옥외광고물이나 불법 현수막은 정비 대상입니다. 위치와 사진을 주시면 확인 후 조치하겠습니다. 지정 게시대 이용 방법도 안내해 드릴 수 있습니다.",
+     law:"옥외광고물 등의 관리와 옥외광고산업 진흥에 관한 법률", url:"https://www.law.go.kr/법령/옥외광고물등의관리와옥외광고산업진흥에관한법률"},
+    {id:"s9", cat:"안전", title:"가로등·보안등 고장 신고", kw:"가로등,보안등,조명,전등,어두움",
+     ans:"고장 난 가로등·보안등은 기둥에 부착된 관리번호(있는 경우)와 위치를 알려주시면 빠르게 접수됩니다. 어두워 안전이 우려되는 구간은 우선 처리하도록 요청하겠습니다.",
+     law:"각 지자체 가로등 설치·관리 조례 (ELIS 확인)", url:"https://www.elis.go.kr"},
+    {id:"s10", cat:"세무", title:"지방세 납부·감면 문의", kw:"세금,지방세,재산세,자동차세,감면,납부",
+     ans:"지방세 조회·납부는 '위택스(wetax)' 또는 관할 세무부서에서 가능합니다. 감면·분납·납기 연장은 요건이 있어, 사유를 확인한 뒤 담당자에게 연결해 정확히 안내해 드리겠습니다.",
+     law:"지방세법 / 지방세징수법", url:"https://www.law.go.kr/법령/지방세법"},
+    {id:"s11", cat:"복지", title:"기초연금 신청 문의", kw:"기초연금,연금,노인,복지,신청",
+     ans:"기초연금은 만 65세 이상, 소득·재산 기준을 충족하면 신청 가능합니다. 주소지 행정복지센터 또는 복지로(온라인)에서 접수되며, 필요 서류를 안내해 드리겠습니다. 자세한 대상 여부는 담당 부서에서 확인해 드립니다.",
+     law:"기초연금법 제3조(기초연금 수급권자의 범위)", url:"https://www.law.go.kr/법령/기초연금법"},
+    {id:"s12", cat:"응대", title:"장시간·반복 항의 전화 응대", kw:"악성,반복,항의,감정,응대,고성",
+     ans:"고생 많으십니다. 먼저 불편을 겪으신 점에 공감을 표하고, 요구사항의 '사실관계'와 '원하시는 결과'를 분리해 정리합니다. 규정상 어려운 부분은 근거를 들어 정중히 설명하고, 필요 시 서면·정식 민원 접수 절차를 안내합니다. 위협·폭언이 지속되면 통화 녹음 고지 및 통화 종료 원칙에 따릅니다.",
+     law:"민원 처리에 관한 법률 제4조(민원 처리 담당자의 보호)", url:"https://www.law.go.kr/법령/민원처리에관한법률"}
+  ];
+
+  /* ---------- 상태 ---------- */
+  let data = load();
+  const $ = s => document.querySelector(s);
+  const listEl = $("#list"), countEl = $("#count"), qEl = $("#q"), clrEl = $("#clr");
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(raw){ const p = JSON.parse(raw); if(Array.isArray(p)) return p; }
+    }catch(e){}
+    return SAMPLES.slice();
+  }
+  function save(){
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+    catch(e){ toast("저장 공간이 부족합니다"); }
+  }
+
+  /* ---------- 렌더 ---------- */
+  let openId = null;
+  function render(){
+    const q = qEl.value.trim();
+    clrEl.style.display = q ? "block" : "none";
+    let rows = data;
+    if(q){
+      const useCho = isChoQuery(q);
+      const qn = q.toLowerCase();
+      rows = data.filter(d=>{
+        const hay = (d.title+" "+(d.kw||"")+" "+(d.cat||"")+" "+(d.ans||"")).toLowerCase();
+        if(hay.includes(qn)) return true;
+        if(useCho){
+          const choHay = toCho(d.title+(d.kw||"")+(d.cat||""));
+          return choHay.replace(/\s/g,"").includes(q.replace(/\s/g,""));
+        }
+        return false;
+      });
+    }
+    countEl.textContent = q ? rows.length+"건 검색됨" : "전체 "+data.length+"건";
+    if(rows.length===0){
+      listEl.innerHTML = '<div class="empty"><div class="big">검색 결과가 없어요</div>'
+        + '다른 키워드로 찾아보거나, 오른쪽 아래 <b>＋ 항목 추가</b>로 직접 등록해 보세요.</div>';
+      return;
+    }
+    listEl.innerHTML = rows.map(d=>{
+      const open = d.id===openId ? " open":"";
+      const law = d.law ? (d.url
+          ? `<div class="law">📖 근거: <a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.law)}</a></div>`
+          : `<div class="law">📖 근거: ${esc(d.law)}</div>`) : "";
+      const kw = d.kw ? `<div class="kw">#${esc(d.kw).split(",").map(s=>s.trim()).filter(Boolean).join(" #")}</div>` : "";
+      return `<div class="card${open}" data-id="${esc(d.id)}">
+        <button class="head" type="button" data-act="toggle">
+          ${d.cat?`<span class="chip">${esc(d.cat)}</span>`:""}
+          <span class="q"><span class="title">${esc(d.title)}</span>${kw}</span>
+          <span class="caret">▸</span>
+        </button>
+        <div class="body">
+          <div class="ans" data-ans>${esc(d.ans||"")}</div>
+          ${law}
+          <div class="actions">
+            <button class="copy" data-act="copy" type="button">📋 답변 복사</button>
+            <button data-act="edit" type="button">✎ 수정</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+  }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  /* ---------- 이벤트: 목록 ---------- */
+  listEl.addEventListener("click", e=>{
+    const btn = e.target.closest("[data-act]");
+    if(!btn) return;
+    const card = e.target.closest(".card");
+    const id = card && card.getAttribute("data-id");
+    const act = btn.getAttribute("data-act");
+    if(act==="toggle"){ openId = (openId===id? null : id); render(); }
+    else if(act==="copy"){
+      const rec = data.find(x=>x.id===id);
+      if(rec){ copy(rec.ans||""); }
+    }
+    else if(act==="edit"){
+      const rec = data.find(x=>x.id===id);
+      if(rec) openModal(rec);
+    }
+  });
+
+  /* ---------- 검색 ---------- */
+  qEl.addEventListener("input", render);
+  clrEl.addEventListener("click", ()=>{ qEl.value=""; qEl.focus(); render(); });
+  // '/' 로 검색창 포커스
+  document.addEventListener("keydown", e=>{
+    if(e.key==="/" && document.activeElement!==qEl && !$("#modalBg").classList.contains("on")){
+      e.preventDefault(); qEl.focus(); qEl.select();
+    }
+    if(e.key==="Escape"){ if($("#modalBg").classList.contains("on")) closeModal(); }
+  });
+
+  /* ---------- 복사 ---------- */
+  function copy(text){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(()=>toast("답변을 복사했어요")).catch(()=>fallbackCopy(text));
+    } else fallbackCopy(text);
+  }
+  function fallbackCopy(text){
+    const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast("답변을 복사했어요"); }catch(e){ toast("복사에 실패했어요"); }
+    document.body.removeChild(ta);
+  }
+
+  /* ---------- 모달 ---------- */
+  const mb=$("#modalBg");
+  function openModal(rec){
+    $("#mTitle").textContent = rec ? "항목 수정" : "항목 추가";
+    $("#fId").value = rec?rec.id:"";
+    $("#fTitle").value = rec?rec.title:"";
+    $("#fCat").value = rec?(rec.cat||""):"";
+    $("#fKw").value = rec?(rec.kw||""):"";
+    $("#fAns").value = rec?(rec.ans||""):"";
+    $("#fLaw").value = rec?(rec.law||""):"";
+    $("#fUrl").value = rec?(rec.url||""):"";
+    $("#mDelete").hidden = !rec;
+    mb.classList.add("on");
+    setTimeout(()=>$("#fTitle").focus(),50);
+  }
+  function closeModal(){ mb.classList.remove("on"); }
+  $("#btnAdd").addEventListener("click", ()=>openModal(null));
+  $("#mCancel").addEventListener("click", closeModal);
+  mb.addEventListener("click", e=>{ if(e.target===mb) closeModal(); });
+  $("#mSave").addEventListener("click", ()=>{
+    const title=$("#fTitle").value.trim(), ans=$("#fAns").value.trim();
+    if(!title){ toast("제목을 입력해 주세요"); $("#fTitle").focus(); return; }
+    if(!ans){ toast("모범 답변을 입력해 주세요"); $("#fAns").focus(); return; }
+    const rec={
+      id:$("#fId").value || ("u"+Date.now()),
+      title, cat:$("#fCat").value.trim(), kw:$("#fKw").value.trim(),
+      ans, law:$("#fLaw").value.trim(), url:$("#fUrl").value.trim()
+    };
+    const idx=data.findIndex(x=>x.id===rec.id);
+    if(idx>=0){ data[idx]=rec; toast("수정했어요"); }
+    else { data.unshift(rec); toast("추가했어요"); }
+    openId=rec.id; save(); render(); closeModal();
+  });
+  $("#mDelete").addEventListener("click", ()=>{
+    const id=$("#fId").value;
+    if(!id) return;
+    if(confirm("이 항목을 삭제할까요?")){
+      data=data.filter(x=>x.id!==id); save(); render(); closeModal(); toast("삭제했어요");
+    }
+  });
+
+  /* ---------- 백업: 내보내기/가져오기 ---------- */
+  $("#btnExport").addEventListener("click", ()=>{
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    const a=document.createElement("a");
+    const d=new Date(), pad=n=>String(n).padStart(2,"0");
+    a.href=URL.createObjectURL(blob);
+    a.download=`민원응대사전_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.json`;
+    a.click(); URL.revokeObjectURL(a.href); toast("백업 파일을 내려받았어요");
+  });
+  $("#btnImport").addEventListener("click", ()=>$("#fileInput").click());
+  $("#fileInput").addEventListener("change", e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{
+      try{
+        const p=JSON.parse(r.result);
+        if(!Array.isArray(p)) throw 0;
+        const clean=p.filter(x=>x&&x.title).map((x,i)=>({
+          id:x.id||("i"+Date.now()+i), title:String(x.title), cat:x.cat||"", kw:x.kw||"",
+          ans:x.ans||"", law:x.law||"", url:x.url||""
+        }));
+        if(confirm(`${clean.length}건을 불러옵니다. 현재 목록을 이 내용으로 바꿀까요?\n(취소하면 현재 목록 뒤에 합칩니다)`)){
+          data=clean;
+        } else {
+          data=data.concat(clean);
+        }
+        save(); render(); toast("가져왔어요");
+      }catch(err){ toast("올바른 백업 파일이 아니에요"); }
+    };
+    r.readAsText(f); e.target.value="";
+  });
+  $("#btnReset").addEventListener("click", ()=>{
+    if(confirm("현재 목록을 지우고 예시 데이터로 되돌릴까요?\n(먼저 내보내기로 백업하시길 권합니다)")){
+      data=SAMPLES.slice(); openId=null; save(); render(); toast("예시로 복원했어요");
+    }
+  });
+
+  /* ---------- 테마·글씨 ---------- */
+  const root=document.documentElement;
+  function applyTheme(t){ root.setAttribute("data-theme", t); $("#btnTheme").textContent = t==="dark"?"☀ 라이트":"🌙 다크"; }
+  function applyFs(f){ if(f==="lg") root.setAttribute("data-fs","lg"); else root.removeAttribute("data-fs");
+    $("#btnFont").textContent = f==="lg"?"🔎 보통 글씨":"🔎 큰 글씨"; }
+  applyTheme(localStorage.getItem(THEME_KEY)==="dark"?"dark":"light");
+  applyFs(localStorage.getItem(FS_KEY)==="lg"?"lg":"n");
+  $("#btnTheme").addEventListener("click", ()=>{
+    const t=root.getAttribute("data-theme")==="dark"?"light":"dark";
+    applyTheme(t); localStorage.setItem(THEME_KEY,t);
+  });
+  $("#btnFont").addEventListener("click", ()=>{
+    const f=root.getAttribute("data-fs")==="lg"?"n":"lg";
+    applyFs(f); localStorage.setItem(FS_KEY,f);
+  });
+
+  /* ---------- 토스트 ---------- */
+  let tt;
+  function toast(msg){ const el=$("#toast"); el.textContent=msg; el.classList.add("on");
+    clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("on"),1800); }
+
+  render();
+})();
+</script>
+</body>
+</html>
