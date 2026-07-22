@@ -1,15 +1,20 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
+// 빈 값·잘못된 값이 들어와도 사이트 빌드가 멈추지 않도록 안전 처리한 필드들
+const optionalDate = z.coerce.date().optional().catch(undefined);
+const requiredDate = z.coerce.date().catch(() => new Date());
+const orderNum = z.coerce.number().catch(0);
+
 // 글(아카이브) — 본진 콘텐츠
 const writing = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/writing' }),
   schema: z.object({
     title: z.string(),
-    date: z.coerce.date(),
-    category: z.enum(['AI 활용법', 'AI 행정혁신', 'Human Premium', '교육 노트']),
+    date: requiredDate,
+    category: z.enum(['AI 활용법', 'AI 행정혁신', 'Human Premium', '교육 노트']).catch('AI 활용법'),
     summary: z.string().optional(),
-    draft: z.boolean().default(false),
+    draft: z.boolean().catch(false),
   }),
 });
 
@@ -18,11 +23,11 @@ const books = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/books' }),
   schema: z.object({
     title: z.string(),
-    status: z.enum(['출간', '집필 중', '기획 중']).default('출간'),
+    status: z.enum(['출간', '집필 중', '기획 중']).catch('출간'),
     year: z.string().optional(),
     cover: z.string().optional(),
     link: z.string().optional(),
-    order: z.number().default(0),
+    order: orderNum,
   }),
 });
 
@@ -33,8 +38,8 @@ const videos = defineCollection({
     title: z.string(),
     url: z.string(),
     thumbnail: z.string().optional(),
-    date: z.coerce.date().optional(),
-    order: z.number().default(0),
+    date: optionalDate,
+    order: orderNum,
   }),
 });
 
@@ -43,11 +48,11 @@ const apps = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/apps' }),
   schema: z.object({
     title: z.string(),
-    summary: z.string(),
+    summary: z.string().optional(),
     url: z.string(),
     tag: z.string().optional(),
     badge: z.string().optional(),
-    order: z.number().default(0),
+    order: orderNum,
   }),
 });
 
