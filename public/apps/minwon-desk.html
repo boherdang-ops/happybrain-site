@@ -48,6 +48,25 @@
   .tbtn{ font:inherit; font-size:.82rem; cursor:pointer; border:1px solid #33436a; background:transparent;
     color:var(--paper-on-navy); padding:.4rem .7rem; border-radius:var(--radius); display:inline-flex; align-items:center; gap:.35rem; }
   .tbtn:hover{ border-color:var(--gold); color:#fff; }
+  .tbtn.help{ border-color:var(--gold); color:#fff; background:rgba(184,134,59,.16); }
+  .tbtn.help:hover{ background:rgba(184,134,59,.3); }
+
+  /* 도움말 본문 */
+  .help-content{ font-size:.94rem; line-height:1.7; }
+  .help-content .hlead{ color:var(--sub); margin:0 0 1rem; }
+  .help-content h3{ font-family:var(--serif); font-size:1.05rem; color:var(--text);
+    margin:1.2rem 0 .5rem; padding-bottom:.3rem; border-bottom:1px solid var(--card-line); }
+  .help-content ul,.help-content ol{ margin:.4rem 0 .6rem; padding-left:1.3rem; }
+  .help-content li{ margin:.35rem 0; }
+  .help-content b{ color:var(--text); }
+  .help-content .k{ font-family:var(--mono); font-size:.8rem; background:var(--chip);
+    border:1px solid var(--card-line); border-radius:3px; padding:.05rem .4rem; color:var(--gold); }
+  .help-note{ background:var(--paper-2); border-left:3px solid var(--gold);
+    border-radius:4px; padding:.8rem 1rem .8rem; margin-top:1.1rem; }
+  .help-note > b{ color:var(--text); display:block; margin-bottom:.3rem; }
+  .help-note ul{ margin:.2rem 0 0; }
+  .help-note li{ font-size:.88rem; color:var(--sub); }
+  .help-note li b{ color:var(--text); }
 
   /* search */
   .searchbar{ position:sticky; top:0; z-index:20; background:var(--bg); padding:.9rem 0 .7rem;
@@ -142,6 +161,7 @@
     <h1 class="serif">묻기 전에, 먼저 찾는다</h1>
     <p class="lead">키워드 한 번이면 모범 답변과 근거 법령이 바로 뜹니다. 전화기 든 채로, 3초 안에.</p>
     <div class="toolbar">
+      <button class="tbtn help" id="btnHelp" type="button">❓ 도움말</button>
       <button class="tbtn" id="btnTheme" type="button">🌙 다크</button>
       <button class="tbtn" id="btnFont" type="button">🔎 큰 글씨</button>
       <button class="tbtn" id="btnExport" type="button">⬇ 내보내기</button>
@@ -210,6 +230,44 @@
       <button class="del" id="mDelete" type="button" hidden>삭제</button>
       <button id="mCancel" type="button">취소</button>
       <button class="primary" id="mSave" type="button">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 도움말 모달 -->
+<div class="modal-bg" id="helpBg">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="hTitle">
+    <h2 id="hTitle" class="serif">이렇게 쓰세요</h2>
+    <div class="help-content">
+      <p class="hlead">전화기를 든 채로 3초 안에, 모범 답변과 근거 법령을 찾는 도구입니다. 설치·로그인 없이 브라우저에서 바로 씁니다.</p>
+
+      <h3>빠른 시작</h3>
+      <ol>
+        <li>위 검색창에 <b>키워드</b>를 칩니다 → 관련 항목이 바로 좁혀집니다.</li>
+        <li>항목을 <b>클릭</b>하면 답변과 근거가 펼쳐집니다.</li>
+        <li><b>📋 답변 복사</b>로 안내문·메모에 붙여넣습니다(Ctrl+V).</li>
+      </ol>
+
+      <h3>이런 기능이 있어요</h3>
+      <ul>
+        <li><b>초성 검색</b> — 급할 땐 <span class="k">ㅈㅊ</span>만 쳐도 '주차', <span class="k">ㅆㄹㄱ</span>면 '쓰레기'가 나옵니다. (<span class="k">/</span> 키를 누르면 검색창으로 바로 이동)</li>
+        <li><b>내 지식 추가</b> — 오른쪽 아래 <b>＋ 항목 추가</b>로 우리 부서 답변·내선번호·조례를 넣으세요. 예시를 내 업무 기준으로 바꾸면 진짜 내 도구가 됩니다.</li>
+        <li><b>백업·공유</b> — <b>⬇ 내보내기</b>로 파일 저장, <b>⬆ 가져오기</b>로 복원·전달. 동료와 파일을 주고받으면 같은 사전을 씁니다.</li>
+        <li><b>눈 편하게</b> — 🌙 다크모드 / 🔎 큰 글씨 (설정은 기억됩니다). 실수로 지웠다면 ↺ 예시 복원.</li>
+      </ul>
+
+      <div class="help-note">
+        <b>⚠️ 꼭 알아두세요</b>
+        <ul>
+          <li>추가·수정한 내용은 <b>지금 이 브라우저에만</b> 저장됩니다. 다른 방문자에겐 안 보이고, 각자 자기 사본을 씁니다.</li>
+          <li>그래서 <b>캐시를 지우거나 다른 기기로 가면 편집분이 사라집니다.</b> 중요하면 <b>내보내기로 백업</b>하세요.</li>
+          <li><b>개인정보(민원인 실명·연락처·주민번호)는 넣지 마세요.</b> 누구에게나 통하는 표준 답변·근거를 담는 용도입니다.</li>
+          <li>답변·법령은 참고용 초안입니다. 조례는 개정되니 중요한 건은 <b>근거 링크(원문)로 최종 확인</b> 후 안내하세요.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot">
+      <button class="primary" id="hClose" type="button">시작하기</button>
     </div>
   </div>
 </div>
@@ -374,11 +432,29 @@
   clrEl.addEventListener("click", ()=>{ qEl.value=""; qEl.focus(); render(); });
   // '/' 로 검색창 포커스
   document.addEventListener("keydown", e=>{
-    if(e.key==="/" && document.activeElement!==qEl && !$("#modalBg").classList.contains("on")){
+    const anyModal = $("#modalBg").classList.contains("on") || $("#helpBg").classList.contains("on");
+    if(e.key==="/" && document.activeElement!==qEl && !anyModal){
       e.preventDefault(); qEl.focus(); qEl.select();
     }
-    if(e.key==="Escape"){ if($("#modalBg").classList.contains("on")) closeModal(); }
+    if(e.key==="Escape"){
+      if($("#modalBg").classList.contains("on")) closeModal();
+      else if($("#helpBg").classList.contains("on")) closeHelp();
+    }
   });
+
+  /* ---------- 도움말 ---------- */
+  const hb=$("#helpBg");
+  function openHelp(){ hb.classList.add("on"); setTimeout(()=>$("#hClose").focus(),50); }
+  function closeHelp(){ hb.classList.remove("on"); }
+  $("#btnHelp").addEventListener("click", openHelp);
+  $("#hClose").addEventListener("click", closeHelp);
+  hb.addEventListener("click", e=>{ if(e.target===hb) closeHelp(); });
+  // 첫 방문이면 도움말을 한 번 자동으로 보여줌
+  try{
+    if(!localStorage.getItem("minwon-desk-seen")){
+      openHelp(); localStorage.setItem("minwon-desk-seen","1");
+    }
+  }catch(e){}
 
   /* ---------- 복사 ---------- */
   function copy(text){
