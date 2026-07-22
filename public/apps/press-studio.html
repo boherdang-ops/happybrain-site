@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>보도자료 · 홍보문구 스튜디오</title>
+<meta name="description" content="행정 재료를 넣으면 언론 배포용 보도자료를 만들고, 그대로 카드뉴스·SNS·문자 문구로 변환하는 도구." />
+<style>
+  :root{
+    --ink:#1b2a4a; --navy:#1f3864; --navy-deep:#16233f; --blue:#2e5fa3;
+    --gold:#b8863b; --paper:#faf9f6; --paper-2:#f2eee4; --paper-on-navy:#ece7db;
+    --muted:#6b7385; --line:#e5ddce; --red:#b03636;
+    --serif:'Noto Serif KR',serif;
+    --sans:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,'Malgun Gothic',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --radius:5px; --fs:16px;
+    --card:#fff; --card-line:var(--line); --chip:var(--paper-2);
+    --bg:var(--paper); --text:var(--ink); --sub:var(--muted);
+  }
+  html[data-theme="dark"]{
+    --bg:#111b2e; --text:#e6e9f0; --sub:#9aa6bd; --card:#1a2740;
+    --card-line:#2b3a5c; --chip:#22314e; --line:#2b3a5c; --paper-2:#22314e;
+    --gold:#d0a45a; --blue:#7aa3d8; --red:#f0a0a0;
+  }
+  html[data-fs="lg"]{ --fs:18.5px; }
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ font-size:var(--fs); -webkit-text-size-adjust:100%; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.6;
+    -webkit-font-smoothing:antialiased; transition:background .2s,color .2s; }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none!important; animation:none!important; } }
+  .serif{ font-family:var(--serif); }
+  .wrap{ width:100%; max-width:1180px; margin-inline:auto; padding:0 clamp(1rem,4vw,1.75rem); }
+
+  header.top{ background:var(--navy-deep); color:var(--paper-on-navy); padding:1.4rem 0 1.5rem; }
+  header.top .eyebrow{ font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gold); display:inline-flex; align-items:center; gap:.5rem; margin-bottom:.5rem; }
+  header.top .eyebrow::before{ content:""; width:1.5rem; height:1px; background:var(--gold); }
+  header.top h1{ font-family:var(--serif); font-weight:700; color:#fff; margin:0; font-size:clamp(1.4rem,4vw,1.9rem); }
+  header.top p.lead{ margin:.45rem 0 0; color:var(--paper-on-navy); font-size:.92rem; max-width:58ch; }
+  .toolbar{ display:flex; gap:.5rem; margin-top:1rem; flex-wrap:wrap; }
+  .tbtn{ font:inherit; font-size:.82rem; cursor:pointer; border:1px solid #33436a; background:transparent;
+    color:var(--paper-on-navy); padding:.4rem .7rem; border-radius:var(--radius); }
+  .tbtn:hover{ border-color:var(--gold); color:#fff; }
+  .tbtn.help{ border-color:var(--gold); color:#fff; background:rgba(184,134,59,.16); }
+  .tbtn.help:hover{ background:rgba(184,134,59,.3); }
+
+  main{ padding:1.3rem 0 3rem; }
+  .stage{ font-family:var(--mono); font-size:.72rem; letter-spacing:.08em; color:var(--gold); margin:0 0 .5rem; }
+  .cols{ display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; align-items:start; }
+  @media (max-width:820px){ .cols{ grid-template-columns:1fr; } }
+  .panel{ background:var(--card); border:1px solid var(--card-line); border-radius:8px; padding:1rem 1rem 1.1rem; }
+  .panel h2{ font-family:var(--serif); font-size:1.08rem; margin:0 0 .7rem; }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+  @media (max-width:520px){ .grid2{ grid-template-columns:1fr; } }
+  label.fl{ display:block; font-size:.75rem; color:var(--sub); margin:.55rem 0 .25rem; font-weight:600; }
+  .field input, .field textarea, .panel textarea{ width:100%; font:inherit; font-size:.9rem; padding:.5rem .65rem;
+    border:1.5px solid var(--card-line); border-radius:var(--radius); background:var(--bg); color:var(--text); }
+  .field input:focus, .panel textarea:focus{ outline:none; border-color:var(--blue); }
+  textarea#fContent{ min-height:120px; line-height:1.6; resize:vertical; }
+  textarea#press{ min-height:330px; line-height:1.7; resize:vertical; font-size:.92rem; }
+
+  .btn{ font:inherit; font-size:.9rem; cursor:pointer; border:1px solid var(--card-line); background:var(--card);
+    color:var(--text); padding:.6rem .95rem; border-radius:var(--radius); }
+  .btn:hover:not(:disabled){ border-color:var(--gold); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .btn.primary{ background:var(--navy); color:#fff; border-color:var(--navy); font-weight:600; }
+  .btn.primary:hover:not(:disabled){ background:var(--blue); border-color:var(--blue); }
+  .btnrow{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.8rem; }
+  .msg{ font-size:.8rem; margin-top:.5rem; min-height:1.1em; }
+  .msg.err{ color:var(--red); }
+  .msg.ok{ color:var(--sub); }
+
+  .warn{ font-size:.78rem; color:var(--sub); background:var(--paper-2); border-left:3px solid #c0562e;
+    padding:.55rem .8rem; border-radius:4px; margin-top:.8rem; }
+  .warn b{ color:var(--text); }
+
+  /* 채널 변환 */
+  .channel{ margin-top:1.3rem; }
+  .tabs{ display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.8rem; }
+  .tab{ font:inherit; font-size:.85rem; cursor:pointer; border:1px solid var(--card-line); background:var(--card);
+    color:var(--text); padding:.5rem .85rem; border-radius:999px; }
+  .tab:hover:not(:disabled){ border-color:var(--gold); }
+  .tab.on{ background:var(--navy); color:#fff; border-color:var(--navy); }
+  .tab:disabled{ opacity:.45; cursor:not-allowed; }
+  .cout{ white-space:pre-wrap; font-size:.92rem; line-height:1.75; background:var(--bg); border:1px solid var(--card-line);
+    border-radius:var(--radius); padding:1rem 1.1rem; min-height:160px; max-height:520px; overflow-y:auto; }
+  .cout.placeholder{ color:var(--sub); display:flex; align-items:center; justify-content:center; text-align:center; }
+  .cout.err{ color:var(--red); }
+
+  .spin{ display:inline-block; width:1rem; height:1rem; border:2px solid rgba(255,255,255,.4);
+    border-top-color:#fff; border-radius:50%; animation:sp .7s linear infinite; vertical-align:-2px; margin-right:.4rem; }
+  @keyframes sp{ to{ transform:rotate(360deg); } }
+
+  /* modal */
+  .modal-bg{ display:none; position:fixed; inset:0; z-index:50; background:rgba(16,23,40,.55); padding:1rem; overflow-y:auto; }
+  .modal-bg.on{ display:flex; align-items:flex-start; justify-content:center; }
+  .modal{ background:var(--card); color:var(--text); width:100%; max-width:600px; border-radius:8px; margin:2.5rem auto;
+    padding:1.4rem; border:1px solid var(--card-line); }
+  .modal h2{ font-family:var(--serif); font-size:1.25rem; margin:0 0 1rem; }
+  .modal .foot{ display:flex; justify-content:flex-end; margin-top:1.3rem; }
+  .help-content{ font-size:.93rem; line-height:1.7; }
+  .help-content .hlead{ color:var(--sub); margin:0 0 1rem; }
+  .help-content h3{ font-family:var(--serif); font-size:1.03rem; margin:1.1rem 0 .45rem; padding-bottom:.3rem; border-bottom:1px solid var(--card-line); }
+  .help-content ul,.help-content ol{ margin:.4rem 0 .6rem; padding-left:1.3rem; }
+  .help-content li{ margin:.3rem 0; }
+  .help-note{ background:var(--paper-2); border-left:3px solid var(--gold); border-radius:4px; padding:.8rem 1rem; margin-top:1.1rem; }
+  .help-note b{ display:block; margin-bottom:.3rem; }
+  .help-note li{ font-size:.87rem; color:var(--sub); }
+
+  .toast{ position:fixed; left:50%; bottom:2rem; transform:translateX(-50%) translateY(1rem); z-index:60;
+    background:var(--navy-deep); color:#fff; padding:.6rem 1.1rem; border-radius:999px; font-size:.85rem;
+    opacity:0; pointer-events:none; transition:opacity .2s,transform .2s; }
+  .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  footer{ border-top:1px solid var(--line); color:var(--sub); font-size:.78rem; padding:1.4rem 0 2rem; text-align:center; margin-top:2rem; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">보도자료 · 홍보문구 스튜디오</p>
+    <h1 class="serif">보도자료부터 카드뉴스까지, 한 자리에서</h1>
+    <p class="lead">행정 재료를 넣으면 언론 배포용 보도자료를 만들고, 그 결과를 카드뉴스·SNS·문자 문구로 바로 변환합니다.</p>
+    <div class="toolbar">
+      <button class="tbtn help" id="btnHelp" type="button">❓ 도움말</button>
+      <button class="tbtn" id="btnTheme" type="button">🌙 다크</button>
+      <button class="tbtn" id="btnFont" type="button">🔎 큰 글씨</button>
+      <button class="tbtn" id="btnSample" type="button">📋 예시 넣기</button>
+      <button class="tbtn" id="btnClear" type="button">🗑 비우기</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="cols">
+      <!-- STAGE 1 -->
+      <div class="panel field">
+        <p class="stage">STAGE 1 · 재료 입력</p>
+        <h2 class="serif">무엇을 알릴까요?</h2>
+        <div class="grid2">
+          <div><label class="fl" for="fName">정책·행사명</label><input id="fName" type="text" placeholder="예: 봄맞이 벚꽃축제 개최" /></div>
+          <div><label class="fl" for="fWhen">일시</label><input id="fWhen" type="text" placeholder="예: 4. 5.(토)~4. 6.(일)" /></div>
+          <div><label class="fl" for="fWhere">장소</label><input id="fWhere" type="text" placeholder="예: ○○천 일대" /></div>
+          <div><label class="fl" for="fDept">담당부서</label><input id="fDept" type="text" placeholder="예: 문화관광과" /></div>
+        </div>
+        <label class="fl" for="fContent">주요 내용 (핵심 사실 — 아는 대로, 편하게)</label>
+        <textarea id="fContent" placeholder="예)&#10;- 셔틀버스 4대 운행, 주차장 부족으로 대중교통 권장&#10;- 야간 경관조명, 먹거리 부스 30여 곳&#10;- 지역 예술인 공연 매일 2회"></textarea>
+        <div class="grid2">
+          <div><label class="fl" for="fEffect">기대효과·배경 (선택)</label><input id="fEffect" type="text" placeholder="예: 지역 상권 활성화" /></div>
+          <div><label class="fl" for="fTel">문의처(부서 대표전화)</label><input id="fTel" type="text" placeholder="예: 000-000-0000" /></div>
+        </div>
+        <div class="btnrow">
+          <button class="btn primary" id="btnGen" type="button">✨ 보도자료 생성</button>
+        </div>
+        <div class="msg" id="genMsg"></div>
+      </div>
+
+      <!-- STAGE 2 -->
+      <div class="panel">
+        <p class="stage">STAGE 2 · 보도자료 (생성·편집)</p>
+        <h2 class="serif">보도자료</h2>
+        <textarea id="press" placeholder="여기에 보도자료가 만들어집니다. 이미 작성한 보도자료가 있다면 STAGE 1을 건너뛰고 여기에 바로 붙여넣어도 됩니다."></textarea>
+        <div class="btnrow">
+          <button class="btn" id="btnCopyPress" type="button" disabled>📋 보도자료 복사</button>
+          <button class="btn" id="btnDlPress" type="button" disabled>⬇ 다운로드(.txt)</button>
+        </div>
+        <div class="warn">
+          <b>배포 전 반드시 확인:</b> AI 초안입니다. 수치·인용문·직위·이름·날짜가 사실과 맞는지 검토하고, 문의처는 개인 번호가 아닌 <b>부서 대표번호</b>를 쓰세요.
+        </div>
+      </div>
+    </div>
+
+    <!-- STAGE 3 -->
+    <div class="channel">
+      <p class="stage">STAGE 3 · 채널 변환</p>
+      <h2 class="serif" style="font-family:var(--serif); font-size:1.15rem; margin:.2rem 0 .8rem;">완성된 보도자료를 채널별로 바꾸기</h2>
+      <div class="tabs" id="tabs">
+        <button class="tab" data-ch="card" type="button" disabled>🖼 카드뉴스</button>
+        <button class="tab" data-ch="sns" type="button" disabled>📱 인스타·페북</button>
+        <button class="tab" data-ch="blog" type="button" disabled>✍ 블로그</button>
+        <button class="tab" data-ch="sms" type="button" disabled>💬 문자·알림톡</button>
+      </div>
+      <div class="cout placeholder" id="cout">위 보도자료가 채워지면, 채널 버튼이 켜집니다.</div>
+      <div class="btnrow">
+        <button class="btn" id="btnRegen" type="button" disabled>🔄 다시 생성</button>
+        <button class="btn primary" id="btnCopyCh" type="button" disabled>📋 변환 문구 복사</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- 도움말 -->
+<div class="modal-bg" id="helpBg">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="hTitle">
+    <h2 id="hTitle" class="serif">이렇게 쓰세요</h2>
+    <div class="help-content">
+      <p class="hlead">재료를 넣으면 언론 배포용 보도자료를 만들고, 그 보도자료를 그대로 카드뉴스·SNS·문자 문구로 변환합니다. 세 단계가 이어집니다.</p>
+      <h3>STAGE 1 · 재료 입력</h3>
+      <ul><li>정책·행사명, 일시, 장소, 주요 내용을 넣고 <b>✨ 보도자료 생성</b>. 칸이 애매하면 '주요 내용'에 다 적어도 됩니다.</li></ul>
+      <h3>STAGE 2 · 보도자료</h3>
+      <ul>
+        <li>역피라미드 구조(리드→세부→인용→문의)의 보도자료 초안이 나옵니다. <b>직접 수정 가능</b>합니다.</li>
+        <li>이미 보도자료가 있으면 1단계를 건너뛰고 여기에 <b>붙여넣기만</b> 해도 됩니다.</li>
+      </ul>
+      <h3>STAGE 3 · 채널 변환</h3>
+      <ul><li>보도자료가 채워지면 채널 버튼이 켜집니다. 카드뉴스·인스타/페북·블로그·문자 중 눌러 변환하고 복사하세요.</li></ul>
+      <div class="help-note">
+        <b>⚠️ 꼭 알아두세요</b>
+        <ul>
+          <li>텍스트는 생성·변환을 위해 외부 AI(Google Gemini)로 전송됩니다. 보도자료는 공개 자료지만 <b>미공개 개인정보는 넣지 마세요.</b></li>
+          <li>AI 결과는 <b>초안</b>입니다. 배포 전 수치·인용·이름·날짜를 반드시 확인하세요.</li>
+          <li>이 앱은 <b>홈페이지에 올린 뒤</b> 작동합니다(AI 호출). 로컬 파일로 열면 안 됩니다.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot"><button class="btn primary" id="hClose" type="button">시작하기</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer><div class="wrap">바이브 코딩으로 만든 행정지원앱 · AI 처리는 Google Gemini · 배포 전 사실 확인 필수<br />한국공공자치연구원 AI행정혁신연구소</div></footer>
+
+<script>
+(function(){
+  "use strict";
+  const LS="press-studio-v1", THEME="press-studio-theme", FS="press-studio-fs", SEEN="press-studio-seen";
+  const $=s=>document.querySelector(s);
+
+  const PRESS_SYS=[
+    "너는 대한민국 지방자치단체의 홍보 담당 공무원이자 보도자료 작성 전문가야. 아래 [입력 정보]를 바탕으로 언론사에 배포할 수 있는 완성도 높은 보도자료를 작성해.",
+    "[작성 원칙]",
+    "- 역피라미드 구조: 가장 중요한 사실(누가·언제·어디서·무엇을·왜·어떻게)을 첫 문단(리드)에 압축하고, 이어서 세부 → 배경/기대효과 순으로 전개",
+    "- 문체: 객관적이고 간결한 보도체(~했다, ~한다, ~할 예정이다). 과장·홍보성 형용사 남발 금지, 사실 중심",
+    "- 분량: 본문 3~5문단",
+    "- 관계자 인용문 1개를 포함하되, 입력에 담당자 이름·직위가 없으면 '○○○ ○○과장'처럼 채워 넣을 자리를 표시할 것",
+    "- 입력에 없는 통계·수치·사실은 절대 지어내지 말 것. 꼭 필요하면 '[수치 확인]'처럼 표시",
+    "- 문의처는 개인 연락처가 아니라 입력된 부서·대표전화를 사용",
+    "[출력 형식]",
+    "제목: (핵심을 담은 한 줄, 25자 내외)",
+    "부제: (필요시 1~2줄, 없으면 생략)",
+    "(빈 줄)",
+    "(본문 문단들 — 역피라미드)",
+    "(빈 줄)",
+    "문의: (담당부서) / (대표전화)"
+  ].join("\n");
+
+  const CHANNELS={
+    card:{ label:"카드뉴스", sys:[
+      "너는 지자체 SNS 홍보 담당자야. 아래 보도자료를 인스타그램 '카드뉴스'용 문구로 변환해.",
+      "- 5~7장으로 구성하고 각 카드를 '카드 1', '카드 2'처럼 표기",
+      "- 카드 1은 시선을 끄는 표지 문구(짧고 강하게)",
+      "- 카드마다 한 가지 메시지만, 1~2문장으로 짧고 쉽게",
+      "- 마지막 카드는 문의처·참여 방법 안내",
+      "- 이모지는 카드당 0~1개로 절제",
+      "- 보도자료에 없는 사실은 넣지 말 것"
+    ].join("\n") },
+    sns:{ label:"인스타·페북", sys:[
+      "너는 지자체 SNS 담당자야. 아래 보도자료를 인스타그램/페이스북 게시글로 변환해.",
+      "- 친근하지만 신뢰감 있는 공공기관 톤",
+      "- 핵심만 3~5문장, 첫 문장으로 관심을 끌 것",
+      "- 이모지를 적절히(과하지 않게) 사용",
+      "- 마지막 줄에 관련 해시태그 8~12개(지역명·정책명 활용)",
+      "- 보도자료에 없는 사실은 넣지 말 것"
+    ].join("\n") },
+    blog:{ label:"블로그", sys:[
+      "너는 기관 공식 블로그 운영자야. 아래 보도자료를 블로그 게시글로 변환해.",
+      "- 블로그용 제목(보도자료보다 조금 부드럽게)",
+      "- 소제목 2~3개로 구조화",
+      "- 존댓말(~습니다)로 읽기 쉽게",
+      "- 마지막에 문의처 안내",
+      "- 보도자료에 없는 사실은 넣지 말 것"
+    ].join("\n") },
+    sms:{ label:"문자·알림톡", sys:[
+      "너는 지자체 주민 안내 담당자야. 아래 보도자료의 핵심을 주민 안내 문자(SMS)/카카오 알림톡용으로 아주 짧게 변환해.",
+      "- 2~4문장, 90자 내외를 우선",
+      "- 핵심 사실(무엇을/언제/어디서)만 남길 것",
+      "- 필요하면 '자세히: [링크]' 자리표시",
+      "- 정중하고 간결한 공공기관 안내 톤",
+      "- 보도자료에 없는 사실은 넣지 말 것"
+    ].join("\n") }
+  };
+
+  const SAMPLE={
+    name:"봄맞이 벚꽃축제 개최", when:"4. 5.(토) ~ 4. 6.(일)", where:"○○천 벚꽃길 일대", dept:"문화관광과",
+    content:"- 셔틀버스 4대 운행, 주차 공간 부족으로 대중교통 이용 권장\n- 야간 경관조명 운영, 지역 먹거리 부스 30여 곳\n- 지역 예술인 초청 공연 매일 2회(오후 2시·6시)\n- 반려동물 동반 가능, 쓰레기 되가져가기 캠페인 병행",
+    effect:"지역 상권 활성화 및 관광객 유치", tel:"000-000-0000"
+  };
+
+  let busy=false, activeCh=null, cache={};
+
+  async function callAI(system, user){
+    const res=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({systemPrompt:system, userPrompt:user})});
+    let data={}; try{ data=await res.json(); }catch(e){}
+    if(!res.ok || data.error) throw new Error(data.error || `요청 실패 (${res.status})`);
+    return (data.text||"").trim();
+  }
+
+  /* STAGE 1 → 2 : 보도자료 생성 */
+  function buildPressUser(){
+    return [
+      "[입력 정보]",
+      "정책·행사명: "+$("#fName").value.trim(),
+      "일시: "+$("#fWhen").value.trim(),
+      "장소: "+$("#fWhere").value.trim(),
+      "담당부서: "+$("#fDept").value.trim(),
+      "문의처(대표전화): "+$("#fTel").value.trim(),
+      "기대효과·배경: "+$("#fEffect").value.trim(),
+      "주요 내용:",
+      $("#fContent").value.trim()
+    ].join("\n");
+  }
+  async function genPress(){
+    if(busy) return;
+    if(!$("#fContent").value.trim() && !$("#fName").value.trim()){ toast("정책·행사명 또는 주요 내용을 넣어주세요"); $("#fName").focus(); return; }
+    busy=true; setGenLoading(true); setMsg("");
+    try{
+      const text=await callAI(PRESS_SYS, buildPressUser());
+      $("#press").value=text; onPressChanged(); save();
+      setMsg("보도자료 초안을 만들었어요. 필요하면 직접 다듬으세요.","ok");
+      toast("보도자료 생성 완료");
+    }catch(e){ setMsg("⚠ "+e.message, "err"); }
+    finally{ busy=false; setGenLoading(false); }
+  }
+  function setGenLoading(on){ const b=$("#btnGen"); b.disabled=on; b.innerHTML= on?'<span class="spin"></span>생성 중…':'✨ 보도자료 생성'; }
+  function setMsg(t,k){ const m=$("#genMsg"); m.textContent=t||""; m.className="msg"+(k?(" "+k):""); }
+
+  /* 보도자료 상태 변화 → 채널 초기화/활성화 */
+  function onPressChanged(){
+    const has=$("#press").value.trim().length>0;
+    $("#btnCopyPress").disabled=!has; $("#btnDlPress").disabled=!has;
+    document.querySelectorAll(".tab").forEach(t=>t.disabled=!has);
+    cache={}; activeCh=null;
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
+    const c=$("#cout"); c.className="cout placeholder";
+    c.textContent = has ? "채널 버튼을 눌러 변환하세요." : "위 보도자료가 채워지면, 채널 버튼이 켜집니다.";
+    $("#btnCopyCh").disabled=true; $("#btnRegen").disabled=true;
+  }
+  $("#press").addEventListener("input", ()=>{ onPressChanged(); save(); });
+
+  /* STAGE 3 : 채널 변환 */
+  document.querySelectorAll(".tab").forEach(t=>{
+    t.addEventListener("click", ()=>{ if(!t.disabled) selectChannel(t.getAttribute("data-ch")); });
+  });
+  function selectChannel(id){
+    activeCh=id;
+    document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on", t.getAttribute("data-ch")===id));
+    $("#btnRegen").disabled=false;
+    if(cache[id]!=null){ showChannel(cache[id]); }
+    else genChannel(id);
+  }
+  async function genChannel(id){
+    if(busy) return;
+    const press=$("#press").value.trim();
+    if(!press){ toast("먼저 보도자료를 채워주세요"); return; }
+    busy=true; setChannelLoading(true);
+    try{
+      const text=await callAI(CHANNELS[id].sys, press);
+      cache[id]=text; showChannel(text);
+      toast(CHANNELS[id].label+" 문구 완성");
+    }catch(e){
+      const c=$("#cout"); c.className="cout err"; c.textContent="⚠ "+e.message;
+      $("#btnCopyCh").disabled=true;
+    }finally{ busy=false; setChannelLoading(false); }
+  }
+  function setChannelLoading(on){
+    const c=$("#cout");
+    if(on){ c.className="cout placeholder"; c.innerHTML='<span><span class="spin" style="border-color:rgba(120,120,120,.4);border-top-color:var(--blue)"></span>'+(CHANNELS[activeCh]?CHANNELS[activeCh].label:'')+' 문구를 만드는 중…</span>'; $("#btnCopyCh").disabled=true; }
+  }
+  function showChannel(text){
+    const c=$("#cout"); c.className="cout"; c.textContent=text;
+    $("#btnCopyCh").disabled=!text;
+  }
+  $("#btnRegen").addEventListener("click", ()=>{ if(activeCh){ delete cache[activeCh]; genChannel(activeCh); } });
+
+  /* 복사 / 다운로드 */
+  function copyText(t, okmsg){
+    if(!t) return;
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(()=>toast(okmsg)).catch(()=>fb(t,okmsg));
+    } else fb(t,okmsg);
+  }
+  function fb(t,okmsg){ const ta=document.createElement("textarea"); ta.value=t; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); toast(okmsg);}catch(e){toast("복사 실패");} document.body.removeChild(ta); }
+  $("#btnCopyPress").addEventListener("click", ()=>copyText($("#press").value.trim(),"보도자료를 복사했어요"));
+  $("#btnCopyCh").addEventListener("click", ()=>copyText(activeCh?cache[activeCh]:"", "변환 문구를 복사했어요"));
+  $("#btnDlPress").addEventListener("click", ()=>{
+    const t=$("#press").value.trim(); if(!t) return;
+    const blob=new Blob([t],{type:"text/plain;charset=utf-8"});
+    const a=document.createElement("a"); const nm=($("#fName").value.trim()||"보도자료").replace(/[\\/:*?"<>|]/g,"").slice(0,40);
+    a.href=URL.createObjectURL(blob); a.download="보도자료_"+nm+".txt"; a.click(); URL.revokeObjectURL(a.href); toast("다운로드했어요");
+  });
+
+  /* 예시 / 비우기 */
+  $("#btnSample").addEventListener("click", ()=>{
+    $("#fName").value=SAMPLE.name; $("#fWhen").value=SAMPLE.when; $("#fWhere").value=SAMPLE.where;
+    $("#fDept").value=SAMPLE.dept; $("#fContent").value=SAMPLE.content; $("#fEffect").value=SAMPLE.effect; $("#fTel").value=SAMPLE.tel;
+    save(); toast("예시를 넣었어요 · 보도자료 생성을 눌러보세요");
+  });
+  $("#btnClear").addEventListener("click", ()=>{
+    if(!confirm("모든 입력과 결과를 지울까요?")) return;
+    ["fName","fWhen","fWhere","fDept","fContent","fEffect","fTel","press"].forEach(id=>$("#"+id).value="");
+    setMsg(""); onPressChanged(); save(); toast("비웠어요");
+  });
+
+  /* 저장 / 복원 */
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify({
+    name:$("#fName").value, when:$("#fWhen").value, where:$("#fWhere").value, dept:$("#fDept").value,
+    content:$("#fContent").value, effect:$("#fEffect").value, tel:$("#fTel").value, press:$("#press").value
+  })); }catch(e){} }
+  function restore(){ try{
+    const p=JSON.parse(localStorage.getItem(LS)||"null"); if(!p) return;
+    $("#fName").value=p.name||""; $("#fWhen").value=p.when||""; $("#fWhere").value=p.where||"";
+    $("#fDept").value=p.dept||""; $("#fContent").value=p.content||""; $("#fEffect").value=p.effect||""; $("#fTel").value=p.tel||"";
+    $("#press").value=p.press||"";
+  }catch(e){} }
+  ["fName","fWhen","fWhere","fDept","fContent","fEffect","fTel"].forEach(id=>$("#"+id).addEventListener("input", save));
+
+  /* 도움말 / 테마 / 글씨 */
+  const hb=$("#helpBg");
+  const openHelp=()=>{ hb.classList.add("on"); setTimeout(()=>$("#hClose").focus(),50); };
+  const closeHelp=()=>hb.classList.remove("on");
+  $("#btnHelp").addEventListener("click", openHelp);
+  $("#hClose").addEventListener("click", closeHelp);
+  hb.addEventListener("click", e=>{ if(e.target===hb) closeHelp(); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape"&&hb.classList.contains("on")) closeHelp(); });
+
+  const root=document.documentElement;
+  function applyTheme(t){ root.setAttribute("data-theme",t); $("#btnTheme").textContent=t==="dark"?"☀ 라이트":"🌙 다크"; }
+  function applyFs(f){ if(f==="lg")root.setAttribute("data-fs","lg"); else root.removeAttribute("data-fs");
+    $("#btnFont").textContent=f==="lg"?"🔎 보통 글씨":"🔎 큰 글씨"; }
+  applyTheme(localStorage.getItem(THEME)==="dark"?"dark":"light");
+  applyFs(localStorage.getItem(FS)==="lg"?"lg":"n");
+  $("#btnTheme").addEventListener("click", ()=>{ const t=root.getAttribute("data-theme")==="dark"?"light":"dark"; applyTheme(t); localStorage.setItem(THEME,t); });
+  $("#btnFont").addEventListener("click", ()=>{ const f=root.getAttribute("data-fs")==="lg"?"n":"lg"; applyFs(f); localStorage.setItem(FS,f); });
+
+  let tt; function toast(m){ const el=$("#toast"); el.textContent=m; el.classList.add("on"); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("on"),1900); }
+
+  $("#btnGen").addEventListener("click", genPress);
+  restore(); onPressChanged();
+  try{ if(!localStorage.getItem(SEEN)){ openHelp(); localStorage.setItem(SEEN,"1"); } }catch(e){}
+})();
+</script>
+</body>
+</html>
