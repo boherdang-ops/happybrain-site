@@ -48,7 +48,7 @@ gallery:
     caption: 광주 서구(2025.2.25~27 / 3회)
   - image: /uploads/resized (5).jpeg
     caption: 광주 서구(2025.2.25~27 / 3회)
-thumbnail: ''
+thumbnail: /uploads/resized (4).jpeg
 order: 7
 draft: false
 ---
