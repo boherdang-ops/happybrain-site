@@ -15,6 +15,7 @@ const books = (await getCollection('books')).sort((a, b) => a.data.order - b.dat
 const videos = (await getCollection('videos')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
 const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
 const courses = (await getCollection('courses', ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
+const resources = (await getCollection('resources', ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
 ---
 <Base>
   <!-- 히어로: 네이비 표지 -->
@@ -49,6 +50,28 @@ const courses = (await getCollection('courses', ({ data }) => !data.draft)).sort
               {c.data.target && <span>{c.data.target}</span>}
               {c.data.duration && <span>· {c.data.duration}</span>}
             </span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- 자료실 -->
+  {resources.length > 0 && (
+    <section class="section wrap">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Resources</p>
+          <h2>자료실</h2>
+        </div>
+        <a class="more" href="/resources/">전체 보기 →</a>
+      </div>
+      <div class="home-res-row">
+        {resources.map((r) => (
+          <a class="home-res" href="/resources/">
+            <span class="home-res-cat">{r.data.category}</span>
+            <span class="home-res-title">{r.data.title}</span>
+            {r.data.summary && <span class="home-res-summary">{r.data.summary}</span>}
           </a>
         ))}
       </div>
@@ -252,6 +275,15 @@ const courses = (await getCollection('courses', ({ data }) => !data.draft)).sort
   .home-course:hover .home-course-title { color: var(--blue); }
   .home-course-summary { color: var(--muted); font-size: .92rem; line-height: 1.55; }
   .home-course-meta { font-family: var(--mono); font-size: .72rem; color: var(--gold); display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .2rem; }
+
+  /* 홈 자료실 */
+  .home-res-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.2rem; }
+  .home-res { display: flex; flex-direction: column; gap: .5rem; padding: 1.4rem; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); transition: border-color .16s, transform .16s; }
+  .home-res:hover { text-decoration: none; border-color: var(--navy); transform: translateY(-2px); }
+  .home-res-cat { font-family: var(--mono); font-size: .66rem; color: var(--navy); background: var(--paper-2); border: 1px solid var(--line); padding: .12rem .45rem; border-radius: 2px; align-self: flex-start; }
+  .home-res-title { font-family: var(--serif); font-weight: 600; font-size: 1.1rem; }
+  .home-res:hover .home-res-title { color: var(--blue); }
+  .home-res-summary { color: var(--muted); font-size: .89rem; line-height: 1.55; }
 
   /* 소개 스트립 */
   .about-strip { background: var(--paper-2); border-top: 1px solid var(--line); }

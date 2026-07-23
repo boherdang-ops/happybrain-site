@@ -1,0 +1,157 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const items = (await getCollection('resources', ({ data }) => !data.draft))
+  .sort((a, b) => {
+    if (a.data.order !== b.data.order) return a.data.order - b.data.order;
+    const at = a.data.date ? a.data.date.valueOf() : 0;
+    const bt = b.data.date ? b.data.date.valueOf() : 0;
+    return bt - at;
+  });
+
+const categories = ['강의자료', '프롬프트 모음', '실습문제', '워크시트', '현장 사진', '기타'];
+const used = categories.filter((c) => items.some((i) => i.data.category === c));
+const fmtDate = (d) => d ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(d) : '';
+---
+<Base title="자료실" description="AI 교육 강의자료, 프롬프트 모음, 실습문제, 워크시트를 무료로 내려받으세요.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Resources</p>
+      <h1>자료실</h1>
+      <p class="page-lead">
+        교육에서 쓰는 강의자료와 프롬프트 모음, 실습문제와 워크시트를 나눕니다.
+        누구나 자유롭게 내려받아 쓰세요.
+      </p>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    {items.length > 0 && (
+      <div class="tools">
+        <div class="filters" data-filters>
+          <button class="chip is-on" data-cat="all" aria-pressed="true">전체</button>
+          {used.map((c) => <button class="chip" data-cat={c} aria-pressed="false">{c}</button>)}
+        </div>
+        <input class="search" type="search" placeholder="자료 검색…" data-search aria-label="자료 검색" />
+      </div>
+    )}
+
+    <div class="res-grid" data-list>
+      {items.map((r) => {
+        const href = r.data.file || r.data.link;
+        const external = !!r.data.link && !r.data.file;
+        return (
+          <article class="res" data-category={r.data.category} data-text={`${r.data.title} ${r.data.summary || ''} ${r.data.category}`}>
+            {r.data.thumbnail && <img class="res-thumb" src={r.data.thumbnail} alt="" loading="lazy" />}
+            <div class="res-body">
+              <span class="res-cat">{r.data.category}</span>
+              <h2 class="res-title">{r.data.title}</h2>
+              {r.data.summary && <p class="res-summary">{r.data.summary}</p>}
+              <div class="res-foot">
+                <span class="res-meta">
+                  {r.data.fileLabel && <span>{r.data.fileLabel}</span>}
+                  {r.data.date && <span class="res-date">{fmtDate(r.data.date)}</span>}
+                </span>
+                {href && (
+                  <a class="btn btn--sm" href={href} download={external ? undefined : true} target={external ? '_blank' : undefined} rel={external ? 'noopener' : undefined}>
+                    {external ? '자료 보기 →' : '내려받기 ↓'}
+                  </a>
+                )}
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+
+    <p class="none" data-none hidden>찾는 자료가 없습니다. 다른 검색어나 분류로 찾아보세요.</p>
+
+    {items.length === 0 && (
+      <div class="empty-box">
+        <p>자료를 준비하고 있습니다.</p>
+        <p class="empty-hint">교육 자료가 필요하시면 언제든 문의해 주세요.</p>
+        <a class="btn" href="/contact/">자료 문의하기</a>
+      </div>
+    )}
+  </section>
+</Base>
+
+<script>
+  const wrap = document.querySelector('[data-filters]');
+  const search = document.querySelector('[data-search]');
+  const cards = Array.from(document.querySelectorAll('[data-list] .res'));
+  const none = document.querySelector('[data-none]');
+  let cat = 'all';
+
+  function apply() {
+    const q = (search?.value || '').trim().toLowerCase();
+    let shown = 0;
+    cards.forEach((c) => {
+      const okCat = cat === 'all' || c.dataset.category === cat;
+      const okQ = !q || (c.dataset.text || '').toLowerCase().includes(q);
+      const ok = okCat && okQ;
+      c.style.display = ok ? '' : 'none';
+      if (ok) shown++;
+    });
+    if (none) none.hidden = shown !== 0 || cards.length === 0;
+  }
+
+  wrap?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip');
+    if (!btn) return;
+    wrap.querySelectorAll('.chip').forEach((c) => { c.classList.remove('is-on'); c.setAttribute('aria-pressed', 'false'); });
+    btn.classList.add('is-on'); btn.setAttribute('aria-pressed', 'true');
+    cat = btn.dataset.cat;
+    apply();
+  });
+  search?.addEventListener('input', apply);
+</script>
+
+<style>
+  .page-head { background: var(--navy-deep); color: var(--paper-on-navy); }
+  .page-head .wrap { padding-block: clamp(3rem, 8vw, 5rem); }
+  .page-head h1 { color: #fff; margin-top: .8rem; }
+  .page-head .eyebrow { color: var(--gold); }
+  .page-head .eyebrow::before { background: var(--gold); }
+  .page-lead { color: var(--paper-on-navy); max-width: 40rem; margin-top: 1rem; }
+
+  .tools { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+  .filters { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .chip {
+    font-family: var(--mono); font-size: .78rem; letter-spacing: .02em;
+    padding: .4rem .85rem; border-radius: 2px; cursor: pointer;
+    border: 1px solid var(--line); background: transparent; color: var(--muted);
+    transition: all .14s ease;
+  }
+  .chip:hover { border-color: var(--gold); color: var(--ink); }
+  .chip.is-on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .search {
+    font-family: var(--sans); font-size: .92rem; padding: .5rem .8rem;
+    border: 1px solid var(--line); border-radius: 2px; background: var(--paper); color: var(--ink);
+    min-width: 200px;
+  }
+  .search:focus { outline: none; border-color: var(--gold); }
+
+  .res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.4rem; }
+  .res {
+    display: flex; flex-direction: column;
+    border: 1px solid var(--line); border-radius: 4px; background: var(--paper); overflow: hidden;
+    transition: border-color .16s ease, transform .16s ease;
+  }
+  .res:hover { border-color: var(--navy); transform: translateY(-2px); }
+  .res-thumb { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-bottom: 1px solid var(--line); }
+  .res-body { display: flex; flex-direction: column; gap: .5rem; padding: 1.4rem; flex: 1; }
+  .res-cat { font-family: var(--mono); font-size: .68rem; letter-spacing: .04em; color: var(--navy); background: var(--paper-2); border: 1px solid var(--line); padding: .15rem .5rem; border-radius: 2px; align-self: flex-start; }
+  .res-title { font-size: 1.16rem; margin: .2rem 0 0; }
+  .res-summary { color: var(--muted); font-size: .92rem; line-height: 1.6; margin: 0; flex: 1; }
+  .res-foot { display: flex; align-items: center; justify-content: space-between; gap: .8rem; flex-wrap: wrap; margin-top: .6rem; padding-top: .9rem; border-top: 1px solid var(--line); }
+  .res-meta { font-family: var(--mono); font-size: .72rem; color: var(--muted); display: flex; gap: .6rem; flex-wrap: wrap; }
+  .res-date { color: var(--gold); }
+  .btn--sm { padding: .45rem .9rem; font-size: .85rem; }
+
+  .none { color: var(--muted); margin-top: 1.5rem; }
+  .empty-box { text-align: center; padding: 3rem 1.5rem; background: var(--paper-2); border: 1px solid var(--line); border-radius: 4px; }
+  .empty-box p { margin: 0 0 .5rem; font-size: 1.05rem; }
+  .empty-hint { color: var(--muted); font-size: .95rem; margin-bottom: 1.3rem !important; }
+</style>

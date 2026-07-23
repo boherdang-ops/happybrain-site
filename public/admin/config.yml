@@ -43,10 +43,50 @@ collections:
           - { name: title, label: "제목", widget: string, required: false }
           - { name: detail, label: "내용", widget: text, required: false }
       - { name: outcome, label: "기대 효과", widget: text, required: false }
+      - name: gallery
+        label: "교육 현장 사진"
+        widget: list
+        required: false
+        fields:
+          - { name: image, label: "사진", widget: image }
+          - { name: caption, label: "사진 설명", widget: string, required: false }
       - { name: thumbnail, label: "대표 이미지", widget: image, required: false }
       - { name: order, label: "정렬 순서 (작을수록 먼저)", widget: number, default: 0, value_type: int }
       - { name: draft, label: "임시저장(공개 안 함)", widget: boolean, default: false }
       - { name: body, label: "과정 소개 (본문)", widget: markdown }
+
+  # ── 자료실 ──────────────────────────────────────────
+  - name: resources
+    label: "자료실"
+    label_singular: "자료"
+    folder: "src/content/resources"
+    create: true
+    slug: "{{slug}}"
+    extension: md
+    format: frontmatter
+    fields:
+      - { name: title, label: "자료명", widget: string }
+      - name: category
+        label: "분류"
+        widget: select
+        options: ["강의자료", "프롬프트 모음", "실습문제", "워크시트", "현장 사진", "기타"]
+        default: "강의자료"
+      - { name: summary, label: "설명", widget: text, required: false }
+      - { name: file, label: "다운로드 파일 (PDF·한글·PPT·zip 등)", widget: file, required: false }
+      - { name: fileLabel, label: "파일 안내 (예: PDF · 2.4MB)", widget: string, required: false }
+      - { name: link, label: "외부 링크 (대용량 자료는 여기에)", widget: string, required: false }
+      - { name: thumbnail, label: "미리보기 이미지", widget: image, required: false }
+      - name: gallery
+        label: "관련 사진 (여러 장)"
+        widget: list
+        required: false
+        fields:
+          - { name: image, label: "사진", widget: image }
+          - { name: caption, label: "사진 설명", widget: string, required: false }
+      - { name: date, label: "등록일", widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", required: false }
+      - { name: order, label: "정렬 순서 (작을수록 먼저)", widget: number, default: 0, value_type: int }
+      - { name: draft, label: "임시저장(공개 안 함)", widget: boolean, default: false }
+      - { name: body, label: "자세한 설명 (선택)", widget: markdown, required: false }
 
   # ── 글 ──────────────────────────────────────────────
   - name: writing

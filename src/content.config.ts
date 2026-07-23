@@ -73,9 +73,34 @@ const courses = defineCollection({
     })).catch([]),
     outcome: z.string().optional(),       // 기대효과
     thumbnail: z.string().optional(),
+    gallery: z.array(z.object({
+      image: z.string().optional(),
+      caption: z.string().optional(),
+    })).catch([]),                        // 현장 사진
     order: orderNum,
     draft: z.boolean().catch(false),
   }),
 });
 
-export const collections = { writing, books, videos, apps, courses };
+// 자료실 — 강의자료·프롬프트·실습문제·워크시트 다운로드
+const resources = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/resources' }),
+  schema: z.object({
+    title: z.string(),
+    category: z.enum(['강의자료', '프롬프트 모음', '실습문제', '워크시트', '현장 사진', '기타']).catch('기타'),
+    summary: z.string().optional(),
+    file: z.string().optional(),          // 다운로드 파일
+    fileLabel: z.string().optional(),     // 예: PDF · 2.4MB
+    link: z.string().optional(),          // 외부 링크(대용량 자료용)
+    thumbnail: z.string().optional(),
+    gallery: z.array(z.object({
+      image: z.string().optional(),
+      caption: z.string().optional(),
+    })).catch([]),
+    date: optionalDate,
+    order: orderNum,
+    draft: z.boolean().catch(false),
+  }),
+});
+
+export const collections = { writing, books, videos, apps, courses, resources };
