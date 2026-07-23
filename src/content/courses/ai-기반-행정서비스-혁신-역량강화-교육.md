@@ -31,7 +31,7 @@ gallery:
   - image: /uploads/resized (3).jpeg
     caption: 완도군(2024.12.16)
 thumbnail: /uploads/resized (2).jpeg
-order: 0
+order: 6
 draft: false
 ---
 
