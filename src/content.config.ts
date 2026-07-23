@@ -89,8 +89,10 @@ const resources = defineCollection({
     title: z.string(),
     category: z.enum(['강의자료', '프롬프트 모음', '실습문제', '워크시트', '현장 사진', '기타']).catch('기타'),
     summary: z.string().optional(),
-    file: z.string().optional(),          // 다운로드 파일
+    file: z.string().optional(),          // 미리보기·다운로드 파일
     fileLabel: z.string().optional(),     // 예: PDF · 2.4MB
+    allowDownload: z.boolean().catch(false),  // 다운로드 허용 여부 (기본: 열람만)
+    notice: z.string().optional(),        // 이용 안내 / 저작권 문구
     link: z.string().optional(),          // 외부 링크(대용량 자료용)
     thumbnail: z.string().optional(),
     gallery: z.array(z.object({

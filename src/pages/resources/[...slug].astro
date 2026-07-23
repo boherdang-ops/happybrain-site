@@ -1,0 +1,145 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const items = await getCollection('resources', ({ data }) => !data.draft);
+  return items.map((item) => ({ params: { slug: item.id }, props: { item } }));
+}
+
+const { item } = Astro.props;
+const { Content } = await render(item);
+const d = item.data;
+
+const ext = (d.file || '').split('.').pop()?.toLowerCase() || '';
+const isPdf = ext === 'pdf';
+const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
+const canPreview = isPdf || isImage;
+const fmtDate = (x) => x ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }).format(x) : '';
+---
+<Base title={d.title} description={d.summary}>
+  <article>
+    <header class="res-head">
+      <div class="wrap">
+        <p class="eyebrow">{d.category}</p>
+        <h1>{d.title}</h1>
+        {d.summary && <p class="lead">{d.summary}</p>}
+        <div class="head-meta">
+          {d.fileLabel && <span>{d.fileLabel}</span>}
+          {d.date && <span>{fmtDate(d.date)}</span>}
+          <span class={d.allowDownload ? 'pill pill--ok' : 'pill'}>
+            {d.allowDownload ? '내려받기 가능' : '열람 전용'}
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap body">
+      {(d.summary || item.body?.trim()) && (
+        <div class="desc"><Content /></div>
+      )}
+
+      {/* 미리보기 */}
+      {d.file && canPreview && (
+        <section class="preview-block">
+          <h2>미리보기</h2>
+          {isPdf ? (
+            <div class="pdf-wrap">
+              <object data={`${d.file}#toolbar=0&navpanes=0`} type="application/pdf">
+                <p class="fallback">
+                  이 브라우저에서는 미리보기가 표시되지 않습니다.
+                  <a href={d.file} target="_blank" rel="noopener">새 창에서 열기 →</a>
+                </p>
+              </object>
+            </div>
+          ) : (
+            <img class="img-preview" src={d.file} alt={d.title} loading="lazy" />
+          )}
+        </section>
+      )}
+
+      {d.file && !canPreview && (
+        <section class="preview-block">
+          <h2>미리보기</h2>
+          <p class="no-preview">
+            이 형식({ext.toUpperCase() || '파일'})은 브라우저에서 미리보기를 지원하지 않습니다.
+            {d.allowDownload ? ' 아래에서 내려받아 확인해 주세요.' : ' 자료가 필요하시면 문의해 주세요.'}
+          </p>
+        </section>
+      )}
+
+      {/* 관련 사진 */}
+      {d.gallery.length > 0 && (
+        <section class="preview-block">
+          <h2>관련 사진</h2>
+          <div class="gallery">
+            {d.gallery.map((g) => g.image && (
+              <figure class="shot">
+                <img src={g.image} alt={g.caption || d.title} loading="lazy" />
+                {g.caption && <figcaption>{g.caption}</figcaption>}
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 이용 안내 */}
+      {d.notice && <p class="notice">{d.notice}</p>}
+
+      {/* 액션 */}
+      <section class="actions">
+        {d.allowDownload && d.file && (
+          <a class="btn" href={d.file} download>내려받기 ↓</a>
+        )}
+        {d.link && (
+          <a class="btn btn--ghost" href={d.link} target="_blank" rel="noopener">외부 링크로 보기 →</a>
+        )}
+        {!d.allowDownload && (
+          <a class="btn btn--ghost" href="/contact/">자료 문의하기</a>
+        )}
+        <a class="back" href="/resources/">← 자료실로</a>
+      </section>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .res-head { background: var(--navy-deep); color: var(--paper-on-navy); }
+  .res-head .wrap { padding-block: clamp(2.6rem, 6vw, 4rem); max-width: 52rem; }
+  .res-head .eyebrow { color: var(--gold); }
+  .res-head .eyebrow::before { background: var(--gold); }
+  .res-head h1 { color: #fff; margin: .8rem 0 1rem; font-size: clamp(1.7rem, 4vw, 2.5rem); }
+  .lead { color: var(--paper-on-navy); font-size: 1.06rem; line-height: 1.7; margin: 0 0 1.5rem; }
+  .head-meta { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; font-family: var(--mono); font-size: .76rem; color: var(--muted-on-navy); padding-top: 1.2rem; border-top: 1px solid var(--line-on-navy); }
+  .pill { border: 1px solid var(--line-on-navy); padding: .18rem .6rem; border-radius: 2px; color: var(--paper-on-navy); }
+  .pill--ok { background: var(--gold); border-color: var(--gold); color: var(--navy-deep); }
+
+  .body { max-width: 52rem; padding-block: clamp(2.2rem, 5vw, 3rem); }
+  .desc { font-size: 1.06rem; line-height: 1.8; }
+  .desc :global(p) { margin: 0 0 1.1em; }
+
+  .preview-block { margin-top: 2.4rem; }
+  .preview-block h2 { font-size: 1.3rem; margin: 0 0 1rem; padding-bottom: .5rem; border-bottom: 2px solid var(--gold); display: inline-block; }
+
+  .pdf-wrap { border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--paper-2); }
+  .pdf-wrap object { width: 100%; height: min(78vh, 820px); display: block; border: 0; }
+  .fallback { padding: 2rem; text-align: center; color: var(--muted); }
+  .img-preview { width: 100%; border: 1px solid var(--line); border-radius: 4px; }
+  .no-preview { color: var(--muted); background: var(--paper-2); border: 1px solid var(--line); border-radius: 4px; padding: 1.4rem; line-height: 1.7; }
+
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+  .shot { margin: 0; }
+  .shot img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 3px; border: 1px solid var(--line); }
+  .shot figcaption { margin-top: .45rem; font-size: .84rem; color: var(--muted); }
+
+  .notice { margin-top: 2rem; padding: 1rem 1.2rem; background: var(--paper-2); border-left: 3px solid var(--gold); color: var(--muted); font-size: .93rem; line-height: 1.7; border-radius: 0 3px 3px 0; }
+
+  .actions { margin-top: 2.6rem; padding-top: 1.8rem; border-top: 1px solid var(--line); display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
+  .back { font-family: var(--mono); font-size: .84rem; color: var(--muted); margin-left: auto; }
+  .back:hover { color: var(--blue); }
+
+  @media (max-width: 600px) {
+    .pdf-wrap object { height: 60vh; }
+    .back { margin-left: 0; }
+  }
+</style>

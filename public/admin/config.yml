@@ -72,8 +72,10 @@ collections:
         options: ["강의자료", "프롬프트 모음", "실습문제", "워크시트", "현장 사진", "기타"]
         default: "강의자료"
       - { name: summary, label: "설명", widget: text, required: false }
-      - { name: file, label: "다운로드 파일 (PDF·한글·PPT·zip 등)", widget: file, required: false }
+      - { name: file, label: "자료 파일 (PDF·이미지는 미리보기 지원)", widget: file, required: false }
       - { name: fileLabel, label: "파일 안내 (예: PDF · 2.4MB)", widget: string, required: false }
+      - { name: allowDownload, label: "내려받기 허용 (끄면 화면 열람만 가능)", widget: boolean, default: false }
+      - { name: notice, label: "이용 안내 / 저작권 문구", widget: text, required: false }
       - { name: link, label: "외부 링크 (대용량 자료는 여기에)", widget: string, required: false }
       - { name: thumbnail, label: "미리보기 이미지", widget: image, required: false }
       - name: gallery

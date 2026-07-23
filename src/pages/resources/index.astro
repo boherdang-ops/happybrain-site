@@ -38,31 +38,26 @@ const fmtDate = (d) => d ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', m
     )}
 
     <div class="res-grid" data-list>
-      {items.map((r) => {
-        const href = r.data.file || r.data.link;
-        const external = !!r.data.link && !r.data.file;
-        return (
-          <article class="res" data-category={r.data.category} data-text={`${r.data.title} ${r.data.summary || ''} ${r.data.category}`}>
-            {r.data.thumbnail && <img class="res-thumb" src={r.data.thumbnail} alt="" loading="lazy" />}
-            <div class="res-body">
+      {items.map((r) => (
+        <a class="res" href={`/resources/${r.id}/`} data-category={r.data.category} data-text={`${r.data.title} ${r.data.summary || ''} ${r.data.category}`}>
+          {r.data.thumbnail && <img class="res-thumb" src={r.data.thumbnail} alt="" loading="lazy" />}
+          <div class="res-body">
+            <span class="res-top">
               <span class="res-cat">{r.data.category}</span>
-              <h2 class="res-title">{r.data.title}</h2>
-              {r.data.summary && <p class="res-summary">{r.data.summary}</p>}
-              <div class="res-foot">
-                <span class="res-meta">
-                  {r.data.fileLabel && <span>{r.data.fileLabel}</span>}
-                  {r.data.date && <span class="res-date">{fmtDate(r.data.date)}</span>}
-                </span>
-                {href && (
-                  <a class="btn btn--sm" href={href} download={external ? undefined : true} target={external ? '_blank' : undefined} rel={external ? 'noopener' : undefined}>
-                    {external ? '자료 보기 →' : '내려받기 ↓'}
-                  </a>
-                )}
-              </div>
-            </div>
-          </article>
-        );
-      })}
+              {r.data.allowDownload && <span class="res-dl">내려받기 가능</span>}
+            </span>
+            <h2 class="res-title">{r.data.title}</h2>
+            {r.data.summary && <p class="res-summary">{r.data.summary}</p>}
+            <span class="res-foot">
+              <span class="res-meta">
+                {r.data.fileLabel && <span>{r.data.fileLabel}</span>}
+                {r.data.date && <span class="res-date">{fmtDate(r.data.date)}</span>}
+              </span>
+              <span class="res-go">미리보기 →</span>
+            </span>
+          </div>
+        </a>
+      ))}
     </div>
 
     <p class="none" data-none hidden>찾는 자료가 없습니다. 다른 검색어나 분류로 찾아보세요.</p>
@@ -139,10 +134,15 @@ const fmtDate = (d) => d ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', m
     border: 1px solid var(--line); border-radius: 4px; background: var(--paper); overflow: hidden;
     transition: border-color .16s ease, transform .16s ease;
   }
-  .res:hover { border-color: var(--navy); transform: translateY(-2px); }
+  .res:hover { border-color: var(--navy); transform: translateY(-2px); text-decoration: none; }
+  .res { color: var(--ink); }
+  .res:hover .res-title { color: var(--blue); }
   .res-thumb { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-bottom: 1px solid var(--line); }
   .res-body { display: flex; flex-direction: column; gap: .5rem; padding: 1.4rem; flex: 1; }
-  .res-cat { font-family: var(--mono); font-size: .68rem; letter-spacing: .04em; color: var(--navy); background: var(--paper-2); border: 1px solid var(--line); padding: .15rem .5rem; border-radius: 2px; align-self: flex-start; }
+  .res-top { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; }
+  .res-dl { font-family: var(--mono); font-size: .64rem; letter-spacing: .04em; color: var(--navy-deep); background: var(--gold); padding: .14rem .45rem; border-radius: 2px; }
+  .res-go { font-family: var(--mono); font-size: .76rem; color: var(--gold); white-space: nowrap; }
+  .res-cat { font-family: var(--mono); font-size: .68rem; letter-spacing: .04em; color: var(--navy); background: var(--paper-2); border: 1px solid var(--line); padding: .15rem .5rem; border-radius: 2px; }
   .res-title { font-size: 1.16rem; margin: .2rem 0 0; }
   .res-summary { color: var(--muted); font-size: .92rem; line-height: 1.6; margin: 0; flex: 1; }
   .res-foot { display: flex; align-items: center; justify-content: space-between; gap: .8rem; flex-wrap: wrap; margin-top: .6rem; padding-top: .9rem; border-top: 1px solid var(--line); }
