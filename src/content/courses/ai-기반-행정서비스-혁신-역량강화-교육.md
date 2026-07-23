@@ -1,5 +1,5 @@
 ---
-title: AI 시대의 스마트 공무원
+title: AI 기반 행정서비스 혁신 워크숍
 summary: 본 과정은 지방행정 현장의 업무 효율성을 극대화하고 주민 중심의 혁신적인 행정 서비스를 제공하기 위한 'AI 기반 행정서비스 혁신' 역량 강화 교육입니다.
 target: 지자체 실무 담당자
 duration: 3시간
@@ -26,7 +26,7 @@ curriculum:
       ■ 민원 응대 답변 작성
 outcome: 본 교육을 이수한 공직자들은 AI 기술을 효과적으로 업무에 적용하여 기존 문서 처리 및 정보 검색에 낭비되던 시간과 행정 자원을 획기적으로 절감할 수 있습니다. 이렇게 절약된 시간은 미뤄왔던 중요 행정 업무 처리에 즉시 재투자됨으로써 조직 전반의 행정 생산성을 대폭 향상시킵니다.
 gallery:
-  - image: /uploads/resized (2).jpeg
+  - image: /uploads/resized (6).jpeg
     caption: 완도군(2024.12.16)
   - image: /uploads/resized (3).jpeg
     caption: 완도군(2024.12.16)
