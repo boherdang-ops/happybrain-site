@@ -107,30 +107,6 @@ const resources = (await getCollection('resources', ({ data }) => !data.draft)).
     </ol>
   </section>
 
-  <!-- 책 -->
-  <section class="section wrap">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">Books</p>
-        <h2>책</h2>
-      </div>
-      <a class="more" href="/books/">전체 보기 →</a>
-    </div>
-    <div class="book-row">
-      {books.map((b) => (
-        <a class="book" href={b.data.link || '/books/'}>
-          <span class="book-cover" style={bgImage(b.data.cover)}>
-            {!b.data.cover && <span class="book-cover-title">{b.data.title}</span>}
-          </span>
-          <span class="book-info">
-            <span class="book-status">{b.data.status}{b.data.year ? ` · ${b.data.year}` : ''}</span>
-            <span class="book-title">{b.data.title}</span>
-          </span>
-        </a>
-      ))}
-    </div>
-  </section>
-
   <!-- 영상 -->
   <section class="section wrap">
     <div class="section-head">
@@ -170,6 +146,30 @@ const resources = (await getCollection('resources', ({ data }) => !data.draft)).
           </span>
           <span class="home-app-title">{app.data.title}</span>
           <span class="home-app-summary">{app.data.summary}</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- 책 -->
+  <section class="section wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Books</p>
+        <h2>책</h2>
+      </div>
+      <a class="more" href="/books/">전체 보기 →</a>
+    </div>
+    <div class="book-row">
+      {books.map((b) => (
+        <a class="book" href={b.data.link || '/books/'}>
+          <span class="book-cover" style={bgImage(b.data.cover)}>
+            {!b.data.cover && <span class="book-cover-title">{b.data.title}</span>}
+          </span>
+          <span class="book-info">
+            <span class="book-status">{b.data.status}{b.data.year ? ` · ${b.data.year}` : ''}</span>
+            <span class="book-title">{b.data.title}</span>
+          </span>
         </a>
       ))}
     </div>
