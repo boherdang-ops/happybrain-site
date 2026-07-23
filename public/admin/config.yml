@@ -18,6 +18,36 @@ public_folder: "/uploads"
 locale: ko
 
 collections:
+  # ── 교육과정 ────────────────────────────────────────
+  - name: courses
+    label: "교육과정"
+    label_singular: "과정"
+    folder: "src/content/courses"
+    create: true
+    slug: "{{slug}}"
+    extension: md
+    format: frontmatter
+    fields:
+      - { name: title, label: "과정명", widget: string }
+      - { name: summary, label: "한 줄 소개", widget: text, required: false }
+      - { name: target, label: "교육 대상", widget: string, required: false }
+      - { name: duration, label: "소요 시간 (예: 14시간 / 1박2일)", widget: string, required: false }
+      - { name: format, label: "교육 형식 (예: 집합·방문)", widget: string, required: false }
+      - { name: objectives, label: "교육 목표 (여러 개)", widget: list, field: { name: item, label: "목표", widget: string }, required: false }
+      - name: curriculum
+        label: "커리큘럼 (회차별)"
+        widget: list
+        required: false
+        fields:
+          - { name: session, label: "회차/차시 (예: 1회차)", widget: string, required: false }
+          - { name: title, label: "제목", widget: string, required: false }
+          - { name: detail, label: "내용", widget: text, required: false }
+      - { name: outcome, label: "기대 효과", widget: text, required: false }
+      - { name: thumbnail, label: "대표 이미지", widget: image, required: false }
+      - { name: order, label: "정렬 순서 (작을수록 먼저)", widget: number, default: 0, value_type: int }
+      - { name: draft, label: "임시저장(공개 안 함)", widget: boolean, default: false }
+      - { name: body, label: "과정 소개 (본문)", widget: markdown }
+
   # ── 글 ──────────────────────────────────────────────
   - name: writing
     label: "글"

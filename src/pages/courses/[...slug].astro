@@ -1,0 +1,115 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const courses = await getCollection('courses', ({ data }) => !data.draft);
+  return courses.map((course) => ({ params: { slug: course.id }, props: { course } }));
+}
+
+const { course } = Astro.props;
+const { Content } = await render(course);
+const d = course.data;
+---
+<Base title={d.title} description={d.summary}>
+  <article>
+    <header class="course-head">
+      <div class="wrap">
+        <p class="eyebrow">교육과정</p>
+        <h1>{d.title}</h1>
+        {d.summary && <p class="lead">{d.summary}</p>}
+        <dl class="head-meta">
+          {d.target && <div><dt>교육 대상</dt><dd>{d.target}</dd></div>}
+          {d.duration && <div><dt>소요 시간</dt><dd>{d.duration}</dd></div>}
+          {d.format && <div><dt>교육 형식</dt><dd>{d.format}</dd></div>}
+        </dl>
+      </div>
+    </header>
+
+    <div class="wrap body">
+      <div class="overview"><Content /></div>
+
+      {d.objectives.length > 0 && (
+        <section class="block">
+          <h2>교육 목표</h2>
+          <ul class="objectives">
+            {d.objectives.map((o) => <li>{o}</li>)}
+          </ul>
+        </section>
+      )}
+
+      {d.curriculum.length > 0 && (
+        <section class="block">
+          <h2>커리큘럼</h2>
+          <ol class="curriculum">
+            {d.curriculum.map((s) => (
+              <li>
+                {s.session && <span class="cur-no">{s.session}</span>}
+                <div class="cur-main">
+                  {s.title && <span class="cur-title">{s.title}</span>}
+                  {s.detail && <span class="cur-detail">{s.detail}</span>}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      {d.outcome && (
+        <section class="block outcome">
+          <h2>기대 효과</h2>
+          <p>{d.outcome}</p>
+        </section>
+      )}
+
+      <section class="cta">
+        <p>이 과정, 우리 지자체에서 진행하고 싶으신가요?</p>
+        <div class="cta-actions">
+          <a class="btn" href="/contact/">교육 문의하기</a>
+          <a class="btn btn--ghost" href="/courses/">다른 과정 보기</a>
+        </div>
+      </section>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .course-head { background: var(--navy-deep); color: var(--paper-on-navy); }
+  .course-head .wrap { padding-block: clamp(3rem, 7vw, 4.5rem); max-width: 52rem; }
+  .course-head .eyebrow { color: var(--gold); }
+  .course-head .eyebrow::before { background: var(--gold); }
+  .course-head h1 { color: #fff; margin: .8rem 0 1rem; font-size: clamp(1.9rem, 4.5vw, 2.8rem); }
+  .lead { color: var(--paper-on-navy); font-size: 1.1rem; line-height: 1.7; margin: 0 0 1.8rem; }
+  .head-meta { display: flex; flex-wrap: wrap; gap: 1rem 2.4rem; margin: 0; padding-top: 1.4rem; border-top: 1px solid var(--line-on-navy); }
+  .head-meta > div { display: flex; flex-direction: column; gap: .3rem; }
+  .head-meta dt { font-family: var(--mono); font-size: .68rem; letter-spacing: .06em; color: var(--gold); margin: 0; }
+  .head-meta dd { margin: 0; font-size: 1rem; color: #fff; }
+
+  .body { max-width: 52rem; padding-block: clamp(2.5rem, 6vw, 3.5rem); }
+  .overview { font-size: 1.08rem; line-height: 1.8; color: var(--ink); }
+  .overview :global(p) { margin: 0 0 1.2em; }
+
+  .block { margin-top: 2.8rem; }
+  .block h2 { font-size: 1.5rem; margin: 0 0 1.2rem; padding-bottom: .6rem; border-bottom: 2px solid var(--gold); display: inline-block; }
+
+  .objectives { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .7rem; }
+  .objectives li { position: relative; padding-left: 1.6rem; font-size: 1.04rem; line-height: 1.65; }
+  .objectives li::before { content: "→"; position: absolute; left: 0; color: var(--gold); font-weight: 700; }
+
+  .curriculum { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .curriculum li { display: grid; grid-template-columns: auto 1fr; gap: 1.2rem; padding: 1.2rem .2rem; border-bottom: 1px solid var(--line); align-items: start; }
+  .cur-no { font-family: var(--mono); font-size: .82rem; color: var(--gold); font-weight: 500; white-space: nowrap; padding-top: .15rem; }
+  .cur-main { display: flex; flex-direction: column; gap: .35rem; }
+  .cur-title { font-family: var(--serif); font-weight: 600; font-size: 1.15rem; }
+  .cur-detail { color: var(--muted); font-size: .96rem; line-height: 1.6; }
+
+  .outcome p { font-size: 1.08rem; line-height: 1.75; background: var(--paper-2); border-left: 3px solid var(--gold); padding: 1.2rem 1.4rem; border-radius: 0 3px 3px 0; margin: 0; }
+
+  .cta { margin-top: 3.5rem; padding-top: 2.5rem; border-top: 1px solid var(--line); text-align: center; }
+  .cta p { font-size: 1.1rem; margin: 0 0 1.3rem; }
+  .cta-actions { display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; }
+
+  @media (max-width: 520px) {
+    .curriculum li { grid-template-columns: 1fr; gap: .4rem; }
+  }
+</style>

@@ -56,4 +56,26 @@ const apps = defineCollection({
   }),
 });
 
-export const collections = { writing, books, videos, apps };
+// 교육과정 — 과정별 상세 안내
+const courses = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/courses' }),
+  schema: z.object({
+    title: z.string(),
+    target: z.string().optional(),        // 교육 대상
+    duration: z.string().optional(),      // 소요 시간
+    format: z.string().optional(),        // 형식 (집합·방문·온라인·혼합)
+    summary: z.string().optional(),       // 한 줄 소개
+    objectives: z.array(z.string()).catch([]),   // 교육 목표
+    curriculum: z.array(z.object({
+      session: z.string().optional(),     // 회차/차시
+      title: z.string().optional(),
+      detail: z.string().optional(),
+    })).catch([]),
+    outcome: z.string().optional(),       // 기대효과
+    thumbnail: z.string().optional(),
+    order: orderNum,
+    draft: z.boolean().catch(false),
+  }),
+});
+
+export const collections = { writing, books, videos, apps, courses };

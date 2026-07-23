@@ -1,0 +1,74 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const courses = (await getCollection('courses', ({ data }) => !data.draft))
+  .sort((a, b) => a.data.order - b.data.order);
+---
+<Base title="교육과정" description="지자체 공무원을 위한 AI 활용 교육과정. 대상·시간·커리큘럼을 확인하고 문의하세요.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Courses</p>
+      <h1>교육과정</h1>
+      <p class="page-lead">
+        지자체 공무원이 실제 업무에 AI를 쓰도록 설계한 과정들입니다.
+        대상과 목적에 맞는 과정을 골라보세요. 맞춤 과정도 상담해 드립니다.
+      </p>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="course-grid">
+      {courses.map((c) => (
+        <a class="course-card" href={`/courses/${c.id}/`}>
+          <div class="course-body">
+            <h2 class="course-title">{c.data.title}</h2>
+            {c.data.summary && <p class="course-summary">{c.data.summary}</p>}
+            <dl class="course-meta">
+              {c.data.target && <div><dt>대상</dt><dd>{c.data.target}</dd></div>}
+              {c.data.duration && <div><dt>시간</dt><dd>{c.data.duration}</dd></div>}
+              {c.data.format && <div><dt>형식</dt><dd>{c.data.format}</dd></div>}
+            </dl>
+          </div>
+          <span class="course-go">과정 자세히 →</span>
+        </a>
+      ))}
+    </div>
+    {courses.length === 0 && <p class="empty">준비 중입니다.</p>}
+
+    <div class="course-cta">
+      <p>찾는 과정이 없거나, 우리 지자체에 맞춘 과정이 필요하신가요?</p>
+      <a class="btn" href="/contact/">맞춤 교육 문의하기</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head { background: var(--navy-deep); color: var(--paper-on-navy); }
+  .page-head .wrap { padding-block: clamp(3rem, 8vw, 5rem); }
+  .page-head h1 { color: #fff; margin-top: .8rem; }
+  .page-head .eyebrow { color: var(--gold); }
+  .page-head .eyebrow::before { background: var(--gold); }
+  .page-lead { color: var(--paper-on-navy); max-width: 40rem; margin-top: 1rem; }
+
+  .course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+  .course-card {
+    display: flex; flex-direction: column; justify-content: space-between; gap: 1.2rem;
+    padding: 1.8rem; border: 1px solid var(--line); border-radius: 4px;
+    background: var(--paper); color: var(--ink);
+    transition: border-color .16s ease, transform .16s ease, box-shadow .16s ease;
+  }
+  .course-card:hover { text-decoration: none; border-color: var(--navy); transform: translateY(-3px); box-shadow: -7px 9px 0 -1px var(--paper-2), -7px 9px 0 0 var(--line); }
+  .course-title { font-size: 1.4rem; margin: 0 0 .6rem; }
+  .course-card:hover .course-title { color: var(--blue); }
+  .course-summary { color: var(--muted); font-size: .96rem; line-height: 1.6; margin: 0 0 1.1rem; }
+  .course-meta { margin: 0; display: flex; flex-direction: column; gap: .4rem; }
+  .course-meta > div { display: grid; grid-template-columns: 3.2rem 1fr; gap: .6rem; align-items: baseline; }
+  .course-meta dt { font-family: var(--mono); font-size: .7rem; letter-spacing: .04em; color: var(--gold); margin: 0; }
+  .course-meta dd { margin: 0; font-size: .9rem; color: var(--ink); }
+  .course-go { font-family: var(--mono); font-size: .8rem; color: var(--gold); }
+
+  .course-cta { margin-top: 3rem; padding: 2rem; background: var(--paper-2); border: 1px solid var(--line); border-radius: 4px; text-align: center; }
+  .course-cta p { margin: 0 0 1.1rem; font-size: 1.05rem; }
+  .empty { color: var(--muted); }
+</style>
