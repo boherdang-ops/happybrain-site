@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>프롬프트 도우미</title>
+<meta name="description" content="하고 싶은 일을 평소 말투로 적으면 AI에 바로 넣을 수 있는 프롬프트를 만들어 주는 도구." />
+<style>
+  :root{
+    --ink:#1b2a4a; --navy:#1f3864; --navy-deep:#16233f; --blue:#2e5fa3;
+    --gold:#b8863b; --paper:#faf9f6; --paper-2:#f2eee4; --paper-on-navy:#ece7db;
+    --muted:#6b7385; --line:#e5ddce; --red:#b03636;
+    --serif:'Noto Serif KR',serif;
+    --sans:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,'Malgun Gothic',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --radius:5px; --fs:16px;
+    --card:#fff; --card-line:var(--line); --chip:var(--paper-2);
+    --bg:var(--paper); --text:var(--ink); --sub:var(--muted);
+  }
+  html[data-theme="dark"]{
+    --bg:#111b2e; --text:#e6e9f0; --sub:#9aa6bd; --card:#1a2740;
+    --card-line:#2b3a5c; --chip:#22314e; --line:#2b3a5c; --paper-2:#22314e;
+    --gold:#d0a45a; --blue:#7aa3d8; --red:#f0a0a0;
+  }
+  html[data-fs="lg"]{ --fs:18.5px; }
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ font-size:var(--fs); -webkit-text-size-adjust:100%; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.6;
+    -webkit-font-smoothing:antialiased; transition:background .2s,color .2s; }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none!important; animation:none!important; } }
+  .serif{ font-family:var(--serif); }
+  .wrap{ width:100%; max-width:1080px; margin-inline:auto; padding:0 clamp(1rem,4vw,1.75rem); }
+
+  header.top{ background:var(--navy-deep); color:var(--paper-on-navy); padding:1.4rem 0 1.5rem; }
+  header.top .eyebrow{ font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gold); display:inline-flex; align-items:center; gap:.5rem; margin-bottom:.5rem; }
+  header.top .eyebrow::before{ content:""; width:1.5rem; height:1px; background:var(--gold); }
+  header.top h1{ font-family:var(--serif); font-weight:700; color:#fff; margin:0; font-size:clamp(1.4rem,4vw,1.9rem); }
+  header.top p.lead{ margin:.45rem 0 0; color:var(--paper-on-navy); font-size:.92rem; max-width:58ch; }
+  .toolbar{ display:flex; gap:.5rem; margin-top:1rem; flex-wrap:wrap; }
+  .tbtn{ font:inherit; font-size:.82rem; cursor:pointer; border:1px solid #33436a; background:transparent;
+    color:var(--paper-on-navy); padding:.4rem .7rem; border-radius:var(--radius); }
+  .tbtn:hover{ border-color:var(--gold); color:#fff; }
+  .tbtn.help{ border-color:var(--gold); color:#fff; background:rgba(184,134,59,.16); }
+  .tbtn.help:hover{ background:rgba(184,134,59,.3); }
+
+  main{ padding:1.3rem 0 3rem; }
+  .cols{ display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; align-items:start; }
+  @media (max-width:860px){ .cols{ grid-template-columns:1fr; } }
+  .panel{ background:var(--card); border:1px solid var(--card-line); border-radius:8px; padding:1rem 1rem 1.1rem; }
+  .panel h2{ font-family:var(--serif); font-size:1.08rem; margin:0 0 .35rem; }
+  .panel .sub{ font-size:.8rem; color:var(--sub); margin:0 0 .7rem; }
+  label.fl{ display:block; font-size:.76rem; color:var(--sub); margin:.6rem 0 .28rem; font-weight:600; }
+  select, textarea, input{ width:100%; font:inherit; font-size:.92rem; padding:.55rem .65rem; border:1.5px solid var(--card-line);
+    border-radius:var(--radius); background:var(--bg); color:var(--text); }
+  select:focus, textarea:focus, input:focus{ outline:none; border-color:var(--blue); }
+  textarea#goal{ min-height:150px; line-height:1.7; resize:vertical; }
+  textarea#out{ min-height:290px; line-height:1.7; resize:vertical; font-size:.9rem; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+  @media (max-width:520px){ .grid2{ grid-template-columns:1fr; } }
+
+  .btn{ font:inherit; font-size:.9rem; cursor:pointer; border:1px solid var(--card-line); background:var(--card);
+    color:var(--text); padding:.6rem .95rem; border-radius:var(--radius); }
+  .btn:hover:not(:disabled){ border-color:var(--gold); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .btn.primary{ background:var(--navy); color:#fff; border-color:var(--navy); font-weight:600; }
+  .btn.primary:hover:not(:disabled){ background:var(--blue); border-color:var(--blue); }
+  .btnrow{ display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.9rem; }
+  .msg{ font-size:.8rem; margin-top:.5rem; min-height:1.1em; } .msg.err{ color:var(--red); } .msg.ok{ color:var(--sub); }
+
+  /* 예시 칩 */
+  .chips{ display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.5rem; }
+  .chip{ font:inherit; font-size:.79rem; cursor:pointer; background:var(--chip); border:1px solid var(--card-line);
+    color:var(--text); padding:.32rem .7rem; border-radius:999px; }
+  .chip:hover{ border-color:var(--gold); }
+
+  .block{ margin-top:.9rem; background:var(--bg); border:1px solid var(--card-line); border-left:3px solid var(--gold);
+    border-radius:6px; padding:.75rem .9rem; font-size:.87rem; line-height:1.7; white-space:pre-wrap; }
+  .block .ttl{ font-family:var(--serif); font-weight:600; font-size:.94rem; margin-bottom:.35rem; white-space:normal; }
+  .block.next{ border-left-color:var(--blue); }
+
+  .warn{ font-size:.78rem; color:var(--sub); background:var(--paper-2); border-left:3px solid var(--gold);
+    padding:.55rem .85rem; border-radius:4px; margin-top:.9rem; }
+  .warn b{ color:var(--text); }
+  .spin{ display:inline-block; width:1rem; height:1rem; border:2px solid rgba(255,255,255,.4); border-top-color:#fff;
+    border-radius:50%; animation:sp .7s linear infinite; vertical-align:-2px; margin-right:.4rem; }
+  @keyframes sp{ to{ transform:rotate(360deg); } }
+
+  /* modal */
+  .modal-bg{ display:none; position:fixed; inset:0; z-index:50; background:rgba(16,23,40,.55); padding:1rem; overflow-y:auto; }
+  .modal-bg.on{ display:flex; align-items:flex-start; justify-content:center; }
+  .modal{ background:var(--card); color:var(--text); width:100%; max-width:620px; border-radius:8px; margin:2.5rem auto; padding:1.4rem; border:1px solid var(--card-line); }
+  .modal h2{ font-family:var(--serif); font-size:1.25rem; margin:0 0 1rem; }
+  .modal .foot{ display:flex; justify-content:flex-end; margin-top:1.3rem; }
+  .help-content{ font-size:.93rem; line-height:1.7; }
+  .help-content .hlead{ color:var(--sub); margin:0 0 1rem; }
+  .help-content h3{ font-family:var(--serif); font-size:1.03rem; margin:1.1rem 0 .45rem; padding-bottom:.3rem; border-bottom:1px solid var(--card-line); }
+  .help-content ul,.help-content ol{ margin:.4rem 0 .6rem; padding-left:1.3rem; } .help-content li{ margin:.3rem 0; }
+  .help-note{ background:var(--paper-2); border-left:3px solid var(--gold); border-radius:4px; padding:.8rem 1rem; margin-top:1.1rem; }
+  .help-note b{ display:block; margin-bottom:.3rem; } .help-note li{ font-size:.87rem; color:var(--sub); }
+
+  .toast{ position:fixed; left:50%; bottom:2rem; transform:translateX(-50%) translateY(1rem); z-index:60;
+    background:var(--navy-deep); color:#fff; padding:.6rem 1.1rem; border-radius:999px; font-size:.85rem; opacity:0; pointer-events:none; transition:opacity .2s,transform .2s; }
+  .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
+  footer{ border-top:1px solid var(--line); color:var(--sub); font-size:.78rem; padding:1.4rem 0 2rem; text-align:center; margin-top:2rem; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">프롬프트 도우미</p>
+    <h1 class="serif">하고 싶은 일을 말하면, 프롬프트가 됩니다</h1>
+    <p class="lead">프롬프트 작성법을 몰라도 됩니다. 평소 말투로 "무엇을 하고 싶은지"만 적으면, AI에 그대로 넣을 지시문을 만들어 드립니다.</p>
+    <div class="toolbar">
+      <button class="tbtn help" id="btnHelp" type="button">❓ 도움말</button>
+      <button class="tbtn" id="btnTheme" type="button">🌙 다크</button>
+      <button class="tbtn" id="btnFont" type="button">🔎 큰 글씨</button>
+      <button class="tbtn" id="btnClear" type="button">🗑 비우기</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="cols">
+      <div class="panel">
+        <h2 class="serif">1. 하고 싶은 일 적기</h2>
+        <p class="sub">문법·형식 신경 쓰지 마세요. 옆자리 동료에게 부탁하듯 편하게 쓰면 됩니다.</p>
+        <label class="fl" for="goal">무엇을 하고 싶으세요?</label>
+        <textarea id="goal" placeholder="예) 우리 군 인구가 자꾸 줄어드는데, 청년들이 안 떠나게 할 방법을 좀 찾아보고 싶어. 다른 지자체에서 성공한 사례도 알고 싶고, 우리 예산으로 할 수 있는 것 위주로."></textarea>
+        <div class="chips" id="chips">
+          <button class="chip" type="button" data-ex="idea">💡 정책 아이디어 찾기</button>
+          <button class="chip" type="button" data-ex="doc">📄 보고서 쓰기</button>
+          <button class="chip" type="button" data-ex="analyze">📊 자료 분석하기</button>
+          <button class="chip" type="button" data-ex="edu">🎓 교육 기획하기</button>
+        </div>
+        <div class="grid2">
+          <div>
+            <label class="fl" for="depth">얼마나 자세히?</label>
+            <select id="depth">
+              <option value="normal">보통 (일반적인 업무용)</option>
+              <option value="simple">간단히 (짧고 빠르게)</option>
+              <option value="deep">깊이 있게 (중요한 일)</option>
+            </select>
+          </div>
+          <div>
+            <label class="fl" for="who">내 상황 (선택)</label>
+            <input id="who" type="text" placeholder="예: ○○군 기획실, 인구정책 담당" />
+          </div>
+        </div>
+        <div class="btnrow">
+          <button class="btn primary" id="btnGen" type="button">✨ 프롬프트 만들기</button>
+        </div>
+        <div class="msg" id="msg"></div>
+        <div class="warn">
+          만든 프롬프트는 <b>ChatGPT·Gemini·Claude 어디서나</b> 그대로 쓸 수 있습니다. 개인정보는 넣지 마세요(입력 내용은 외부 AI로 전송됩니다).
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 class="serif">2. 완성된 프롬프트</h2>
+        <p class="sub">복사해서 쓰시는 AI에 붙여넣으세요. 마음에 안 들면 직접 고쳐도 됩니다.</p>
+        <textarea id="out" placeholder="여기에 바로 쓸 수 있는 프롬프트가 만들어집니다."></textarea>
+        <div class="btnrow">
+          <button class="btn primary" id="btnCopy" type="button" disabled>📋 프롬프트 복사</button>
+          <button class="btn" id="btnAgain" type="button" disabled>🔄 다시 만들기</button>
+        </div>
+        <div class="block" id="why" hidden><div class="ttl">이렇게 구성했어요</div><div id="whyBody"></div></div>
+        <div class="block next" id="next" hidden><div class="ttl">이어서 이렇게 대화해 보세요</div><div id="nextBody"></div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- 도움말 -->
+<div class="modal-bg" id="helpBg">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="hTitle">
+    <h2 id="hTitle" class="serif">이렇게 쓰세요</h2>
+    <div class="help-content">
+      <p class="hlead">프롬프트 작성법을 따로 배우지 않아도 됩니다. <b>하고 싶은 일만 평소 말로</b> 적으면, AI가 알아듣는 지시문으로 바꿔 드립니다.</p>
+      <h3>순서</h3>
+      <ol>
+        <li>왼쪽에 <b>무엇을 하고 싶은지</b> 편하게 적습니다. (예: "청년 유출을 막을 방법을 찾고 싶다")</li>
+        <li><b>✨ 프롬프트 만들기</b>를 누릅니다.</li>
+        <li>오른쪽 프롬프트를 <b>복사</b>해서 ChatGPT·Gemini·Claude 등에 붙여넣습니다.</li>
+        <li>아래 <b>이어서 이렇게 대화해 보세요</b>를 참고해 한두 번 더 주고받으면 결과가 훨씬 좋아집니다.</li>
+      </ol>
+      <h3>잘 적는 요령 (딱 두 가지)</h3>
+      <ul>
+        <li><b>목적을 말하세요</b> — "무엇을 위해" 필요한지 적으면 AI가 방향을 잡습니다.</li>
+        <li><b>내 상황을 한 줄</b> — 어떤 부서, 어떤 지역, 어떤 제약(예산·기간)이 있는지 덧붙이면 훨씬 쓸모 있어집니다.</li>
+      </ul>
+      <div class="help-note">
+        <b>기억할 것 하나</b>
+        <ul>
+          <li>좋은 결과는 <b>한 번에</b> 나오지 않습니다. 첫 답을 받고 "이 부분을 더", "우리 상황엔 안 맞으니 다시"처럼 <b>대화로 이어가는 것</b>이 핵심입니다. 시작과 판단은 사람이, 중간 탐색은 AI가 맡습니다.</li>
+          <li>AI의 답은 늘 <b>초안</b>입니다. 사실·수치는 확인하고 쓰세요.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot"><button class="btn primary" id="hClose" type="button">시작하기</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<footer><div class="wrap">바이브 코딩으로 만든 행정지원앱 · 어떤 AI에서나 쓸 수 있는 프롬프트<br />한국공공자치연구원 AI행정혁신연구소</div></footer>
+
+<script>
+(function(){
+  "use strict";
+  const LS="promptmaker-v1", THEME="promptmaker-theme", FS="promptmaker-fs", SEEN="promptmaker-seen";
+  const $=s=>document.querySelector(s);
+  let busy=false;
+
+  const DEPTH={
+    simple:"짧고 간결한 프롬프트로. 군더더기 없이 핵심 지시만 담아 5줄 안팎.",
+    normal:"일반 업무에 적당한 분량으로. 역할·맥락·과업·조건·출력형식이 담기되 너무 길지 않게.",
+    deep:"중요한 업무용으로 충실하게. 단계별 사고 요청, 검토 관점, 주의사항까지 포함해 꼼꼼하게."
+  };
+
+  const SYSTEM=[
+    "너는 프롬프트 설계 전문가야. 사용자는 대한민국 지방자치단체 공무원이고, 프롬프트 작성법을 배우지 않은 사람이다.",
+    "사용자가 '하고 싶은 일'을 일상어로 적으면, 너는 그것을 어떤 생성형 AI(ChatGPT·Gemini·Claude 등)에나 그대로 붙여넣을 수 있는 완성된 프롬프트로 만들어 준다.",
+    "[프롬프트 작성 원칙]",
+    "- AI가 맡을 역할을 지정하고, 업무 맥락(지자체 행정)을 반영할 것",
+    "- 과업을 구체적으로, 필요하면 단계로 나눌 것",
+    "- 지켜야 할 조건(사실 확인, 지어내기 금지, 공공성, 실행 가능성 등)을 넣을 것",
+    "- 원하는 출력 형식(구조·분량·문체)을 지정할 것",
+    "- 정보가 부족한 부분은 임의로 지어내지 말고, 프롬프트 안에서 AI가 사용자에게 되묻도록 유도할 것",
+    "- 사용자가 쓴 말투가 거칠거나 짧아도, 의도를 정확히 파악해 살릴 것. 사용자가 말하지 않은 목적을 임의로 바꾸지 말 것",
+    "- 프롬프트는 사용자가 그대로 복사해 쓸 수 있도록 완결된 문장으로 쓸 것. 빈칸이 꼭 필요하면 (여기에 ○○ 입력)처럼 표시",
+    "[분량] {DEPTH}",
+    "[출력 형식] 아래 세 부분을 이 머리말 그대로, 이 순서로만 출력. 다른 말은 덧붙이지 마.",
+    "[프롬프트]",
+    "(여기에 완성된 프롬프트 전문)",
+    "[이렇게 구성했어요]",
+    "(왜 이런 구조로 만들었는지 2~3문장으로 쉽게 설명. 전문용어 없이)",
+    "[이어서 이렇게 대화해 보세요]",
+    "(첫 답변을 받은 뒤 이어서 던지면 좋은 후속 질문 3개를 - 로 나열. 사용자가 그대로 복사해 쓸 수 있는 문장으로)"
+  ].join("\n");
+
+  const EXAMPLES={
+    idea:"우리 군 인구가 자꾸 줄어드는데, 청년들이 안 떠나게 할 방법을 찾아보고 싶어. 다른 지자체에서 성공한 사례도 알고 싶고, 우리 예산으로 할 수 있는 것 위주로.",
+    doc:"내년도 마을공동체 지원사업 계획을 과장님께 보고할 문서를 써야 해. 배경이랑 추진 방향, 예산까지 들어가야 하고 A4 두 장 정도로.",
+    analyze:"최근 3년 민원 접수 자료를 봐야 하는데, 어떤 분야가 늘고 줄었는지, 왜 그런지 짚어보고 대책까지 뽑고 싶어.",
+    edu:"직원들 대상으로 AI 활용 교육을 하려는데, 반나절짜리로 뭘 어떻게 구성하면 좋을지 짜보고 싶어. 컴퓨터 어려워하는 분들도 있어."
+  };
+
+  function buildUser(){
+    const who=$("#who").value.trim();
+    return [
+      "[하고 싶은 일]", $("#goal").value.trim(),
+      who? "\n[내 상황]\n"+who : ""
+    ].join("\n").trim();
+  }
+
+  async function callAI(system,user){
+    const res=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({systemPrompt:system,userPrompt:user})});
+    let data={}; try{ data=await res.json(); }catch(e){}
+    if(!res.ok || data.error) throw new Error(data.error || `요청 실패 (${res.status})`);
+    return (data.text||"").trim();
+  }
+
+  function splitResult(text){
+    const M1="[프롬프트]", M2="[이렇게 구성했어요]", M3="[이어서 이렇게 대화해 보세요]";
+    const i1=text.indexOf(M1), i2=text.indexOf(M2), i3=text.indexOf(M3);
+    let prompt=text, why="", next="";
+    if(i1>=0){
+      const end = i2>=0? i2 : (i3>=0? i3 : text.length);
+      prompt = text.slice(i1+M1.length, end).trim();
+    } else if(i2>=0){ prompt = text.slice(0,i2).trim(); }
+    if(i2>=0){ const end = i3>=0? i3 : text.length; why = text.slice(i2+M2.length, end).trim(); }
+    if(i3>=0){ next = text.slice(i3+M3.length).trim(); }
+    // 코드펜스 제거
+    prompt = prompt.replace(/^```[a-zA-Z]*\s*/,"").replace(/```\s*$/,"").trim();
+    return {prompt, why, next};
+  }
+
+  async function gen(){
+    if(busy) return;
+    if(!$("#goal").value.trim()){ toast("하고 싶은 일을 적어주세요"); $("#goal").focus(); return; }
+    busy=true; setLoading(true); setMsg("");
+    try{
+      const sys=SYSTEM.replace("{DEPTH}", DEPTH[$("#depth").value]);
+      const text=await callAI(sys, buildUser());
+      const r=splitResult(text);
+      $("#out").value=r.prompt; enableOut(r.prompt.length>0);
+      if(r.why){ $("#whyBody").textContent=r.why; $("#why").hidden=false; } else $("#why").hidden=true;
+      if(r.next){ $("#nextBody").textContent=r.next; $("#next").hidden=false; } else $("#next").hidden=true;
+      setMsg("프롬프트를 만들었어요. 복사해서 쓰시는 AI에 붙여넣으세요.","ok"); save();
+      toast("프롬프트 완성");
+    }catch(e){ setMsg("⚠ "+e.message,"err"); }
+    finally{ busy=false; setLoading(false); }
+  }
+  function setLoading(on){ const b=$("#btnGen"); b.disabled=on; b.innerHTML= on?'<span class="spin"></span>만드는 중…':'✨ 프롬프트 만들기'; }
+  function setMsg(t,k){ const m=$("#msg"); m.textContent=t||""; m.className="msg"+(k?(" "+k):""); }
+  function enableOut(on){ $("#btnCopy").disabled=!on; $("#btnAgain").disabled=!on; }
+
+  $("#out").addEventListener("input", ()=>{ enableOut($("#out").value.trim().length>0); save(); });
+  $("#btnAgain").addEventListener("click", gen);
+
+  function copyText(t){ if(!t) return;
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(()=>toast("복사했어요 · AI에 붙여넣으세요")).catch(()=>fb(t)); } else fb(t); }
+  function fb(t){ const ta=document.createElement("textarea"); ta.value=t; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); toast("복사했어요 · AI에 붙여넣으세요");}catch(e){toast("복사 실패");} document.body.removeChild(ta); }
+  $("#btnCopy").addEventListener("click", ()=>copyText($("#out").value.trim()));
+
+  document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click", ()=>{
+    $("#goal").value=EXAMPLES[c.getAttribute("data-ex")]; save(); $("#goal").focus(); toast("예시를 넣었어요 · 내 상황에 맞게 고쳐도 됩니다");
+  }));
+  $("#btnClear").addEventListener("click", ()=>{ if(!confirm("입력과 결과를 모두 지울까요?")) return;
+    $("#goal").value=""; $("#who").value=""; $("#out").value=""; $("#depth").value="normal";
+    $("#why").hidden=true; $("#next").hidden=true; setMsg(""); enableOut(false); save(); toast("비웠어요"); });
+
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify({goal:$("#goal").value, who:$("#who").value, depth:$("#depth").value, out:$("#out").value})); }catch(e){} }
+  function restore(){ try{ const p=JSON.parse(localStorage.getItem(LS)||"null"); if(!p) return;
+    $("#goal").value=p.goal||""; $("#who").value=p.who||""; $("#depth").value=p.depth||"normal"; $("#out").value=p.out||"";
+    if($("#out").value.trim()) enableOut(true); }catch(e){} }
+  ["goal","who","depth"].forEach(id=>$("#"+id).addEventListener("input", save));
+
+  const hb=$("#helpBg");
+  const openHelp=()=>{ hb.classList.add("on"); setTimeout(()=>$("#hClose").focus(),50); };
+  const closeHelp=()=>hb.classList.remove("on");
+  $("#btnHelp").addEventListener("click", openHelp);
+  $("#hClose").addEventListener("click", closeHelp);
+  hb.addEventListener("click", e=>{ if(e.target===hb) closeHelp(); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape"&&hb.classList.contains("on")) closeHelp(); });
+
+  const root=document.documentElement;
+  function applyTheme(t){ root.setAttribute("data-theme",t); $("#btnTheme").textContent=t==="dark"?"☀ 라이트":"🌙 다크"; }
+  function applyFs(f){ if(f==="lg")root.setAttribute("data-fs","lg"); else root.removeAttribute("data-fs"); $("#btnFont").textContent=f==="lg"?"🔎 보통 글씨":"🔎 큰 글씨"; }
+  applyTheme(localStorage.getItem(THEME)==="dark"?"dark":"light");
+  applyFs(localStorage.getItem(FS)==="lg"?"lg":"n");
+  $("#btnTheme").addEventListener("click", ()=>{ const t=root.getAttribute("data-theme")==="dark"?"light":"dark"; applyTheme(t); localStorage.setItem(THEME,t); });
+  $("#btnFont").addEventListener("click", ()=>{ const f=root.getAttribute("data-fs")==="lg"?"n":"lg"; applyFs(f); localStorage.setItem(FS,f); });
+
+  let tt; function toast(m){ const el=$("#toast"); el.textContent=m; el.classList.add("on"); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("on"),1900); }
+
+  $("#btnGen").addEventListener("click", gen);
+  restore();
+  try{ if(!localStorage.getItem(SEEN)){ openHelp(); localStorage.setItem(SEEN,"1"); } }catch(e){}
+})();
+</script>
+</body>
+</html>
