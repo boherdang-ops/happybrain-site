@@ -1,5 +1,5 @@
 ---
-title: 전직원 생성형 AI 역량강화 심화 교육
+title: 전직원 AI 리터러시 기초 특강 (7H)
 summary: 본 과정에서는 현장 실무의 복잡한 문제 해결을 위한 '사고 연쇄(Chain-of-Thought)' 프롬프팅과, 우수 사례를 모방하는 '퓨샷(Few-Shot)' 프롬프팅 기법을 심층적으로 다룹니다.
 target: 지자체 전 직원
 duration: 7시간
@@ -49,7 +49,7 @@ gallery:
   - image: /uploads/resized (1).jpeg
     caption: 의령군 전직원 생성형 AI 역량강화 심화 교육_2026.6.24.
 thumbnail: /uploads/KakaoTalk_20260625_085607721_09.jpg
-order: 2
+order: 3
 draft: false
 ---
 
