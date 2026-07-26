@@ -29,7 +29,7 @@ gallery:
   - image: /uploads/resized (8).jpeg
     caption: 영광군(2026.9.23~24)
 thumbnail: ''
-order: 0
+order: 9
 draft: false
 ---
 
