@@ -4,7 +4,7 @@ category: 강의자료
 summary: 본 자료는 인공지능을 단순한 정보 검색 도구가 아닌 능동적인 '디지털 행정 보좌관'으로 활용할 수 있도록, 주요 생성형 AI 모델의 핵심 특성과 업무 상황별 최적의 교차 활용 전략을 명확히 제시합니다.
 file: /uploads/생성형 AI 활용 가이드.pdf
 fileLabel: ''
-allowDownload: false
+allowDownload: true
 notice: ''
 link: ''
 thumbnail: ''
