@@ -4,7 +4,7 @@ category: 기타
 summary: 한국공공자치연구원 AI행정혁신연구소의 교육 프로그램은 인구와 복지, 도시 인프라, 지역 경제, 행정 혁신 등 우리나라 지자체가 직면하고 있는 15가지의 주요 현안과 이를 해결하기 위한 AI 기반 정책 기획 실습을 상세히 다루고 있습니다.
 file: /uploads/종합 브로슈어.pdf
 fileLabel: ''
-allowDownload: false
+allowDownload: true
 notice: ''
 link: ''
 thumbnail: ''
