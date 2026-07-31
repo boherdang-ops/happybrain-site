@@ -58,7 +58,7 @@ gallery:
   - image: /uploads/resized (8).jpeg
     caption: 영광군(2025.9.23~24)
 thumbnail: /uploads/resized (9).jpeg
-order: 4
+order: 2
 draft: false
 ---
 
