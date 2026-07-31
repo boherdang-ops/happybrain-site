@@ -31,7 +31,7 @@ gallery:
   - image: /uploads/resized (10).jpeg
     caption: 완도군(2025.12.16)
 thumbnail: /uploads/KakaoTalk_20260529_162938771_15.jpg
-order: 2
+order: 4
 draft: false
 ---
 
