@@ -49,7 +49,7 @@ gallery:
   - image: /uploads/resized (1).jpeg
     caption: 의령군(2026.6.24)
 thumbnail: /uploads/KakaoTalk_20260625_085607721_09.jpg
-order: 3
+order: 4
 draft: false
 ---
 
