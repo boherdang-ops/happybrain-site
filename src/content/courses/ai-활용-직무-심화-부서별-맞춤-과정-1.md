@@ -62,7 +62,7 @@ gallery:
   - image: /uploads/20251125_141118.jpg
     caption: 합천군(2025.11.25~26)
 thumbnail: ''
-order: 0
+order: 5
 draft: false
 ---
 
