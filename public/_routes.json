@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "include": [
+    "/apps/private/*",
+    "/uploads/private/*",
+    "/api/*"
+  ],
+  "exclude": []
+}
