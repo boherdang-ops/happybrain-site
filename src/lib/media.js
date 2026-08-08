@@ -17,3 +17,13 @@ export function videoThumb(data = {}) {
 export function bgImage(path) {
   return path ? `background-image:url('${String(path).replace(/'/g, "\\'")}')` : '';
 }
+
+// 파일 주소 안전 변환: 한글·띄어쓰기가 들어간 경로를 웹 주소 규격으로 인코딩
+// (이미 인코딩된 경로는 이중 인코딩하지 않음)
+export function safeUrl(path) {
+  if (!path) return path;
+  const p = String(path).trim();
+  if (/^https?:\/\//.test(p)) return p;            // 외부 링크는 그대로
+  if (/%[0-9A-Fa-f]{2}/.test(p)) return p;         // 이미 인코딩됨
+  return encodeURI(p);
+}

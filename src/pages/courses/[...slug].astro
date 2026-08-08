@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
+import { safeUrl } from '../../lib/media.js';
 
 export async function getStaticPaths() {
   const courses = await getCollection('courses', ({ data }) => !data.draft);
@@ -68,7 +69,7 @@ const d = course.data;
           <div class="gallery">
             {d.gallery.map((g) => g.image && (
               <figure class="shot">
-                <img src={g.image} alt={g.caption || `${d.title} 교육 현장`} loading="lazy" />
+                <img src={safeUrl(g.image)} alt={g.caption || `${d.title} 교육 현장`} loading="lazy" />
                 {g.caption && <figcaption>{g.caption}</figcaption>}
               </figure>
             ))}

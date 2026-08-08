@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
+import { safeUrl } from '../../lib/media.js';
 
 export async function getStaticPaths() {
   const items = await getCollection('resources', ({ data }) => !data.draft);
@@ -12,7 +13,7 @@ const { Content } = await render(item);
 const d = item.data;
 
 const locked = !!d.protectedFile;
-const src = d.protectedFile || d.file || '';
+const src = safeUrl(d.protectedFile || d.file || '');
 const ext = src.split('.').pop()?.toLowerCase() || '';
 const isPdf = ext === 'pdf';
 const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
@@ -87,7 +88,7 @@ const fmtDate = (x) => x ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', m
           <div class="gallery">
             {d.gallery.map((g) => g.image && (
               <figure class="shot">
-                <img src={g.image} alt={g.caption || d.title} loading="lazy" />
+                <img src={safeUrl(g.image)} alt={g.caption || d.title} loading="lazy" />
                 {g.caption && <figcaption>{g.caption}</figcaption>}
               </figure>
             ))}
