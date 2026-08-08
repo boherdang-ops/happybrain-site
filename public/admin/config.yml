@@ -75,6 +75,13 @@ collections:
       - { name: file, label: "자료 파일 (PDF·이미지는 미리보기 지원)", widget: file, required: false }
       - { name: fileLabel, label: "파일 안내 (예: PDF · 2.4MB)", widget: string, required: false }
       - { name: allowDownload, label: "내려받기 허용 (끄면 화면 열람만 가능)", widget: boolean, default: false }
+      - name: protectedFile
+        label: "보호 자료 (비밀번호를 아는 사람만 열람)"
+        widget: file
+        required: false
+        media_folder: "/public/uploads/private"
+        public_folder: "/uploads/private"
+        hint: "여기에 올린 파일은 비밀번호를 통과해야 열립니다. 위 '자료 파일'과 둘 중 하나만 쓰세요."
       - { name: notice, label: "이용 안내 / 저작권 문구", widget: text, required: false }
       - { name: link, label: "외부 링크 (대용량 자료는 여기에)", widget: string, required: false }
       - { name: thumbnail, label: "미리보기 이미지", widget: image, required: false }
@@ -161,6 +168,7 @@ collections:
       - { name: url, label: "링크 (예: /apps/press-release/ )", widget: string }
       - { name: tag, label: "분류 태그 (예: 보도자료)", widget: string, required: false }
       - { name: badge, label: "뱃지 (예: 무료)", widget: string, required: false }
+      - { name: locked, label: "비밀번호 필요 (앱 파일을 apps/private/ 에 올린 경우 켜기)", widget: boolean, default: false }
       - { name: order, label: "정렬 순서 (작을수록 먼저)", widget: number, default: 0, value_type: int }
 
   # ── 페이지 (소개·강의문의) ─────────────────────────

@@ -23,6 +23,7 @@ const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.
           <div class="app-top">
             {app.data.tag && <span class="app-tag">{app.data.tag}</span>}
             {app.data.badge && <span class="app-badge">{app.data.badge}</span>}
+            {app.data.locked && <span class="app-lock">🔒 비밀번호</span>}
           </div>
           <h2 class="app-title">{app.data.title}</h2>
           <p class="app-summary">{app.data.summary}</p>
@@ -53,6 +54,7 @@ const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.
   .app-top { display: flex; align-items: center; gap: .5rem; }
   .app-tag { font-family: var(--mono); font-size: .68rem; letter-spacing: .04em; color: var(--navy); background: var(--paper-2); border: 1px solid var(--line); padding: .15rem .5rem; border-radius: 2px; }
   .app-badge { font-family: var(--mono); font-size: .66rem; letter-spacing: .06em; color: var(--navy-deep); background: var(--gold); padding: .15rem .5rem; border-radius: 2px; }
+  .app-lock { font-family: var(--mono); font-size: .66rem; letter-spacing: .04em; color: var(--navy-deep); background: var(--paper-2); border: 1px solid var(--gold); padding: .15rem .5rem; border-radius: 2px; }
   .app-title { font-size: 1.28rem; margin: 0; }
   .app-card:hover .app-title { color: var(--blue); }
   .app-summary { color: var(--muted); font-size: .94rem; line-height: 1.6; margin: 0; flex: 1; }

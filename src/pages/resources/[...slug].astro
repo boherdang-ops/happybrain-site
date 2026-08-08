@@ -11,7 +11,9 @@ const { item } = Astro.props;
 const { Content } = await render(item);
 const d = item.data;
 
-const ext = (d.file || '').split('.').pop()?.toLowerCase() || '';
+const locked = !!d.protectedFile;
+const src = d.protectedFile || d.file || '';
+const ext = src.split('.').pop()?.toLowerCase() || '';
 const isPdf = ext === 'pdf';
 const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
 const canPreview = isPdf || isImage;
@@ -27,6 +29,7 @@ const fmtDate = (x) => x ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', m
         <div class="head-meta">
           {d.fileLabel && <span>{d.fileLabel}</span>}
           {d.date && <span>{fmtDate(d.date)}</span>}
+          {locked && <span class="pill pill--lock">🔒 비밀번호 필요</span>}
           <span class={d.allowDownload ? 'pill pill--ok' : 'pill'}>
             {d.allowDownload ? '내려받기 가능' : '열람 전용'}
           </span>
@@ -39,26 +42,35 @@ const fmtDate = (x) => x ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', m
         <div class="desc"><Content /></div>
       )}
 
+      {locked && (
+        <section class="lock-panel" data-lock>
+          <p class="lock-title">🔒 이 자료는 교육 참가자용입니다</p>
+          <p class="lock-desc">안내받은 비밀번호를 입력하면 미리보기와 내려받기가 열립니다.</p>
+          <a class="btn" href={`/unlock/?next=${encodeURIComponent(Astro.url.pathname)}`}>비밀번호 입력하기</a>
+        </section>
+      )}
+
+      <div class={locked ? "gated" : ""} data-gated={locked ? "1" : undefined}>
       {/* 미리보기 */}
-      {d.file && canPreview && (
+      {src && canPreview && (
         <section class="preview-block">
           <h2>미리보기</h2>
           {isPdf ? (
             <div class="pdf-wrap">
-              <object data={`${d.file}#toolbar=0&navpanes=0`} type="application/pdf">
+              <object data={`${src}#toolbar=0&navpanes=0`} type="application/pdf">
                 <p class="fallback">
                   이 브라우저에서는 미리보기가 표시되지 않습니다.
-                  <a href={d.file} target="_blank" rel="noopener">새 창에서 열기 →</a>
+                  <a href={src} target="_blank" rel="noopener">새 창에서 열기 →</a>
                 </p>
               </object>
             </div>
           ) : (
-            <img class="img-preview" src={d.file} alt={d.title} loading="lazy" />
+            <img class="img-preview" src={src} alt={d.title} loading="lazy" />
           )}
         </section>
       )}
 
-      {d.file && !canPreview && (
+      {src && !canPreview && (
         <section class="preview-block">
           <h2>미리보기</h2>
           <p class="no-preview">
@@ -83,13 +95,15 @@ const fmtDate = (x) => x ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', m
         </section>
       )}
 
+      </div>
+
       {/* 이용 안내 */}
       {d.notice && <p class="notice">{d.notice}</p>}
 
       {/* 액션 */}
       <section class="actions">
-        {d.allowDownload && d.file && (
-          <a class="btn" href={d.file} download>내려받기 ↓</a>
+        {d.allowDownload && src && (
+          <a class="btn" href={src} download>내려받기 ↓</a>
         )}
         {d.link && (
           <a class="btn btn--ghost" href={d.link} target="_blank" rel="noopener">외부 링크로 보기 →</a>
@@ -103,7 +117,22 @@ const fmtDate = (x) => x ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', m
   </article>
 </Base>
 
+<script>
+  // 잠긴 자료: 비밀번호를 통과한 표시(hb_ok)가 있으면 미리보기를 펼침
+  const gated = document.querySelector('[data-gated="1"]');
+  const panel = document.querySelector('[data-lock]');
+  if (gated) {
+    const ok = document.cookie.split(';').some((c) => c.trim().startsWith('hb_ok=1'));
+    if (ok) { gated.classList.remove('gated'); if (panel) panel.hidden = true; }
+  }
+</script>
+
 <style>
+  .pill--lock { background: rgba(255,255,255,.12); border-color: var(--gold); color: var(--gold); }
+  .lock-panel { margin-top: 2rem; padding: 1.8rem; background: var(--paper-2); border: 1px solid var(--line); border-radius: 4px; text-align: center; }
+  .lock-title { font-family: var(--serif); font-weight: 600; font-size: 1.15rem; margin: 0 0 .5rem; }
+  .lock-desc { color: var(--muted); margin: 0 0 1.2rem; line-height: 1.7; }
+  .gated { display: none; }
   .res-head { background: var(--navy-deep); color: var(--paper-on-navy); }
   .res-head .wrap { padding-block: clamp(2.6rem, 6vw, 4rem); max-width: 52rem; }
   .res-head .eyebrow { color: var(--gold); }

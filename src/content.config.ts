@@ -52,6 +52,7 @@ const apps = defineCollection({
     url: z.string(),
     tag: z.string().optional(),
     badge: z.string().optional(),
+    locked: z.boolean().catch(false),         // 비밀번호 필요 여부
     order: orderNum,
   }),
 });
@@ -92,6 +93,7 @@ const resources = defineCollection({
     file: z.string().optional(),          // 미리보기·다운로드 파일
     fileLabel: z.string().optional(),     // 예: PDF · 2.4MB
     allowDownload: z.boolean().catch(false),  // 다운로드 허용 여부 (기본: 열람만)
+    protectedFile: z.string().optional(),     // 비밀번호를 통과해야 열리는 파일
     notice: z.string().optional(),        // 이용 안내 / 저작권 문구
     link: z.string().optional(),          // 외부 링크(대용량 자료용)
     thumbnail: z.string().optional(),

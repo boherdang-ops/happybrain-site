@@ -44,6 +44,7 @@ const fmtDate = (d) => d ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', m
           <div class="res-body">
             <span class="res-top">
               <span class="res-cat">{r.data.category}</span>
+              {r.data.protectedFile && <span class="res-lock">🔒 비밀번호</span>}
               {r.data.allowDownload && <span class="res-dl">내려받기 가능</span>}
             </span>
             <h2 class="res-title">{r.data.title}</h2>
@@ -140,6 +141,7 @@ const fmtDate = (d) => d ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', m
   .res-thumb { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-bottom: 1px solid var(--line); }
   .res-body { display: flex; flex-direction: column; gap: .5rem; padding: 1.4rem; flex: 1; }
   .res-top { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; }
+  .res-lock { font-family: var(--mono); font-size: .64rem; letter-spacing: .04em; color: var(--navy-deep); background: var(--paper-2); border: 1px solid var(--gold); padding: .14rem .45rem; border-radius: 2px; }
   .res-dl { font-family: var(--mono); font-size: .64rem; letter-spacing: .04em; color: var(--navy-deep); background: var(--gold); padding: .14rem .45rem; border-radius: 2px; }
   .res-go { font-family: var(--mono); font-size: .76rem; color: var(--gold); white-space: nowrap; }
   .res-cat { font-family: var(--mono); font-size: .68rem; letter-spacing: .04em; color: var(--navy); background: var(--paper-2); border: 1px solid var(--line); padding: .15rem .5rem; border-radius: 2px; }

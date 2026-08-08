@@ -1,0 +1,87 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="자료 열람" description="교육 참가자용 보호 자료 열람">
+  <section class="unlock">
+    <div class="wrap box">
+      <p class="eyebrow">Protected</p>
+      <h1>보호된 자료입니다</h1>
+      <p class="desc">
+        교육 참가자에게 안내된 비밀번호를 입력하면 열람할 수 있습니다.
+        비밀번호를 모르신다면 문의해 주세요.
+      </p>
+
+      <div class="form">
+        <input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password" aria-label="비밀번호" />
+        <button class="btn" id="go">열기</button>
+      </div>
+      <p class="msg" id="msg" role="status"></p>
+
+      <p class="help"><a href="/contact/">비밀번호 문의하기 →</a> · <a href="/resources/">자료실로 돌아가기</a></p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const pw = document.getElementById('pw');
+  const go = document.getElementById('go');
+  const msg = document.getElementById('msg');
+  const params = new URLSearchParams(location.search);
+  const nextRaw = params.get('next') || '/resources/';
+  const next = nextRaw.startsWith('/') && !nextRaw.startsWith('//') ? nextRaw : '/resources/';
+
+  async function submit() {
+    const password = pw.value.trim();
+    if (!password) { pw.focus(); return; }
+    go.disabled = true; msg.textContent = '확인 중…'; msg.className = 'msg';
+    try {
+      const res = await fetch('/api/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        msg.textContent = '확인되었습니다. 이동합니다…';
+        msg.className = 'msg ok';
+        location.href = next;
+      } else {
+        msg.textContent = data.error || '비밀번호가 맞지 않습니다.';
+        msg.className = 'msg err';
+        go.disabled = false; pw.select();
+      }
+    } catch {
+      msg.textContent = '연결에 문제가 있습니다. 잠시 후 다시 시도해 주세요.';
+      msg.className = 'msg err';
+      go.disabled = false;
+    }
+  }
+
+  go?.addEventListener('click', submit);
+  pw?.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+</script>
+
+<style>
+  .unlock { background: var(--navy-deep); min-height: 60vh; display: flex; align-items: center; }
+  .box { max-width: 34rem; padding-block: clamp(3rem, 9vw, 6rem); color: var(--paper-on-navy); }
+  .box .eyebrow { color: var(--gold); }
+  .box .eyebrow::before { background: var(--gold); }
+  h1 { color: #fff; margin: .9rem 0 1rem; font-size: clamp(1.6rem, 4vw, 2.2rem); }
+  .desc { line-height: 1.75; margin-bottom: 1.8rem; }
+  .form { display: flex; gap: .6rem; flex-wrap: wrap; }
+  #pw {
+    flex: 1; min-width: 200px; font-family: var(--sans); font-size: 1rem;
+    padding: .7rem .9rem; border-radius: 2px; border: 1px solid var(--line-on-navy);
+    background: rgba(255,255,255,.06); color: #fff;
+  }
+  #pw::placeholder { color: var(--muted-on-navy); }
+  #pw:focus { outline: none; border-color: var(--gold); }
+  #go { border-color: var(--gold); background: var(--gold); color: var(--navy-deep); }
+  #go:hover { background: transparent; color: var(--gold); }
+  #go:disabled { opacity: .6; cursor: default; }
+  .msg { min-height: 1.4rem; margin: .9rem 0 0; font-size: .92rem; color: var(--muted-on-navy); }
+  .msg.err { color: #ffb4a8; }
+  .msg.ok { color: var(--gold); }
+  .help { margin-top: 2rem; font-size: .9rem; color: var(--muted-on-navy); }
+  .help a { color: var(--paper-on-navy); }
+</style>
