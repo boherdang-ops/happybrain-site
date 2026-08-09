@@ -12,8 +12,11 @@ const { item } = Astro.props;
 const { Content } = await render(item);
 const d = item.data;
 
-const locked = !!d.protectedFile;
-const src = safeUrl(d.protectedFile || d.file || '');
+const ZONE_LABEL = { private: '공용 암호', learning: '학습 암호', practice: '실습 암호' };
+const zone = d.protectedFile ? 'private' : d.learningFile ? 'learning' : d.practiceFile ? 'practice' : null;
+const locked = !!zone;
+const rawSrc = d.protectedFile || d.learningFile || d.practiceFile || d.file || '';
+const src = safeUrl(rawSrc);
 const ext = src.split('.').pop()?.toLowerCase() || '';
 const isPdf = ext === 'pdf';
 const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
@@ -30,7 +33,7 @@ const fmtDate = (x) => x ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', m
         <div class="head-meta">
           {d.fileLabel && <span>{d.fileLabel}</span>}
           {d.date && <span>{fmtDate(d.date)}</span>}
-          {locked && <span class="pill pill--lock">🔒 비밀번호 필요</span>}
+          {locked && <span class="pill pill--lock">🔒 {ZONE_LABEL[zone]} 필요</span>}
           <span class={d.allowDownload ? 'pill pill--ok' : 'pill'}>
             {d.allowDownload ? '내려받기 가능' : '열람 전용'}
           </span>
@@ -45,13 +48,13 @@ const fmtDate = (x) => x ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', m
 
       {locked && (
         <section class="lock-panel" data-lock>
-          <p class="lock-title">🔒 이 자료는 교육 참가자용입니다</p>
+          <p class="lock-title">🔒 {ZONE_LABEL[zone]}가 필요한 자료입니다</p>
           <p class="lock-desc">안내받은 비밀번호를 입력하면 미리보기와 내려받기가 열립니다.</p>
           <a class="btn" href={`/unlock/?next=${encodeURIComponent(Astro.url.pathname)}`}>비밀번호 입력하기</a>
         </section>
       )}
 
-      <div class={locked ? "gated" : ""} data-gated={locked ? "1" : undefined}>
+      <div class={locked ? "gated" : ""} data-gated={locked ? "1" : undefined} data-zone={zone || undefined}>
       {/* 미리보기 */}
       {src && canPreview && (
         <section class="preview-block">
@@ -123,7 +126,8 @@ const fmtDate = (x) => x ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', m
   const gated = document.querySelector('[data-gated="1"]');
   const panel = document.querySelector('[data-lock]');
   if (gated) {
-    const ok = document.cookie.split(';').some((c) => c.trim().startsWith('hb_ok=1'));
+    const z = gated.dataset.zone;
+    const ok = document.cookie.split(';').some((c) => c.trim().startsWith(`hb_ok_${z}=1`));
     if (ok) { gated.classList.remove('gated'); if (panel) panel.hidden = true; }
   }
 </script>

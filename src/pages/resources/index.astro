@@ -45,7 +45,9 @@ const fmtDate = (d) => d ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', m
           <div class="res-body">
             <span class="res-top">
               <span class="res-cat">{r.data.category}</span>
-              {r.data.protectedFile && <span class="res-lock">🔒 비밀번호</span>}
+              {(r.data.protectedFile || r.data.learningFile || r.data.practiceFile) && (
+                <span class="res-lock">🔒 {r.data.protectedFile ? '공용' : r.data.learningFile ? '학습' : '실습'}</span>
+              )}
               {r.data.allowDownload && <span class="res-dl">내려받기 가능</span>}
             </span>
             <h2 class="res-title">{r.data.title}</h2>

@@ -93,7 +93,9 @@ const resources = defineCollection({
     file: z.string().optional(),          // 미리보기·다운로드 파일
     fileLabel: z.string().optional(),     // 예: PDF · 2.4MB
     allowDownload: z.boolean().catch(false),  // 다운로드 허용 여부 (기본: 열람만)
-    protectedFile: z.string().optional(),     // 비밀번호를 통과해야 열리는 파일
+    protectedFile: z.string().optional(),     // 공용 암호 구역 파일
+    learningFile: z.string().optional(),      // 학습 암호 구역 파일
+    practiceFile: z.string().optional(),      // 실습 암호 구역 파일
     notice: z.string().optional(),        // 이용 안내 / 저작권 문구
     link: z.string().optional(),          // 외부 링크(대용량 자료용)
     thumbnail: z.string().optional(),

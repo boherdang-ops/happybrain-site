@@ -1,7 +1,13 @@
 // ============================================================
-//  /api/gate-status — 잠금 기능 진단용
-//  이 주소가 열리면 = 문지기(Functions)가 작동 중이라는 뜻입니다.
+//  /api/gate-status — 잠금 상태 진단
+//  구역별 비밀번호 설정 여부와 내 통행증 상태를 한눈에 보여줍니다.
 // ============================================================
+
+const ZONES = [
+  { key: 'private',  env: 'SITE_PASSWORD',     label: '공용' },
+  { key: 'learning', env: 'LEARNING_PASSWORD', label: '학습' },
+  { key: 'practice', env: 'PRACTICE_PASSWORD', label: '실습' },
+];
 
 async function sha256(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -9,31 +15,34 @@ async function sha256(text) {
 }
 
 export async function onRequest({ request, env }) {
-  const secret = env.SITE_PASSWORD;
   const cookie = request.headers.get('Cookie') || '';
-  const match = cookie.match(/(?:^|;\s*)hb_key=([a-f0-9]{64})/);
+  const zones = {};
 
-  let cookieState = '없음 (비밀번호 미입력 상태)';
-  if (match) {
-    if (secret) {
-      const expected = await sha256(secret + '|hb-access');
-      cookieState = match[1] === expected ? '유효함 (열람 가능 상태)' : '무효함 (비밀번호가 바뀌었거나 위조)';
+  for (const z of ZONES) {
+    const secret = env[z.env];
+    let state;
+    if (!secret) {
+      state = `비밀번호 미설정 ❌ (환경변수 ${z.env} 추가 필요)`;
     } else {
-      cookieState = '있음 (다만 비밀번호 미설정이라 확인 불가)';
+      const m = cookie.match(new RegExp(`(?:^|;\\s*)hb_${z.key}=([a-f0-9]{64})`));
+      const expected = await sha256(`${secret}|hb-${z.key}`);
+      state = !m
+        ? '설정됨 ✅ / 내 통행증: 없음 (잠김)'
+        : m[1] === expected
+          ? '설정됨 ✅ / 내 통행증: 유효 (열람 가능)'
+          : '설정됨 ✅ / 내 통행증: 무효 (비밀번호가 바뀜)';
     }
+    zones[`${z.label}(${z.key})`] = {
+      상태: state,
+      보호경로: [`/apps/${z.key}/*`, `/uploads/${z.key}/*`],
+    };
   }
 
-  const report = {
-    '1_함수작동': '예 — 이 화면이 보이면 Functions는 정상 작동 중입니다',
-    '2_비밀번호설정': secret ? '설정됨 ✅' : '설정 안 됨 ❌ (Cloudflare 환경변수 SITE_PASSWORD 확인 필요)',
-    '3_내쿠키상태': cookieState,
-    '4_보호경로': ['/apps/private/*', '/uploads/private/*'],
-    '안내': secret
-      ? '위 보호 경로의 파일은 비밀번호를 통과해야만 열립니다. 시크릿 창에서 /apps/private/zzz.html 을 열어 확인해 보세요.'
-      : '비밀번호가 설정되지 않아 보호 경로는 503으로 차단됩니다. Cloudflare Settings에서 SITE_PASSWORD를 추가하고 재배포하세요.',
-  };
-
-  return new Response(JSON.stringify(report, null, 2), {
+  return new Response(JSON.stringify({
+    함수작동: '예 — 이 화면이 보이면 Functions 정상',
+    구역: zones,
+    안내: '통행증을 반납하려면 /unlock/ 에서 "이 기기에서 통행증 해제"를 누르세요. 잠금 시험은 시크릿 창에서 하세요.',
+  }, null, 2), {
     status: 200,
     headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
   });

@@ -5,7 +5,7 @@ import Base from '../layouts/Base.astro';
   <section class="unlock">
     <div class="wrap box">
       <p class="eyebrow">Protected</p>
-      <h1>보호된 자료입니다</h1>
+      <h1 id="title">보호된 자료입니다</h1>
       <p class="desc">
         교육 참가자에게 안내된 비밀번호를 입력하면 열람할 수 있습니다.
         비밀번호를 모르신다면 문의해 주세요.
@@ -17,7 +17,10 @@ import Base from '../layouts/Base.astro';
       </div>
       <p class="msg" id="msg" role="status"></p>
 
-      <p class="help"><a href="/contact/">비밀번호 문의하기 →</a> · <a href="/resources/">자료실로 돌아가기</a></p>
+      <p class="help">
+        <a href="/contact/">비밀번호 문의하기 →</a> · <a href="/resources/">자료실로 돌아가기</a>
+        · <a href="#" id="logout">이 기기에서 통행증 해제</a>
+      </p>
     </div>
   </section>
 </Base>
@@ -27,6 +30,12 @@ import Base from '../layouts/Base.astro';
   const go = document.getElementById('go');
   const msg = document.getElementById('msg');
   const params = new URLSearchParams(location.search);
+  const ZONE_LABEL = { private: '공용 자료', learning: '학습 자료', practice: '실습 자료' };
+  const zone = params.get('zone');
+  if (zone && ZONE_LABEL[zone]) {
+    const t = document.getElementById('title');
+    if (t) t.textContent = `${ZONE_LABEL[zone]}입니다`;
+  }
   const nextRaw = params.get('next') || '/resources/';
   const next = nextRaw.startsWith('/') && !nextRaw.startsWith('//') ? nextRaw : '/resources/';
 
@@ -56,6 +65,22 @@ import Base from '../layouts/Base.astro';
       go.disabled = false;
     }
   }
+
+  document.getElementById('logout')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    try {
+      await fetch('/api/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logout: true }),
+      });
+      msg.textContent = '이 기기의 통행증을 해제했습니다. 이제 비밀번호를 다시 입력해야 열립니다.';
+      msg.className = 'msg ok';
+    } catch {
+      msg.textContent = '해제에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+      msg.className = 'msg err';
+    }
+  });
 
   go?.addEventListener('click', submit);
   pw?.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });

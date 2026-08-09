@@ -2,7 +2,11 @@
   "version": 1,
   "include": [
     "/apps/private/*",
+    "/apps/learning/*",
+    "/apps/practice/*",
     "/uploads/private/*",
+    "/uploads/learning/*",
+    "/uploads/practice/*",
     "/api/*"
   ],
   "exclude": []

@@ -23,7 +23,11 @@ const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.
           <div class="app-top">
             {app.data.tag && <span class="app-tag">{app.data.tag}</span>}
             {app.data.badge && <span class="app-badge">{app.data.badge}</span>}
-            {app.data.locked && <span class="app-lock">🔒 비밀번호</span>}
+            {(() => {
+              const u = (app.data.url || '').toLowerCase();
+              const z = u.includes('/apps/private/') ? '공용' : u.includes('/apps/learning/') ? '학습' : u.includes('/apps/practice/') ? '실습' : null;
+              return (z || app.data.locked) ? <span class="app-lock">🔒 {z || '비밀번호'}</span> : null;
+            })()}
           </div>
           <h2 class="app-title">{app.data.title}</h2>
           <p class="app-summary">{app.data.summary}</p>
