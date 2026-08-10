@@ -1,38 +1,62 @@
 ---
 import Base from '../../layouts/Base.astro';
 import about from '../../data/about.json';
+import org from '../../data/org.json';
 
 const { name, penName, intro, focus, career, ctaHeading, ctaBody } = about;
 ---
-<Base title="소개" description="박상득(해피브레인) — 지자체 공무원을 위한 AI 교육 전문가, 저자.">
-  <!-- 표지 -->
+<Base title="소개" description={org.intro}>
+  <!-- 표지: 법인 -->
   <section class="intro">
     <div class="wrap intro-inner">
       <p class="eyebrow">About</p>
-      <h1>{name} <span class="pen">{penName}</span></h1>
-      <p class="intro-lead">{intro}</p>
+      <h1 class="org-name">{org.name}</h1>
+      {org.mission && <p class="mission">{org.mission}</p>}
+      <p class="intro-lead">{org.intro}</p>
     </div>
   </section>
 
-  <!-- 하는 일 -->
-  <section class="section wrap">
-    <p class="eyebrow">What I do</p>
-    <h2 class="sec-title">하는 일</h2>
-    <div class="focus">
-      {focus.map((f, i) => (
-        <div class="focus-item">
-          <span class="focus-idx">{String(i + 1).padStart(2, '0')}</span>
-          <h3>{f.title}</h3>
-          <p>{f.body}</p>
-        </div>
-      ))}
+  <!-- 사업 영역 -->
+  {org.services?.length > 0 && (
+    <section class="section wrap">
+      <p class="eyebrow">Services</p>
+      <h2 class="sec-title">사업 영역</h2>
+      <div class="focus">
+        {org.services.map((f, i) => (
+          <div class="focus-item">
+            <span class="focus-idx">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{f.title}</h3>
+            <p>{f.body}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- 대표 프로필 -->
+  <section class="section wrap profile-strip">
+    <p class="eyebrow">Director</p>
+    <h2 class="sec-title">연구소장</h2>
+    <div class="profile">
+      <div class="profile-head">
+        <p class="pname">{name} <span class="pen">{penName}</span></p>
+        <p class="pintro">{intro}</p>
+      </div>
+      <div class="profile-focus">
+        {focus.map((f) => (
+          <div class="pf-item">
+            <h3>{f.title}</h3>
+            <p>{f.body}</p>
+          </div>
+        ))}
+      </div>
     </div>
   </section>
 
   <!-- 이력 -->
   <section class="section wrap">
     <p class="eyebrow">Career</p>
-    <h2 class="sec-title">지나온 자리</h2>
+    <h2 class="sec-title">주요 경력</h2>
     <ul class="career">
       {career.map((c) => (
         <li>
@@ -72,6 +96,17 @@ const { name, penName, intro, focus, career, ctaHeading, ctaBody } = about;
   .career li { display: grid; grid-template-columns: 6rem 1fr; gap: 1.5rem; padding: 1.1rem .25rem; border-bottom: 1px solid var(--line); align-items: baseline; }
   .period { font-family: var(--mono); font-size: .78rem; color: var(--gold); }
   .role { font-size: 1.02rem; }
+
+  .org-name { font-size: clamp(1.7rem, 4.5vw, 2.7rem); margin-bottom: .8rem; }
+  .mission { font-family: var(--serif); font-size: clamp(1.05rem, 2.4vw, 1.3rem); color: var(--gold); margin: 0 0 1.2rem; }
+  .profile-strip { background: var(--paper-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .profile { display: grid; grid-template-columns: 1fr 1.3fr; gap: 2.5rem; align-items: start; }
+  .pname { font-family: var(--serif); font-weight: 700; font-size: 1.5rem; margin: 0 0 .8rem; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+  .pintro { line-height: 1.8; color: var(--ink); margin: 0; }
+  .profile-focus { display: flex; flex-direction: column; gap: 1.2rem; }
+  .pf-item h3 { font-size: 1.05rem; margin: 0 0 .35rem; }
+  .pf-item p { margin: 0; color: var(--muted); line-height: 1.65; font-size: .95rem; }
+  @media (max-width: 700px) { .profile { grid-template-columns: 1fr; gap: 1.5rem; } }
 
   .cta-strip { background: var(--navy-deep); color: var(--paper-on-navy); }
   .cta-inner { text-align: center; max-width: 40rem; margin-inline: auto; }

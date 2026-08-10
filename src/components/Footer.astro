@@ -1,17 +1,19 @@
 ---
 import site from '../data/site.json';
+import org from '../data/org.json';
 const year = new Date().getFullYear();
 const channels = site.channels;
 ---
 <footer class="site-footer">
   <div class="wrap grid">
     <div class="col-brand">
-      <p class="fname">{site.footerName}</p>
+      <p class="fname">{org.shortName || site.footerName}</p>
       <p class="ftag">{site.footerTagline.split('\n').map((line, i) => (<>{i > 0 && <br />}{line}</>))}</p>
     </div>
     <nav class="col-nav" aria-label="사이트 맵">
       <p class="col-label">둘러보기</p>
       <a href="/courses/">교육과정</a>
+      <a href="/records/">교육 실적</a>
       <a href="/resources/">자료실</a>
       <a href="/writing/">글</a>
       <a href="/videos/">영상</a>
@@ -25,6 +27,17 @@ const channels = site.channels;
       {channels.map((c) => <a href={c.href} rel="me noopener" target="_blank">{c.label}</a>)}
     </nav>
   </div>
+  <div class="wrap bizinfo">
+    <p class="biz">
+      <span class="biz-name">{org.name}</span>
+      {org.ceo && <span>대표 {org.ceo}</span>}
+      {org.bizNumber && <span>사업자등록번호 {org.bizNumber}</span>}
+      {org.address && <span>{org.address}</span>}
+      {org.phone && <span>{org.phone}</span>}
+      {org.email && <span>{org.email}</span>}
+    </p>
+  </div>
+
   <div class="wrap baseline">
     <span>© {year} 박상득 · 해피브레인</span>
     <span class="mono">Human Premium</span>
@@ -43,9 +56,12 @@ const channels = site.channels;
   .col-nav { display: flex; flex-direction: column; gap: .55rem; }
   .col-nav a { color: var(--paper-on-navy); font-size: .95rem; }
   .col-nav a:hover { color: #fff; text-decoration: none; }
+  .bizinfo { border-top: 1px solid var(--line-on-navy); padding-top: 1.3rem; }
+  .biz { display: flex; flex-wrap: wrap; gap: .4rem 1.1rem; margin: 0; font-size: .8rem; color: var(--muted-on-navy); line-height: 1.7; }
+  .biz-name { color: var(--paper-on-navy); font-weight: 600; }
   .baseline {
     display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-    border-top: 1px solid var(--line-on-navy); padding-block: 1.4rem;
+    padding-block: 1.4rem;
     font-size: .8rem; color: var(--muted-on-navy);
   }
   .baseline .mono { font-family: var(--mono); letter-spacing: .12em; color: var(--gold); }

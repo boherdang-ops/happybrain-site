@@ -1,0 +1,122 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import org from '../../data/org.json';
+
+const items = (await getCollection('records', ({ data }) => !data.draft));
+
+// 연도별로 묶기 (최신 연도 먼저)
+const byYear = {};
+for (const r of items) {
+  const y = r.data.year || '기타';
+  (byYear[y] ||= []).push(r);
+}
+const years = Object.keys(byYear).sort((a, b) => b.localeCompare(a));
+for (const y of years) {
+  byYear[y].sort((a, b) => a.data.order - b.data.order);
+}
+
+// 자동 집계
+const totalCount = items.length;
+const orgCount = new Set(items.map((r) => r.data.org)).size;
+const totalParticipants = items.reduce((s, r) => s + (r.data.participants || 0), 0);
+const totalHours = items.reduce((s, r) => s + (r.data.hours || 0), 0);
+const nf = (n) => new Intl.NumberFormat('ko-KR').format(n);
+---
+<Base title="교육 실적" description="지자체 AI 교육 수행 실적. 기관별·연도별 교육 과정과 규모.">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Track Record</p>
+      <h1>교육 실적</h1>
+      <p class="page-lead">
+        전국 지자체와 공공기관에서 수행한 AI 활용 교육 기록입니다.
+      </p>
+    </div>
+  </section>
+
+  {totalCount > 0 && (
+    <section class="stats-strip">
+      <div class="wrap stats">
+        <div class="stat"><span class="num">{nf(orgCount)}</span><span class="lab">수행 기관</span></div>
+        <div class="stat"><span class="num">{nf(totalCount)}</span><span class="lab">교육 과정</span></div>
+        {totalParticipants > 0 && <div class="stat"><span class="num">{nf(totalParticipants)}</span><span class="lab">누적 교육 인원</span></div>}
+        {totalHours > 0 && <div class="stat"><span class="num">{nf(totalHours)}</span><span class="lab">누적 교육 시간</span></div>}
+      </div>
+    </section>
+  )}
+
+  <section class="section wrap">
+    {years.map((y) => (
+      <div class="year-block">
+        <h2 class="year">{y}</h2>
+        <ul class="rec-list">
+          {byYear[y].map((r) => (
+            <li class="rec">
+              <span class="rec-org">{r.data.org}</span>
+              <span class="rec-main">
+                {r.data.title && <span class="rec-title">{r.data.title}</span>}
+                {r.data.note && <span class="rec-note">{r.data.note}</span>}
+              </span>
+              <span class="rec-meta">
+                {r.data.period && <span>{r.data.period}</span>}
+                {r.data.hours ? <span>{r.data.hours}시간</span> : null}
+                {r.data.participants ? <span>{nf(r.data.participants)}명</span> : null}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+
+    {totalCount === 0 && (
+      <div class="empty-box">
+        <p>실적을 정리하고 있습니다.</p>
+        <a class="btn" href="/contact/">교육 문의하기</a>
+      </div>
+    )}
+
+    <div class="cta">
+      <p>우리 지자체에 맞는 교육을 찾고 계신가요?</p>
+      <div class="cta-actions">
+        <a class="btn" href="/contact/">교육 문의하기</a>
+        <a class="btn btn--ghost" href="/courses/">교육과정 보기</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head { background: var(--navy-deep); color: var(--paper-on-navy); }
+  .page-head .wrap { padding-block: clamp(3rem, 8vw, 5rem); }
+  .page-head h1 { color: #fff; margin-top: .8rem; }
+  .page-head .eyebrow { color: var(--gold); }
+  .page-head .eyebrow::before { background: var(--gold); }
+  .page-lead { color: var(--paper-on-navy); max-width: 40rem; margin-top: 1rem; }
+
+  .stats-strip { background: var(--paper-2); border-bottom: 1px solid var(--line); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1.5rem; padding-block: 2.2rem; }
+  .stat { display: flex; flex-direction: column; gap: .3rem; align-items: center; text-align: center; }
+  .num { font-family: var(--serif); font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 700; color: var(--navy); line-height: 1; }
+  .lab { font-family: var(--mono); font-size: .72rem; letter-spacing: .06em; color: var(--muted); }
+
+  .year-block { margin-bottom: 2.8rem; }
+  .year { font-family: var(--mono); font-size: 1rem; letter-spacing: .08em; color: var(--gold); margin: 0 0 .9rem; padding-bottom: .5rem; border-bottom: 2px solid var(--gold); display: inline-block; }
+  .rec-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .rec { display: grid; grid-template-columns: 10rem 1fr auto; gap: 1.2rem; align-items: baseline; padding: 1rem .2rem; border-bottom: 1px solid var(--line); }
+  .rec-org { font-weight: 700; color: var(--navy); font-size: 1.02rem; }
+  .rec-main { display: flex; flex-direction: column; gap: .25rem; }
+  .rec-title { font-size: 1rem; }
+  .rec-note { color: var(--muted); font-size: .88rem; }
+  .rec-meta { display: flex; gap: .8rem; font-family: var(--mono); font-size: .76rem; color: var(--muted); white-space: nowrap; }
+
+  .cta { margin-top: 3rem; padding: 2rem; background: var(--paper-2); border: 1px solid var(--line); border-radius: 4px; text-align: center; }
+  .cta p { margin: 0 0 1.1rem; font-size: 1.05rem; }
+  .cta-actions { display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; }
+  .empty-box { text-align: center; padding: 3rem 1.5rem; background: var(--paper-2); border: 1px solid var(--line); border-radius: 4px; }
+  .empty-box p { margin: 0 0 1.2rem; }
+
+  @media (max-width: 640px) {
+    .rec { grid-template-columns: 1fr; gap: .35rem; }
+    .rec-meta { flex-wrap: wrap; }
+  }
+</style>

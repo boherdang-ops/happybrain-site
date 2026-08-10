@@ -109,6 +109,26 @@ collections:
       - { name: draft, label: "임시저장(공개 안 함)", widget: boolean, default: false }
       - { name: body, label: "자세한 설명 (선택)", widget: markdown, required: false }
 
+  # ── 교육 실적 ───────────────────────────────────────
+  - name: records
+    label: "교육 실적"
+    label_singular: "실적"
+    folder: "src/content/records"
+    create: true
+    slug: "{{slug}}"
+    extension: md
+    format: frontmatter
+    fields:
+      - { name: org, label: "기관명 (예: 의령군)", widget: string }
+      - { name: title, label: "과정명", widget: string, required: false }
+      - { name: year, label: "연도 (예: 2026)", widget: string, required: false }
+      - { name: period, label: "시기 (예: 2026.03 ~ 04)", widget: string, required: false }
+      - { name: hours, label: "교육 시간", widget: number, required: false, value_type: int }
+      - { name: participants, label: "교육 인원", widget: number, required: false, value_type: int }
+      - { name: note, label: "비고", widget: string, required: false }
+      - { name: order, label: "정렬 순서 (작을수록 먼저)", widget: number, default: 0, value_type: int }
+      - { name: draft, label: "임시저장(공개 안 함)", widget: boolean, default: false }
+
   # ── 글 ──────────────────────────────────────────────
   - name: writing
     label: "글"
@@ -230,6 +250,26 @@ collections:
             fields:
               - { name: label, label: "이름 (예: 유튜브)", widget: string }
               - { name: href, label: "링크 주소 (내 채널 주소)", widget: string }
+      - name: org
+        label: "법인 정보 (소개·푸터에 반영)"
+        file: "src/data/org.json"
+        fields:
+          - { name: name, label: "법인/기관 정식 명칭", widget: string }
+          - { name: shortName, label: "짧은 이름 (푸터 표기)", widget: string }
+          - { name: mission, label: "한 줄 슬로건", widget: string, required: false }
+          - { name: intro, label: "기관 소개", widget: text }
+          - name: services
+            label: "사업 영역"
+            widget: list
+            required: false
+            fields:
+              - { name: title, label: "제목", widget: string }
+              - { name: body, label: "설명", widget: text }
+          - { name: ceo, label: "대표자", widget: string, required: false }
+          - { name: bizNumber, label: "사업자등록번호", widget: string, required: false }
+          - { name: address, label: "주소", widget: string, required: false }
+          - { name: phone, label: "대표 전화", widget: string, required: false }
+          - { name: email, label: "대표 이메일", widget: string, required: false }
       - name: home
         label: "홈 화면 (첫 화면 문구)"
         file: "src/data/home.json"

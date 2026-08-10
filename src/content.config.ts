@@ -109,4 +109,22 @@ const resources = defineCollection({
   }),
 });
 
-export const collections = { writing, books, videos, apps, courses, resources };
+
+// 교육 실적 — 수행한 교육 기록
+const records = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/records' }),
+  schema: z.object({
+    org: z.coerce.string(),                       // 기관명 (예: 의령군)
+    title: z.coerce.string().optional().catch(undefined),   // 과정명
+    year: z.coerce.string().optional().catch(undefined),    // 연도 (예: 2026)
+    period: z.coerce.string().optional().catch(undefined),  // 시기 (예: 2026.03 ~ 04)
+    hours: z.coerce.number().optional().catch(undefined),      // 교육 시간
+    participants: z.coerce.number().optional().catch(undefined), // 인원
+    note: z.coerce.string().optional().catch(undefined),
+    thumbnail: z.string().optional(),
+    order: orderNum,
+    draft: z.boolean().catch(false),
+  }),
+});
+
+export const collections = { writing, books, videos, apps, courses, resources, records };
