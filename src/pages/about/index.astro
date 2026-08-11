@@ -3,14 +3,13 @@ import Base from '../../layouts/Base.astro';
 import about from '../../data/about.json';
 import org from '../../data/org.json';
 
-const { name, penName, intro, focus, career, ctaHeading, ctaBody } = about;
+const { name, penName, intro, greeting, signName, signTitle, focus, career, ctaHeading, ctaBody } = about;
 ---
 <Base title="소개" description={org.intro}>
   <!-- 표지: 법인 -->
   <section class="intro">
     <div class="wrap intro-inner">
       <p class="eyebrow">About</p>
-      <h1 class="org-name">{org.name}</h1>
       {org.mission && <p class="mission">{org.mission}</p>}
       <p class="intro-lead">{org.intro}</p>
     </div>
@@ -35,12 +34,17 @@ const { name, penName, intro, focus, career, ctaHeading, ctaBody } = about;
 
   <!-- 대표 프로필 -->
   <section class="section wrap profile-strip">
-    <p class="eyebrow">Director</p>
-    <h2 class="sec-title">연구소장</h2>
+    <p class="eyebrow">Greeting</p>
+    <h2 class="sec-title">인사말</h2>
     <div class="profile">
       <div class="profile-head">
-        <p class="pname">{name} <span class="pen">{penName}</span></p>
-        <p class="pintro">{intro}</p>
+        <div class="greeting">
+          {(greeting || intro || '').split('\n').filter(Boolean).map((para) => <p>{para}</p>)}
+        </div>
+        <p class="sign">
+          {signTitle && <span class="sign-title">{signTitle}</span>}
+          <span class="sign-name">{signName || name}</span>
+        </p>
       </div>
       <div class="profile-focus">
         {focus.map((f) => (
@@ -55,8 +59,8 @@ const { name, penName, intro, focus, career, ctaHeading, ctaBody } = about;
 
   <!-- 이력 -->
   <section class="section wrap">
-    <p class="eyebrow">Career</p>
-    <h2 class="sec-title">주요 경력</h2>
+    <p class="eyebrow">Record</p>
+    <h2 class="sec-title">교육 실적</h2>
     <ul class="career">
       {career.map((c) => (
         <li>
@@ -97,12 +101,13 @@ const { name, penName, intro, focus, career, ctaHeading, ctaBody } = about;
   .period { font-family: var(--mono); font-size: .78rem; color: var(--gold); }
   .role { font-size: 1.02rem; }
 
-  .org-name { font-size: clamp(1.7rem, 4.5vw, 2.7rem); margin-bottom: .8rem; }
   .mission { font-family: var(--serif); font-size: clamp(1.05rem, 2.4vw, 1.3rem); color: var(--gold); margin: 0 0 1.2rem; }
   .profile-strip { background: var(--paper-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
   .profile { display: grid; grid-template-columns: 1fr 1.3fr; gap: 2.5rem; align-items: start; }
-  .pname { font-family: var(--serif); font-weight: 700; font-size: 1.5rem; margin: 0 0 .8rem; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
-  .pintro { line-height: 1.8; color: var(--ink); margin: 0; }
+  .greeting p { line-height: 1.85; color: var(--ink); margin: 0 0 1em; }
+  .sign { margin: 1.4rem 0 0; display: flex; align-items: baseline; gap: .6rem; justify-content: flex-start; }
+  .sign-title { font-family: var(--mono); font-size: .76rem; letter-spacing: .08em; color: var(--muted); }
+  .sign-name { font-family: var(--serif); font-weight: 700; font-size: 1.25rem; color: var(--ink); }
   .profile-focus { display: flex; flex-direction: column; gap: 1.2rem; }
   .pf-item h3 { font-size: 1.05rem; margin: 0 0 .35rem; }
   .pf-item p { margin: 0; color: var(--muted); line-height: 1.65; font-size: .95rem; }

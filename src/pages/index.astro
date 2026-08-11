@@ -15,9 +15,6 @@ const latest = posts.slice(0, 5);
 const books = (await getCollection('books')).sort((a, b) => a.data.order - b.data.order);
 const videos = (await getCollection('videos')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
 const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
-const records = (await getCollection('records', ({ data }) => !data.draft));
-const recOrgs = new Set(records.map((r) => r.data.org)).size;
-const recPeople = records.reduce((s2, r) => s2 + (r.data.participants || 0), 0);
 const courses = (await getCollection('courses', ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
 const resources = (await getCollection('resources', ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order).slice(0, 3);
 ---
@@ -30,24 +27,10 @@ const resources = (await getCollection('resources', ({ data }) => !data.draft)).
       <p class="cover-lead">{home.heroLead}</p>
       <div class="cover-actions">
         <a class="btn btn--on-navy" href="/writing/">글 읽기</a>
-        <a class="btn btn--on-navy" href="/about/">어떤 사람인지 보기</a>
+        <a class="btn btn--on-navy" href="/about/">회사소개</a>
       </div>
     </div>
   </section>
-
-  <!-- 실적 요약 띠 -->
-  {records.length > 0 && (
-    <section class="proof">
-      <div class="wrap proof-inner">
-        <div class="proof-stats">
-          <span><b>{recOrgs}</b>개 기관</span>
-          <span><b>{records.length}</b>개 과정 수행</span>
-          {recPeople > 0 && <span><b>{new Intl.NumberFormat('ko-KR').format(recPeople)}</b>명 교육</span>}
-        </div>
-        <a class="proof-link" href="/records/">교육 실적 보기 →</a>
-      </div>
-    </section>
-  )}
 
   <!-- 교육과정 -->
   {courses.length > 0 && (
@@ -219,7 +202,7 @@ const resources = (await getCollection('resources', ({ data }) => !data.draft)).
   .cover-inner { padding-block: clamp(4.5rem, 12vw, 8.5rem); position: relative; }
   .eyebrow--gold { color: var(--gold); }
   .eyebrow--gold::before { background: var(--gold); }
-  .cover-title { color: #fff; font-size: clamp(2.6rem, 8vw, 5rem); line-height: 1.12; margin: 1.4rem 0 0; letter-spacing: -0.02em; }
+  .cover-title { color: #fff; font-size: clamp(2rem, 5.6vw, 3.6rem); line-height: 1.12; margin: 1.4rem 0 0; letter-spacing: -0.02em; }
   .cover-lead { max-width: 40rem; margin: 1.6rem 0 2.4rem; color: var(--paper-on-navy); font-size: clamp(1.02rem, 2vw, 1.18rem); line-height: 1.75; }
   .cover-actions { display: flex; gap: .8rem; flex-wrap: wrap; }
 
@@ -284,13 +267,6 @@ const resources = (await getCollection('resources', ({ data }) => !data.draft)).
   .home-app-title { font-family: var(--serif); font-weight: 600; font-size: 1.12rem; }
   .home-app:hover .home-app-title { color: var(--blue); }
   .home-app-summary { color: var(--muted); font-size: .9rem; line-height: 1.55; }
-
-  /* 실적 요약 띠 */
-  .proof { background: var(--paper-2); border-bottom: 1px solid var(--line); }
-  .proof-inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-block: 1.3rem; }
-  .proof-stats { display: flex; gap: 1.8rem; flex-wrap: wrap; font-size: .95rem; color: var(--muted); }
-  .proof-stats b { font-family: var(--serif); font-size: 1.25rem; color: var(--navy); margin-right: .2rem; }
-  .proof-link { font-family: var(--mono); font-size: .8rem; color: var(--gold); }
 
   /* 홈 교육과정 */
   .home-course-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.2rem; }

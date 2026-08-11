@@ -9,11 +9,19 @@ const channels = site.channels;
     <div class="col-brand">
       <p class="fname">{org.shortName || site.footerName}</p>
       <p class="ftag">{site.footerTagline.split('\n').map((line, i) => (<>{i > 0 && <br />}{line}</>))}</p>
+
+      <dl class="bizbox">
+        <div><dt>기관명</dt><dd>{org.name}</dd></div>
+        {org.ceo && <div><dt>대표자</dt><dd>{org.ceo}</dd></div>}
+        {org.bizNumber && <div><dt>사업자등록번호</dt><dd>{org.bizNumber}</dd></div>}
+        {org.address && <div><dt>주소</dt><dd>{org.address}</dd></div>}
+        {org.phone && <div><dt>전화</dt><dd>{org.phone}</dd></div>}
+        {org.email && <div><dt>이메일</dt><dd>{org.email}</dd></div>}
+      </dl>
     </div>
     <nav class="col-nav" aria-label="사이트 맵">
       <p class="col-label">둘러보기</p>
       <a href="/courses/">교육과정</a>
-      <a href="/records/">교육 실적</a>
       <a href="/resources/">자료실</a>
       <a href="/writing/">글</a>
       <a href="/videos/">영상</a>
@@ -27,17 +35,6 @@ const channels = site.channels;
       {channels.map((c) => <a href={c.href} rel="me noopener" target="_blank">{c.label}</a>)}
     </nav>
   </div>
-  <div class="wrap bizinfo">
-    <p class="biz">
-      <span class="biz-name">{org.name}</span>
-      {org.ceo && <span>대표 {org.ceo}</span>}
-      {org.bizNumber && <span>사업자등록번호 {org.bizNumber}</span>}
-      {org.address && <span>{org.address}</span>}
-      {org.phone && <span>{org.phone}</span>}
-      {org.email && <span>{org.email}</span>}
-    </p>
-  </div>
-
   <div class="wrap baseline">
     <span>© {year} 박상득 · 해피브레인</span>
     <span class="mono">Human Premium</span>
@@ -56,9 +53,10 @@ const channels = site.channels;
   .col-nav { display: flex; flex-direction: column; gap: .55rem; }
   .col-nav a { color: var(--paper-on-navy); font-size: .95rem; }
   .col-nav a:hover { color: #fff; text-decoration: none; }
-  .bizinfo { border-top: 1px solid var(--line-on-navy); padding-top: 1.3rem; }
-  .biz { display: flex; flex-wrap: wrap; gap: .4rem 1.1rem; margin: 0; font-size: .8rem; color: var(--muted-on-navy); line-height: 1.7; }
-  .biz-name { color: var(--paper-on-navy); font-weight: 600; }
+  .bizbox { margin: 1.6rem 0 0; padding: 1.1rem 1.2rem; border: 1px solid var(--line-on-navy); border-radius: 3px; display: flex; flex-direction: column; gap: .45rem; max-width: 26rem; }
+  .bizbox > div { display: grid; grid-template-columns: 6.5rem 1fr; gap: .6rem; align-items: baseline; }
+  .bizbox dt { font-family: var(--mono); font-size: .68rem; letter-spacing: .04em; color: var(--gold); margin: 0; }
+  .bizbox dd { margin: 0; font-size: .84rem; color: var(--paper-on-navy); line-height: 1.5; }
   .baseline {
     display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
     padding-block: 1.4rem;
