@@ -34,8 +34,10 @@ const { name, penName, intro, greeting, signName, signTitle, focus, career, ctaH
 
   <!-- 대표 프로필 -->
   <section class="section wrap profile-strip">
-    <p class="eyebrow">Greeting</p>
-    <h2 class="sec-title">인사말</h2>
+    <div class="greeting-head">
+      <p class="eyebrow">Greeting</p>
+      <h2 class="sec-title">인사말</h2>
+    </div>
     <div class="profile">
       <div class="profile-head">
         <div class="greeting">
@@ -45,8 +47,6 @@ const { name, penName, intro, greeting, signName, signTitle, focus, career, ctaH
           {signTitle && <span class="sign-title">{signTitle}</span>}
           <span class="sign-name">{signName || name}</span>
         </p>
-      </div>
-        ))}
       </div>
     </div>
   </section>
@@ -97,9 +97,10 @@ const { name, penName, intro, greeting, signName, signTitle, focus, career, ctaH
 
   .mission { font-family: var(--serif); font-size: clamp(1.05rem, 2.4vw, 1.3rem); color: var(--gold); margin: 0 0 1.2rem; }
   .profile-strip { background: var(--paper-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-  .profile { max-width: 46rem; }
+  .greeting-head { max-width: 48rem; margin-inline: auto; }
+  .profile { max-width: 48rem; margin-inline: auto; }
   .greeting p { line-height: 1.85; color: var(--ink); margin: 0 0 1em; }
-  .sign { margin: 1.4rem 0 0; display: flex; align-items: baseline; gap: .6rem; justify-content: flex-start; }
+  .sign { margin: 2rem 0 0; display: flex; align-items: baseline; gap: .7rem; justify-content: flex-end; }
   .sign-title { font-family: var(--mono); font-size: .76rem; letter-spacing: .08em; color: var(--muted); }
   .sign-name { font-family: var(--serif); font-weight: 700; font-size: 1.25rem; color: var(--ink); }
 
