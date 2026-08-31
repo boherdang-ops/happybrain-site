@@ -5,5 +5,5 @@ url: practice/02-prompt-assembler.html
 tag: ''
 badge: ''
 locked: true
-order: 0
+order: 1
 ---
