@@ -57,7 +57,7 @@ outcome: |-
   ■ 교육생 개인의 AI 활용 경험을 부서 단위 업무혁신으로 확산하여 조직 전체의 AI 행정 역량 강화
 gallery: []
 thumbnail: ''
-order: 4
+order: 6
 draft: false
 ---
 
