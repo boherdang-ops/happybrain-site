@@ -51,7 +51,7 @@ outcome: |-
   ■ 명확한 가이드라인 기반의 안전한 데이터 생태계 확립
 gallery: []
 thumbnail: ''
-order: 3
+order: 1
 draft: false
 ---
 
