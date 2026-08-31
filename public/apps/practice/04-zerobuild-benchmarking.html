@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- 저작물 명칭: 제로빌드 실패분석·벤치마킹 핸드북 (v1.0)
+     파일명: 04-zerobuild-benchmarking.html
+     사용 과정: 04 제로빌드 심화 워크숍 (보조)
+     저작권자: (주)한국공공자치연구원 AI행정혁신연구소 -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제로빌드 실패분석·벤치마킹 핸드북 v1.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .prompt-box {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            font-family: 'Inter', monospace;
+            white-space: pre-wrap;
+        }
+        /* 애니메이션 */
+        @keyframes slideIn { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        .toast-enter { animation: slideIn 0.3s forwards; }
+        .toast-exit { animation: fadeOut 0.3s forwards; }
+        
+        /* 스크롤바 숨기기 (모바일) */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 텍스트 영역 리사이즈 제한 */
+        textarea { resize: vertical; min-height: 80px; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased h-screen flex flex-col">
+
+    <header class="bg-indigo-800 text-white shadow-md z-10 sticky top-0">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-xl font-bold tracking-tight">제로빌드 정책기획 실무 핸드북</h1>
+                <p class="text-indigo-200 text-sm mt-1">Step 2. 실패 원인 분석 및 성공 사례 벤치마킹</p>
+            </div>
+            
+            <!-- 앱 모드 전환 스위치 -->
+            <div class="flex bg-indigo-900 rounded-lg p-1 self-start md:self-auto border border-indigo-700 shadow-inner">
+                <button onclick="switchAppMode('prompt')" id="btn-mode-prompt" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white text-indigo-900 shadow transition-all">
+                    <i class="fa-solid fa-terminal mr-1"></i> 프롬프트 가이드
+                </button>
+                <button onclick="switchAppMode('worksheet')" id="btn-mode-worksheet" class="px-4 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:text-white transition-all">
+                    <i class="fa-solid fa-file-pen mr-1"></i> 실무 워크시트
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow overflow-y-auto p-4 md:p-6 max-w-6xl mx-auto w-full relative">
+        
+        <div id="app-mode-prompt" class="block">
+            <!-- 탭 메뉴 -->
+            <nav class="flex space-x-2 overflow-x-auto no-scrollbar mb-6 border-b-2 border-slate-200" aria-label="Tabs">
+                <button onclick="switchPromptTab('tab1')" id="btn-tab1" class="prompt-tab-btn active border-b-2 border-indigo-600 text-indigo-700 px-4 py-2 font-bold text-sm flex-shrink-0 transition-colors">
+                    1. 기본 셋업
+                </button>
+                <button onclick="switchPromptTab('tab2')" id="btn-tab2" class="prompt-tab-btn border-b-2 border-transparent text-slate-500 hover:text-indigo-600 px-4 py-2 font-medium text-sm flex-shrink-0 transition-colors">
+                    2. 실패 원인 분석
+                </button>
+                <button onclick="switchPromptTab('tab3')" id="btn-tab3" class="prompt-tab-btn border-b-2 border-transparent text-slate-500 hover:text-indigo-600 px-4 py-2 font-medium text-sm flex-shrink-0 transition-colors">
+                    3. 성공 사례 벤치마킹
+                </button>
+            </nav>
+
+            <!-- 탭 1: 기본 셋업 -->
+            <div id="tab1" class="prompt-tab-content space-y-6 block">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <div class="flex items-center gap-2 mb-3 text-indigo-700">
+                        <i class="fa-solid fa-robot"></i><h2 class="text-lg font-bold">AI 페르소나 설정 (가장 먼저 실행)</h2>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-3">AI가 날카로운 정책 감사관이자 로컬 현장 전문가로 행동하도록 역할을 부여합니다.</p>
+                    <div class="relative">
+                        <div id="prompt-1-0" class="prompt-box p-4 rounded-lg text-sm leading-relaxed">너는 지금부터 숱한 지방자치단체 소멸 대응 정책의 사후 평가를 진행해 온 냉철한 정책 감사관이자, 전국 각지의 혁신적인 로컬 재생 현장을 직접 발로 뛰며 검증해 온 수석 컨설턴트야. 
+
+앞으로 내가 질문하는 내용에 대해 다음 원칙을 반드시 지켜서 답변해 줘.
+1. 표면적인 통계나 듣기 좋은 행정 용어를 배제하고, 현장에서 정책이 실패하거나 성공하는 진짜 '구조적 원인'을 해부할 것.
+2. 해결책을 제시할 때는 대규모 예산 신축, 일회성 현금 살포 방식이 아닌 '기존 자원 활용'과 '지속 가능한 생태계 구축' 관점에서만 제시할 것.</div>
+                        <button onclick="copyText('prompt-1-0')" class="absolute top-2 right-2 bg-slate-700 hover:bg-indigo-600 text-white p-2 rounded text-xs flex items-center gap-1 transition"><i class="fa-regular fa-copy"></i> 복사</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab2" class="prompt-tab-content space-y-6 hidden">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mb-4">
+                    <div class="flex items-center gap-2 mb-2 text-rose-600">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i><h2 class="text-lg font-bold">기존 정책의 3대 실패 원인 해부</h2>
+                    </div>
+                    <p class="text-sm text-slate-600">우리 지자체가 반복해 온 관행적 정책들의 구조적 결함을 AI를 통해 객관적으로 진단합니다.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-rose-500">
+                        <h3 class="font-bold text-slate-800 mb-2">1. 하드웨어 팽창주의의 함정</h3>
+                        <p class="text-xs text-slate-500 mb-3">건물 신축 중심의 정책 한계 분석</p>
+                        <div class="relative">
+                            <div id="prompt-2-1" class="prompt-box p-3 rounded-lg text-xs leading-relaxed h-40 overflow-y-auto">과거 우리 지자체를 포함한 많은 지자체들이 인구 유치를 위해 빈집 전면 리모델링, 대형 청년 센터 신축, 거대 관광 인프라 조성 등에 막대한 예산을 쏟아부었음에도 결국 방치되는 경우가 많아. 
+이러한 '하드웨어 중심 팽창주의' 정책이 소프트웨어(사람, 프로그램)와 결합하지 못할 때 겪게 되는 필연적인 실패의 구조적 원인을 3가지로 압축해서 진단해 줘.</div>
+                            <button onclick="copyText('prompt-2-1')" class="absolute top-2 right-2 bg-slate-700 hover:bg-rose-600 text-white w-7 h-7 rounded flex items-center justify-center transition"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-rose-500">
+                        <h3 class="font-bold text-slate-800 mb-2">2. 공급자 중심 편의주의의 한계</h3>
+                        <p class="text-xs text-slate-500 mb-3">보여주기식 행정의 실효성 분석</p>
+                        <div class="relative">
+                            <div id="prompt-2-2" class="prompt-box p-3 rounded-lg text-xs leading-relaxed h-40 overflow-y-auto">지자체와 공무원이 주도하여 기획한 '일회성 축제/행사', '보여주기식 효도 잔치', '현장 실정(고령층 등)을 모르는 스마트폰 앱 개발' 같은 정책들이 왜 당면한 지역 현안(인구 유출, 고독사 등)을 근본적으로 해결하지 못하는지 분석해 줘. 
+행정 편의주의적 기획이 갖는 치명적 결함을 수요자(주민) 입장에서 지적해 줘.</div>
+                            <button onclick="copyText('prompt-2-2')" class="absolute top-2 right-2 bg-slate-700 hover:bg-rose-600 text-white w-7 h-7 rounded flex items-center justify-center transition"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-rose-500">
+                        <h3 class="font-bold text-slate-800 mb-2">3. 현금성 지원의 부작용 검증</h3>
+                        <p class="text-xs text-slate-500 mb-3">단발성 보조금의 한계 및 금기사항 도출</p>
+                        <div class="relative">
+                            <div id="prompt-2-3" class="prompt-box p-3 rounded-lg text-xs leading-relaxed h-40 overflow-y-auto">청년 정착 지원금, 전입 장려금 등 일시적인 '현금성 지원' 방식이 지역 내 지속 가능한 정착을 유도하지 못하고, 오히려 보조금만 수급한 뒤 떠나는 '체류형 모래성 인구'를 양산하는 메커니즘을 경제·심리적 관점에서 분석해 줘. 
+이를 통해 우리가 향후 정책 기획 시 절대 반복하지 말아야 할 '실패의 3대 금기 사항'을 명확히 도출해 줘.</div>
+                            <button onclick="copyText('prompt-2-3')" class="absolute top-2 right-2 bg-slate-700 hover:bg-rose-600 text-white w-7 h-7 rounded flex items-center justify-center transition"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab3" class="prompt-tab-content space-y-6 hidden">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mb-4">
+                    <div class="flex items-center gap-2 mb-2 text-teal-600">
+                        <i class="fa-solid fa-map-location-dot"></i><h2 class="text-lg font-bold">타 지자체 성공 사례 벤치마킹 (이식 전략)</h2>
+                    </div>
+                    <p class="text-sm text-slate-600">우리 지자체 조건에 맞게 대괄호 <span class="font-mono text-teal-700 bg-teal-50 px-1">[ ]</span> 안의 내용을 수정하여 프롬프트를 실행하세요.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-teal-500">
+                        <h3 class="font-bold text-slate-800 mb-2">1. 공간 신축 없는 자원 셰어링</h3>
+                        <div class="relative">
+                            <div id="prompt-3-1" class="prompt-box p-3 rounded-lg text-xs leading-relaxed h-48 overflow-y-auto">새로운 건물을 짓지 않고, 기존의 방치된 유휴공간(구 마을회관, 경로당 유휴실, 폐교, 민간 창고 등)을 활용하여 '[유입시키려는 타겟층, 예: 청년 창업가]'의 활동 거점과 '[돌봄이 필요한 계층, 예: 지역 어르신]'의 쉼터로 동시에 전환하는 데 성공한 타 지자체나 민간단체의 구체적인 성공 사례를 2가지 찾아줘. 
+단순한 사례 소개를 넘어 그 공간이 어떻게 성공적으로 '셰어링(공유)'될 수 있었는지 운영 구조를 분석해 줘.</div>
+                            <button onclick="copyText('prompt-3-1')" class="absolute top-2 right-2 bg-slate-700 hover:bg-teal-600 text-white w-7 h-7 rounded flex items-center justify-center transition"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-teal-500">
+                        <h3 class="font-bold text-slate-800 mb-2">2. 자생 비즈니스와 일상 돌봄 결합</h3>
+                        <div class="relative">
+                            <div id="prompt-3-2" class="prompt-box p-3 rounded-lg text-xs leading-relaxed h-48 overflow-y-auto">'[유입 타겟층, 예: 외부 유입 청년]'에게 억지 봉사를 강요하지 않고, 이들이 로컬에서 자신의 생존 비즈니스(창업, 프로젝트 등)를 영위하는 일상적인 동선 속에 '[돌봄 타겟층, 예: 취약계층/독거노인]'과의 자연스러운 마주침이나 안부 확인 시스템이 결합된 사례를 분석해 줘. 
+비즈니스와 커뮤니티 케어가 어떻게 서로 충돌하지 않고 윈윈(Win-Win)하는 생태계를 구축했는지 그 작동 방식을 구체적으로 설명해 줘.</div>
+                            <button onclick="copyText('prompt-3-2')" class="absolute top-2 right-2 bg-slate-700 hover:bg-teal-600 text-white w-7 h-7 rounded flex items-center justify-center transition"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-teal-500">
+                        <h3 class="font-bold text-slate-800 mb-2">3. 우리 지자체 이식성(Scalability) 검증</h3>
+                        <div class="relative">
+                            <div id="prompt-3-3" class="prompt-box p-3 rounded-lg text-xs leading-relaxed h-48 overflow-y-auto">방금 분석한 성공 사례들 중에서 대도시 인접 지역이거나 예산이 풍부한 지자체에서만 가능한 특수한 요소는 과감히 도려내 줘. 
+오직 우리 지자체의 조건인 '[인구 ○만 미만, 농어촌/도농복합 등 특성 입력, 신규 건축비 불가 및 빡빡한 행정력]' 속에서도 당장 벤치마킹하여 실행할 수 있는 '핵심 작동 원리 3가지'로 압축해 줘. 
+어떤 예산을 우선적으로 용도 전환해야 하는지도 포함해 줘.</div>
+                            <button onclick="copyText('prompt-3-3')" class="absolute top-2 right-2 bg-slate-700 hover:bg-teal-600 text-white w-7 h-7 rounded flex items-center justify-center transition"><i class="fa-regular fa-copy"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="app-mode-worksheet" class="hidden">
+            <div class="flex justify-between items-end border-b-2 border-slate-200 mb-6">
+                <nav class="flex space-x-2 overflow-x-auto no-scrollbar" aria-label="Worksheet Tabs">
+                    <button onclick="switchWorksheetTab('ws1')" id="btn-ws1" class="ws-tab-btn active border-b-2 border-emerald-600 text-emerald-700 px-4 py-2 font-bold text-sm flex-shrink-0 transition-colors">
+                        시트 1: 실패 원인 진단
+                    </button>
+                    <button onclick="switchWorksheetTab('ws2')" id="btn-ws2" class="ws-tab-btn border-b-2 border-transparent text-slate-500 hover:text-emerald-600 px-4 py-2 font-medium text-sm flex-shrink-0 transition-colors">
+                        시트 2: 벤치마킹 사례
+                    </button>
+                    <button onclick="switchWorksheetTab('ws3')" id="btn-ws3" class="ws-tab-btn border-b-2 border-transparent text-slate-500 hover:text-emerald-600 px-4 py-2 font-medium text-sm flex-shrink-0 transition-colors">
+                        시트 3: 우리 지자체 적용 전략
+                    </button>
+                </nav>
+            </div>
+
+            <p class="text-slate-600 text-sm mb-4 bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+                <i class="fa-solid fa-circle-info text-emerald-500 mr-1"></i> AI의 분석 결과를 좌측에 붙여넣고, 실무자의 시각으로 우리 지자체의 실제 사례와 향후 개선 시사점을 우측에 채워 완성하세요.
+            </p>
+
+            <!-- 워크시트 1: 실패 원인 진단 -->
+            <div id="ws1" class="ws-tab-content block space-y-4">
+                <script>
+                    const ws1Areas = ['1. 하드웨어 중심 팽창주의', '2. 공급자 중심 행정 편의주의', '3. 현금성 지원 및 단발성 보조금'];
+                    ws1Areas.forEach((area, index) => {
+                        document.write(`
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                            <h4 class="font-bold text-slate-800 mb-3 bg-slate-100 p-2 rounded"><i class="fa-solid fa-triangle-exclamation text-rose-500 mr-2"></i>${area} 한계 진단</h4>
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">AI 진단 원인 요약 (근본 문제)</label>
+                                    <textarea id="ws1-ai-${index+1}" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-emerald-300 outline-none h-32" placeholder="프롬프트 실행 결과를 요약하여 붙여넣으세요..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">우리 지자체의 과거/현재 유사 사례</label>
+                                    <textarea id="ws1-local-${index+1}" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-emerald-300 outline-none bg-rose-50 h-32" placeholder="우리 지역에서 비슷하게 실패하거나 예산이 낭비된 사례를 솔직하게 기록하세요..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">향후 기획 시 배제할 금기사항(시사점)</label>
+                                    <textarea id="ws1-insight-${index+1}" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-emerald-300 outline-none bg-blue-50 h-32" placeholder="이 실패를 피하기 위해 다음 정책 기획 시 '무엇을 하지 말아야 할지' 정의하세요..."></textarea>
+                                </div>
+                            </div>
+                        </div>`);
+                    });
+                </script>
+            </div>
+
+            <!-- 워크시트 2: 벤치마킹 사례 -->
+            <div id="ws2" class="ws-tab-content hidden space-y-4">
+                <script>
+                    const ws2Areas = ['1. 공간 셰어링 (신축 배제)', '2. 비즈니스와 일상 돌봄망의 결합'];
+                    ws2Areas.forEach((area, index) => {
+                        document.write(`
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                            <h4 class="font-bold text-slate-800 mb-3 bg-slate-100 p-2 rounded"><i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i>벤치마킹 테마: ${area}</h4>
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">타 지자체/기관 성공 사례 요약</label>
+                                    <textarea id="ws2-case-${index+1}" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-emerald-300 outline-none h-32" placeholder="AI가 찾아준 성공 사례의 배경과 내용 요약..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">성공을 만든 핵심 기제 (작동 원리)</label>
+                                    <textarea id="ws2-mechanism-${index+1}" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-emerald-300 outline-none bg-amber-50 h-32" placeholder="표면적 결과가 아닌, 어떤 구조(예산/관계망) 덕분에 성공했는지 기재..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">그대로 가져올 때 예상되는 제약/장벽</label>
+                                    <textarea id="ws2-barrier-${index+1}" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-emerald-300 outline-none bg-rose-50 h-32" placeholder="우리 지자체에 적용할 때 예산, 법령, 주민 반발 등의 제약은 무엇인가?"></textarea>
+                                </div>
+                            </div>
+                        </div>`);
+                    });
+                </script>
+            </div>
+
+            <!-- 워크시트 3: 우리 지자체 적용 전략 -->
+            <div id="ws3" class="ws-tab-content hidden space-y-4">
+                <script>
+                    for(let i=1; i<=3; i++) {
+                        document.write(`
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 border-l-4 border-emerald-500">
+                            <h4 class="font-bold text-slate-800 mb-3 bg-emerald-100 p-2 rounded text-emerald-900">우리 지자체 이식 가능 핵심 원리 ${i}</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">이식할 핵심 작동 원리 (AI 도출)</label>
+                                    <textarea id="ws3-principle-${i}" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-emerald-300 outline-none" placeholder="프롬프트 3단계에서 도출된 핵심 원리 입력..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">우리 지자체 맞춤형 적용 시나리오</label>
+                                    <textarea id="ws3-scenario-${i}" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-emerald-300 outline-none bg-emerald-50" placeholder="우리 관내의 특정 마을, 특정 타겟을 대상으로 어떻게 실행할지 구체화..."></textarea>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">필요한 내부 예산/자원 전환 방안</label>
+                                    <textarea id="ws3-resource-${i}" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-emerald-300 outline-none bg-blue-50" placeholder="신규 편성 없이 어떤 예산이나 유휴 자원을 끌어올 것인가?"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">최종 기대 효과 (+1 프리미엄)</label>
+                                    <textarea id="ws3-effect-${i}" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-emerald-300 outline-none bg-amber-50" placeholder="기존 정책 실패를 극복하고 주민에게 어떤 새로운 가치를 주는가?"></textarea>
+                                </div>
+                            </div>
+                        </div>`);
+                    }
+                </script>
+            </div>
+
+            <!-- 워드 다운로드 플로팅 버튼 -->
+            <button onclick="exportToWord()" class="fixed bottom-6 right-6 md:bottom-10 md:right-10 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-full shadow-xl font-bold flex items-center gap-2 transition-transform hover:scale-105 z-40 border-2 border-white">
+                <i class="fa-solid fa-file-word text-xl"></i>
+                <span class="hidden md:inline">분석 결과 Word 다운로드</span>
+                <span class="md:hidden">Word 저장</span>
+            </button>
+            <div class="h-20"></div> <!-- 하단 여백 -->
+        </div>
+
+    </main>
+
+    <!-- 커스텀 토스트 알림창 -->
+    <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-lg hidden items-center gap-2 z-50">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span class="font-medium text-sm" id="toast-msg">복사되었습니다!</span>
+    </div>
+
+    <script>
+        // --- 앱 모드 전환 로직 ---
+        function switchAppMode(mode) {
+            const promptMode = document.getElementById('app-mode-prompt');
+            const worksheetMode = document.getElementById('app-mode-worksheet');
+            const btnPrompt = document.getElementById('btn-mode-prompt');
+            const btnWorksheet = document.getElementById('btn-mode-worksheet');
+
+            if (mode === 'prompt') {
+                promptMode.classList.remove('hidden'); promptMode.classList.add('block');
+                worksheetMode.classList.remove('block'); worksheetMode.classList.add('hidden');
+                
+                btnPrompt.className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white text-indigo-900 shadow transition-all";
+                btnWorksheet.className = "px-4 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:text-white transition-all";
+            } else {
+                promptMode.classList.remove('block'); promptMode.classList.add('hidden');
+                worksheetMode.classList.remove('hidden'); worksheetMode.classList.add('block');
+                
+                btnWorksheet.className = "px-4 py-1.5 rounded-md text-sm font-bold bg-white text-indigo-900 shadow transition-all";
+                btnPrompt.className = "px-4 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:text-white transition-all";
+            }
+        }
+
+        // --- 프롬프트 탭 전환 로직 ---
+        function switchPromptTab(tabId) {
+            document.querySelectorAll('.prompt-tab-content').forEach(el => { el.classList.add('hidden'); el.classList.remove('block'); });
+            document.querySelectorAll('.prompt-tab-btn').forEach(el => {
+                el.classList.remove('border-indigo-600', 'text-indigo-700', 'font-bold');
+                el.classList.add('border-transparent', 'text-slate-500', 'font-medium');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+            
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('border-transparent', 'text-slate-500', 'font-medium');
+            activeBtn.classList.add('border-indigo-600', 'text-indigo-700', 'font-bold');
+        }
+
+        // --- 워크시트 탭 전환 로직 ---
+        function switchWorksheetTab(tabId) {
+            document.querySelectorAll('.ws-tab-content').forEach(el => { el.classList.add('hidden'); el.classList.remove('block'); });
+            document.querySelectorAll('.ws-tab-btn').forEach(el => {
+                el.classList.remove('border-emerald-600', 'text-emerald-700', 'font-bold');
+                el.classList.add('border-transparent', 'text-slate-500', 'font-medium');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+            
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('border-transparent', 'text-slate-500', 'font-medium');
+            activeBtn.classList.add('border-emerald-600', 'text-emerald-700', 'font-bold');
+        }
+
+        // --- 클립보드 복사 로직 ---
+        function copyText(elementId) {
+            const textToCopy = document.getElementById(elementId).innerText;
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            textarea.style.position = 'fixed'; textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast("프롬프트가 클립보드에 복사되었습니다!");
+            } catch (err) {
+                console.error('복사 실패:', err);
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        // --- 토스트 알림 ---
+        let toastTimeout;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('hidden', 'toast-exit');
+            toast.classList.add('flex', 'toast-enter');
+            if(toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-exit');
+                setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('flex'); }, 300);
+            }, 2500);
+        }
+
+        // --- STREAMING_CHUNK: Word Export Logic ---
+        function exportToWord() {
+            // HTML to Word (doc) conversion utilizing standard Office namespaces
+            const header = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+                <meta charset='utf-8'>
+                <title>제로빌드 실패분석 및 벤치마킹 워크시트</title>
+                <style>
+                    body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; }
+                    h1 { text-align: center; color: #065f46; font-size: 22pt; margin-bottom: 20px; }
+                    h2 { font-size: 14pt; color: #1f2937; margin-top: 30px; border-bottom: 2px solid #cbd5e1; padding-bottom: 5px; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    th, td { border: 1px solid #94a3b8; padding: 10px; text-align: left; vertical-align: top; font-size: 11pt; }
+                    th { background-color: #f1f5f9; font-weight: bold; }
+                </style>
+            </head>
+            <body>
+            `;
+            const footer = "</body></html>";
+            let content = "<h1>제로빌드 실패 원인 분석 및 성공 벤치마킹 실무 워크시트</h1>";
+
+            // Helper to get textarea value safely and convert line breaks
+            const getVal = (id) => {
+                const el = document.getElementById(id);
+                return el ? el.value.replace(/\n/g, '<br/>') : '';
+            };
+
+            // 1. 실패 원인 진단
+            content += "<h2>[시트 1] 기존 정책 실패 원인 진단</h2><table>";
+            content += "<tr><th width='20%'>분석 영역</th><th width='26%'>AI 진단 근본 문제</th><th width='27%'>우리 지자체 실제 과거/현재 사례</th><th width='27%'>향후 기획 시 배제할 금기사항</th></tr>";
+            const w1Areas = ['하드웨어 중심 팽창주의', '공급자 중심 행정 편의주의', '현금성 지원 및 단발성 보조금'];
+            for(let i=1; i<=3; i++) {
+                content += `<tr><td><b>${w1Areas[i-1]}</b></td><td>${getVal(`ws1-ai-${i}`)}</td><td>${getVal(`ws1-local-${i}`)}</td><td>${getVal(`ws1-insight-${i}`)}</td></tr>`;
+            }
+            content += "</table><br clear='all' style='page-break-before:always' />";
+
+            // 2. 벤치마킹 사례
+            content += "<h2>[시트 2] 타 지자체 성공 사례 벤치마킹 분석</h2><table>";
+            content += "<tr><th width='20%'>벤치마킹 테마</th><th width='26%'>타 지자체 성공 사례 요약</th><th width='27%'>성공을 만든 핵심 기제 (작동 원리)</th><th width='27%'>그대로 가져올 때 예상되는 제약/장벽</th></tr>";
+            const w2Areas = ['공간 셰어링 (신축 배제)', '비즈니스와 일상 돌봄망의 결합'];
+            for(let i=1; i<=2; i++) {
+                content += `<tr><td><b>${w2Areas[i-1]}</b></td><td>${getVal(`ws2-case-${i}`)}</td><td>${getVal(`ws2-mechanism-${i}`)}</td><td>${getVal(`ws2-barrier-${i}`)}</td></tr>`;
+            }
+            content += "</table><br clear='all' style='page-break-before:always' />";
+
+            // 3. 우리 지자체 적용 전략
+            content += "<h2>[시트 3] 우리 지자체 이식 가능 핵심 원리 적용 전략</h2><table>";
+            content += "<tr><th width='15%'>구분</th><th width='25%'>이식할 핵심 작동 원리</th><th width='20%'>맞춤형 적용 시나리오</th><th width='20%'>필요한 예산/자원 전환 방안</th><th width='20%'>최종 기대 효과 (+1)</th></tr>";
+            for(let i=1; i<=3; i++) {
+                content += `<tr><td><b>핵심 원리 ${i}</b></td><td>${getVal(`ws3-principle-${i}`)}</td><td>${getVal(`ws3-scenario-${i}`)}</td><td>${getVal(`ws3-resource-${i}`)}</td><td>${getVal(`ws3-effect-${i}`)}</td></tr>`;
+            }
+            content += "</table>";
+
+            // 브라우저에서 Blob을 이용해 다운로드 트리거
+            const sourceHTML = header + content + footer;
+            const blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = '제로빌드_실패분석_벤치마킹_워크시트.doc'; // .doc 확장자 부여
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast("분석 결과 워드 파일 다운로드가 시작되었습니다.");
+        }
+    </script>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   보관함 (SaveKit) — 실습 앱 공통 저장 모듈
+   (주)한국공공자치연구원 AI행정혁신연구소
+
+   ① 입력하는 즉시 이 기기의 브라우저에 자동 저장한다.
+      창을 닫거나 새로 고쳐도 그 자리에서 이어서 진행할 수 있다.
+   ② 「이어하기 파일 저장」으로 파일을 내려받아
+      다른 기기 또는 다음 날의 실습에서 「불러오기」로 여는 것이 가능하다.
+   ③ 「기록 지우기」로 이 기기에 남은 입력 흔적을 즉시 삭제한다.
+      공용 PC에서 실습을 마친 경우 반드시 눌러야 한다.
+
+   저장 위치는 이 기기의 브라우저 안이며, 외부로 전송하지 아니한다.
+   ───────────────────────────────────────────────────────────── */
+(function () {
+  'use strict';
+
+  var KEY_PREFIX = 'kilg.';      // 한국공공자치연구원 실습 앱 공통 접두사
+  var SAVE_DELAY = 400;          // 입력이 멎고 0.4초 뒤에 저장한다
+  var cfg = null, timer = null, restoring = false, wiped = false, lastSaved = null;
+
+  /* ── 필드 식별키 ──────────────────────────────────────────
+     id 가 있으면 id 를, 라디오·체크박스는 name+value 를,
+     둘 다 없으면 종류별 등장 순서를 키로 삼는다.            */
+  function fieldKey(el, seq) {
+    var t = (el.type || '').toLowerCase();
+    if ((t === 'radio' || t === 'checkbox') && el.name) return '@' + el.name + '=' + el.value;
+    if (el.id) return '#' + el.id;
+    if (el.name) return '@' + el.name;
+    return '~' + el.tagName.toLowerCase() + ':' + seq;
+  }
+
+  function eachField(fn) {
+    var seq = {};
+    var list = document.querySelectorAll('input, textarea, select');
+    for (var i = 0; i < list.length; i++) {
+      var el = list[i];
+      var t = (el.type || '').toLowerCase();
+      if (t === 'file' || t === 'password' || t === 'button' || t === 'submit') continue;
+      if (el.closest && el.closest('[data-savekit-skip]')) continue;
+      var tag = el.tagName.toLowerCase();
+      seq[tag] = (seq[tag] || 0) + 1;
+      fn(el, fieldKey(el, seq[tag]));
+    }
+  }
+
+  function collect() {
+    var f = {};
+    eachField(function (el, k) {
+      var t = (el.type || '').toLowerCase();
+      f[k] = (t === 'radio' || t === 'checkbox') ? !!el.checked : el.value;
+    });
+    var extra = null;
+    try { extra = cfg.extra ? cfg.extra() : null; } catch (e) { extra = null; }
+    return { app: cfg.appName, appKey: cfg.appKey, savedAt: new Date().toISOString(), fields: f, extra: extra };
+  }
+
+  function applyFields(data) {
+    if (!data || !data.fields) return;
+    eachField(function (el, k) {
+      if (!(k in data.fields)) return;
+      var v = data.fields[k];
+      var t = (el.type || '').toLowerCase();
+      if (t === 'radio' || t === 'checkbox') {
+        if (el.checked !== !!v) { el.checked = !!v; fire(el, 'change'); }
+      } else if (el.value !== v) {
+        el.value = v;
+        fire(el, 'input'); fire(el, 'change');
+      }
+    });
+  }
+
+  function fire(el, type) {
+    try { el.dispatchEvent(new Event(type, { bubbles: true })); } catch (e) { /* 무시 */ }
+  }
+
+  /* ── 브라우저 저장 ────────────────────────────────────── */
+  function storeKey() { return KEY_PREFIX + cfg.appKey; }
+
+  /* 사람이 실제로 적어 넣은 내용이 하나라도 있는지 본다.
+     빈 화면을 저장해 두면 「기록 지우기」 뒤에도 흔적이 남으므로 저장하지 아니한다. */
+  function hasContent() {
+    var yes = false;
+    eachField(function (el) {
+      if (yes) return;
+      var t = (el.type || '').toLowerCase(), tag = el.tagName.toLowerCase();
+      if (t === 'radio' || t === 'checkbox' || tag === 'select') return;
+      if (String(el.value || '').trim()) yes = true;
+    });
+    return yes;
+  }
+
+  function save() {
+    if (restoring || wiped) return;
+    try {
+      if (!hasContent()) {                       // 적은 것이 없으면 저장하지 아니하고 기존 기록도 지운다
+        localStorage.removeItem(storeKey());
+        return;
+      }
+      var d = collect();
+      localStorage.setItem(storeKey(), JSON.stringify(d));
+      lastSaved = new Date();
+      paint('자동 저장됨 · ' + hhmm(lastSaved));
+    } catch (e) {
+      paint('이 브라우저는 자동 저장을 쓸 수 없는 설정입니다. 「이어하기 파일 저장」을 이용하십시오.', true);
+    }
+  }
+
+  function scheduleSave() {
+    if (restoring || wiped) return;
+    clearTimeout(timer);
+    timer = setTimeout(save, SAVE_DELAY);
+  }
+
+  function restore(data, source) {
+    if (!data) return false;
+    restoring = true;
+    try {
+      applyFields(data);                                   // 1차 — 지금 화면에 있는 칸
+      if (cfg.afterRestore) { try { cfg.afterRestore(data.extra || {}); } catch (e) { } }
+      applyFields(data);                                   // 2차 — 1차 뒤에 새로 그려진 칸
+    } finally {
+      restoring = false;
+    }
+    var when = data.savedAt ? new Date(data.savedAt) : null;
+    var msg = source === 'file'
+      ? '이어하기 파일을 불러왔습니다.'
+      : '이전에 입력하신 내용을 불러왔습니다' + (when ? ' (' + mmdd(when) + ' ' + hhmm(when) + ')' : '') + '.';
+    paint(msg);
+    toast(msg);
+    setTimeout(function () { paint('자동 저장됨 · ' + hhmm(new Date())); }, 4000);
+    return true;
+  }
+
+  function restoreFromBrowser() {
+    var raw;
+    try { raw = localStorage.getItem(storeKey()); } catch (e) { return false; }
+    if (!raw) return false;
+    var data;
+    try { data = JSON.parse(raw); } catch (e) { return false; }
+    return restore(data, 'browser');
+  }
+
+  /* ── 파일 내보내기 · 불러오기 ─────────────────────────── */
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function hhmm(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function mmdd(d) { return (d.getMonth() + 1) + '월 ' + d.getDate() + '일'; }
+  function stamp(d) {
+    return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes());
+  }
+
+  function exportFile() {
+    var d = collect();
+    d._안내 = '이 파일은 「' + cfg.appName + '」의 이어하기 파일입니다. '
+            + '앱 화면 아래쪽 보관함의 「이어하기 파일 열기」로 이 파일을 여시면 저장한 시점부터 이어서 진행할 수 있습니다.';
+    var body = '﻿' + JSON.stringify(d, null, 2);
+    var when = stamp(new Date());
+    // 브라우저가 한글 파일명을 지우는 경우가 있어, 내려받기 이름은 영문으로 둔다.
+    var asciiName = cfg.fileName + '_resume_' + when + '.json';
+    var korName = cfg.appName.replace(/\s+/g, '') + '_이어하기_' + when + '.json';
+    var done = function () {
+      toast('이어하기 파일을 저장하였습니다. 다음 실습에서 「이어하기 파일 열기」로 여십시오.');
+      paint('이어하기 파일로 저장함 · ' + hhmm(new Date()));
+    };
+
+    // ① 저장 위치를 고를 수 있는 브라우저에서는 한글 이름을 그대로 쓴다.
+    if (typeof window.showSaveFilePicker === 'function') {
+      window.showSaveFilePicker({
+        suggestedName: korName,
+        types: [{ description: '이어하기 파일', accept: { 'application/json': ['.json'] } }]
+      }).then(function (h) {
+        return h.createWritable().then(function (w) {
+          return w.write(body).then(function () { return w.close(); });
+        });
+      }).then(done).catch(function (e) {
+        if (e && e.name === 'AbortError') return;   // 이용자가 취소한 경우
+        blobDownload(body, asciiName); done();
+      });
+      return;
+    }
+    // ② 그 밖의 브라우저는 곧바로 내려받는다.
+    blobDownload(body, asciiName);
+    done();
+  }
+
+  function blobDownload(body, name) {
+    var blob = new Blob([body], { type: 'application/json;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name; a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }
+
+  function importFile(file) {
+    var r = new FileReader();
+    r.onload = function () {
+      var text = String(r.result || '').replace(/^﻿/, '');
+      var data;
+      try { data = JSON.parse(text); } catch (e) {
+        toast('이어하기 파일이 아닙니다. 앱에서 내려받은 파일인지 확인하십시오.', 'error');
+        return;
+      }
+      if (data.appKey && data.appKey !== cfg.appKey) {
+        toast('다른 앱의 이어하기 파일입니다. (' + (data.app || '알 수 없음') + ')', 'error');
+        return;
+      }
+      restore(data, 'file');
+      save();
+    };
+    r.readAsText(file, 'utf-8');
+  }
+
+  function wipe() {
+    if (!confirm('이 기기에 저장된 입력 내용을 지웁니다.\n지운 뒤에는 되돌릴 수 없으므로, 필요한 내용은 먼저 「이어하기 파일 저장」을 눌러 두십시오.\n\n지우시겠습니까?')) return;
+    wiped = true;                               // 이후의 자동 저장을 모두 막는다
+    clearTimeout(timer);
+    // 화면에 남은 입력도 함께 비운다. 비우지 아니하면 페이지를 떠나는 순간 다시 저장된다.
+    eachField(function (el) {
+      var t = (el.type || '').toLowerCase();
+      if (t === 'radio' || t === 'checkbox' || el.tagName.toLowerCase() === 'select') return;
+      el.value = '';
+    });
+    try { localStorage.removeItem(storeKey()); } catch (e) { }
+    paint('기록을 지웠습니다.');
+    toast('이 기기에 남아 있던 입력 내용을 지웠습니다.');
+    setTimeout(function () { location.reload(); }, 700);
+  }
+
+  /* ── 화면 아래 보관함 막대 ───────────────────────────── */
+  var bar, label;
+
+  function paint(text, warn) {
+    if (!label) return;
+    label.textContent = text;
+    label.style.color = warn ? '#b91c1c' : '#334155';
+  }
+
+  function toast(msg, type) {
+    if (typeof window.showToast === 'function') { try { window.showToast(msg, type); return; } catch (e) { } }
+    paint(msg, type === 'error');
+  }
+
+  function buildBar() {
+    var css = document.createElement('style');
+    css.textContent = [
+      '#savekit-bar{position:fixed;left:0;right:0;bottom:0;z-index:9999;',
+      'display:flex;align-items:center;gap:8px;flex-wrap:wrap;',
+      'padding:8px 14px;background:#f8fafc;border-top:1px solid #cbd5e1;',
+      'font-family:inherit;font-size:13px;box-shadow:0 -2px 8px rgba(15,23,42,.06)}',
+      '#savekit-bar .sk-t{font-weight:700;color:#0f172a;margin-right:2px;white-space:nowrap}',
+      '#savekit-bar .sk-s{flex:1 1 160px;min-width:120px;color:#334155}',
+      '#savekit-bar button{border:1px solid #cbd5e1;background:#fff;color:#0f172a;',
+      'border-radius:6px;padding:5px 11px;font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit}',
+      '#savekit-bar button:hover{background:#e2e8f0}',
+      '#savekit-bar button.sk-danger{color:#b91c1c;border-color:#fecaca}',
+      '#savekit-bar button.sk-danger:hover{background:#fee2e2}',
+      '@media print{#savekit-bar{display:none}}'
+    ].join('');
+    document.head.appendChild(css);
+
+    bar = document.createElement('div');
+    bar.id = 'savekit-bar';
+    bar.setAttribute('data-savekit-skip', '1');
+    bar.innerHTML =
+      '<span class="sk-t">보관함</span>' +
+      '<span class="sk-s" id="savekit-status">입력하시면 이 기기에 자동으로 저장됩니다.</span>' +
+      '<button type="button" id="savekit-export">이어하기 파일 저장</button>' +
+      '<button type="button" id="savekit-import">이어하기 파일 열기</button>' +
+      '<button type="button" class="sk-danger" id="savekit-wipe">기록 지우기</button>' +
+      '<input type="file" id="savekit-file" accept=".json,application/json" style="display:none">';
+    document.body.appendChild(bar);
+    label = document.getElementById('savekit-status');
+
+    document.getElementById('savekit-export').onclick = exportFile;
+    document.getElementById('savekit-wipe').onclick = wipe;
+    document.getElementById('savekit-import').onclick = function () {
+      document.getElementById('savekit-file').click();
+    };
+    document.getElementById('savekit-file').onchange = function (e) {
+      if (e.target.files && e.target.files[0]) importFile(e.target.files[0]);
+      e.target.value = '';
+    };
+
+    fitBody();
+    window.addEventListener('resize', fitBody);
+  }
+
+  /* 막대가 화면 아래를 차지하므로 그만큼 본문 자리를 좁힌다.
+     화면 전체를 쓰는 앱(h-screen)과 아래로 흐르는 앱을 나누어 처리한다. */
+  function fitBody() {
+    if (!bar) return;
+    var h = bar.offsetHeight;
+    var b = document.body, cs = window.getComputedStyle(b);
+    var full = (cs.overflowY === 'hidden' || cs.overflow === 'hidden')
+               && b.getBoundingClientRect().height >= window.innerHeight - 2;
+    if (full) {                                   // 화면에 꽉 채워 쓰는 앱
+      var mt = parseFloat(cs.marginTop) || 0, mb = parseFloat(cs.marginBottom) || 0;
+      b.style.height = 'calc(100vh - ' + (h + mt + mb) + 'px)';
+      b.style.paddingBottom = '';
+    } else {                                      // 아래로 길어지는 앱
+      b.style.paddingBottom = (h + 10) + 'px';
+    }
+  }
+
+  /* ── 시작 ────────────────────────────────────────────── */
+  function start(options) {
+    cfg = options;
+    buildBar();
+    restoreFromBrowser();
+    document.addEventListener('input', scheduleSave, true);
+    document.addEventListener('change', scheduleSave, true);
+    window.addEventListener('beforeunload', function () { clearTimeout(timer); save(); });
+    // 앱이 스스로 값을 바꾸는 경우(예시 불러오기·단계 이동)도 주기적으로 담아 둔다
+    setInterval(save, 5000);
+  }
+
+  window.SaveKit = { init: function (o) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { start(o); });
+    } else { start(o); }
+  } };
+})();
+
+SaveKit.init({
+  appKey  : 'zerobuild-benchmarking',
+  appName : '제로빌드 실패분석·벤치마킹 핸드북',
+  fileName: '04-zerobuild-benchmarking'
+});
+
+</script>
+</body>
+</html>
