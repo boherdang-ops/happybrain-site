@@ -66,7 +66,7 @@ outcome: |-
   ■ 데이터 기반 행정 혁신 및 상향식(Bottom-up) 의사결정 체계 확립
 gallery: []
 thumbnail: /uploads/resized (9).jpeg
-order: 2
+order: 4
 draft: false
 ---
 
