@@ -67,7 +67,7 @@ outcome: |-
   ■ ❍ 정보 유출 차단 및 신뢰받는 AI 활용 표준 정립
 gallery: []
 thumbnail: ''
-order: 5
+order: 3
 draft: false
 ---
 
