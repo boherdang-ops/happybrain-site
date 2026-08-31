@@ -71,7 +71,7 @@ outcome: |-
   ■ 고품질 콘텐츠 자체 기획을 통한 소통 강화 및 예산 절감
 gallery: []
 thumbnail: /uploads/KakaoTalk_20260625_085607721_09.jpg
-order: 6
+order: 2
 draft: false
 ---
 
