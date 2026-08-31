@@ -5,5 +5,5 @@ url: practice/02-data-insight-lab.html
 tag: ''
 badge: ''
 locked: true
-order: 0
+order: 1
 ---
