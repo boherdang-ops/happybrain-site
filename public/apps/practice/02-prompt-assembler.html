@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- 저작물 명칭: AI 행정 프롬프트 조립기 (v1.0)
+     파일명: 02-prompt-assembler.html
+     사용 과정: 02 역량강화 워크숍 · 03 심화 워크숍
+     저작권자: (주)한국공공자치연구원 AI행정혁신연구소 -->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 행정 프롬프트 조립기 v1.0</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Pretendard', 'Malgun Gothic', '맑은 고딕', sans-serif; background-color:#f3f4f6; color:#1f2937; }
+  .tab-btn.active { border-bottom:3px solid #2563eb; color:#2563eb; font-weight:600; }
+  textarea::-webkit-scrollbar { width:8px; }
+  textarea::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+  @keyframes slideUp { from { transform:translateY(100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
+  .toast-animate { animation:slideUp .3s ease-out forwards; }
+  @keyframes flash { 0% { background-color:#dbeafe; } 100% { background-color:transparent; } }
+  .flash { animation:flash .9s ease-out; }
+  input[type="checkbox"] { accent-color:#2563eb; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<header class="bg-slate-900 text-white shadow-md z-10 flex-shrink-0">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center space-x-3">
+    <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+    <h1 class="text-lg md:text-xl font-bold tracking-tight">AI 행정 프롬프트 조립기 <span class="text-xs font-normal bg-blue-600 px-2 py-1 rounded ml-2">v1.0</span></h1>
+  </div>
+  <div class="bg-red-50 text-red-700 px-4 py-2 text-xs md:text-sm flex items-center justify-center border-b border-red-100 text-center">
+    <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+    <span><strong>[보안 주의]</strong>&nbsp;공개된 자료로 실습하십시오. 개인정보가 담긴 문서와 비공개 내부 자료는 앱에도, AI 도구에도 올리지 마십시오.</span>
+  </div>
+</header>
+
+<main class="flex-1 max-w-7xl w-full mx-auto p-4 flex flex-col md:flex-row gap-4">
+
+  <div class="w-full md:w-2/3 flex flex-col bg-white rounded-xl shadow-sm border border-gray-200">
+
+    <div class="flex border-b border-gray-200 bg-gray-50 px-2 md:px-4 pt-2 shrink-0">
+      <button onclick="switchTab('create')" id="tab-create" class="tab-btn active px-3 md:px-4 py-2.5 text-sm font-medium text-gray-600">📝 문서 기안 및 작성</button>
+      <button onclick="switchTab('analyze')" id="tab-analyze" class="tab-btn px-3 md:px-4 py-2.5 text-sm font-medium text-gray-600">🔍 자료 분석 프롬프트</button>
+    </div>
+
+    <div class="flex-1 p-4 md:p-6">
+
+      <!-- ─────────── 작성 모드 ─────────── -->
+      <div id="content-create" class="space-y-5">
+        <div class="flex justify-between items-start gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-gray-800 mb-1">행정 문서 프롬프트 조립</h2>
+            <p class="text-sm text-gray-500">업무 유형을 고르면 그 문서에 맞는 구성과 조건이 자동으로 잡힙니다.</p>
+          </div>
+          <button onclick="loadSample()" class="shrink-0 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-100">예시 자료 불러오기</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">업무 유형 (무엇을 작성합니까?)</label>
+            <select id="docType" onchange="applyProfile(true)" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+              <option value="press">언론 배포용 보도자료</option>
+              <option value="plan">정책/사업 계획서 초안</option>
+              <option value="speech">단체장 행사 인사말/축사</option>
+              <option value="official">대외 발송 공문</option>
+              <option value="minwon">주민 불편 민원 답변서</option>
+              <option value="research">타 지자체 우수사례 조사 및 분석</option>
+              <option value="sns">소셜미디어(SNS) 홍보용 카드뉴스</option>
+              <option value="shortform">30초 홍보 영상(숏폼) 대본</option>
+            </select>
+            <p id="profileHint" class="text-xs text-blue-600 mt-1.5 font-medium"></p>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">독자 및 목적 (누구에게, 왜?)</label>
+            <input type="text" id="docPurpose" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-sm font-semibold text-gray-700 mb-1 flex justify-between">
+            <span>핵심 내용 및 기초 자료</span>
+            <span id="charCountCreate" class="text-xs font-normal text-gray-400">0자</span>
+          </label>
+          <textarea id="docMaterials" rows="6" class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white resize-y"></textarea>
+          <p id="piiWarningCreate" class="text-xs text-red-500 mt-1 hidden font-medium">⚠️ 개인정보로 보이는 패턴이 감지되었습니다. 비식별화 후 사용하십시오.</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">출력 조건
+            <span class="font-normal text-gray-400 text-xs ml-1">— 유형에 맞게 자동 설정됩니다. 직접 켜고 끌 수 있습니다.</span>
+          </label>
+          <div id="conditionBox" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"></div>
+        </div>
+      </div>
+
+      <!-- ─────────── 분석 모드 ─────────── -->
+      <div id="content-analyze" class="space-y-5 hidden">
+        <div>
+          <h2 class="text-lg font-bold text-gray-800 mb-1">자료 분석 프롬프트 세트</h2>
+          <p class="text-sm text-gray-500">자료는 Gemini Notebook(옛 NotebookLM)에 올리고, 여기서 만든 질문 5개를 순서대로 던지십시오. 마지막 「확장 질문」만 일반 AI 대화창에서 사용합니다.</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">분석할 자료 종류</label>
+          <select id="analyzeType" onchange="renderSourceGuide()" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+            <option value="best">타 지자체 우수사례 및 정책</option>
+            <option value="plan">주요 업무 추진계획</option>
+            <option value="law">법령 및 상급기관 지침</option>
+            <option value="stat">지역 통계 및 실태조사</option>
+            <option value="budget">예산 및 재정 자료</option>
+            <option value="minwon">민원 분석 및 요약</option>
+            <option value="minutes">회의록 및 면담 결과</option>
+            <option value="press">보도자료 및 홍보자료</option>
+            <option value="report">정책연구 보고서</option>
+          </select>
+        </div>
+
+        <div id="sourceGuide" class="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm"></div>
+
+        <button onclick="buildPromptSet()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-lg shadow">프롬프트 세트 만들기</button>
+
+        <div id="promptSet" class="space-y-3"></div>
+      </div>
+
+    </div>
+
+    <!-- 작성 모드 전용 출력 -->
+    <div id="createOutput" class="border-t border-gray-200 bg-gray-50 p-4 shrink-0 flex flex-col gap-2">
+      <button onclick="generatePrompt()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-lg shadow">프롬프트 만들기</button>
+      <div class="mt-2">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs font-semibold text-gray-500">완성된 프롬프트 — 복사 전에 한 번 읽어보십시오</span>
+          <div class="flex gap-1">
+            <button onclick="openEditModal()" class="bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold py-1.5 px-2.5 rounded border border-gray-300 shadow-sm">직접 수정</button>
+            <button onclick="copyPrompt()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-1.5 px-2.5 rounded shadow">복사하기</button>
+          </div>
+        </div>
+        <textarea id="finalPrompt" readonly rows="12" placeholder="버튼을 누르면 AI 창에 붙여넣을 프롬프트가 여기에 나타납니다." class="w-full bg-white border border-blue-200 rounded-lg p-3 text-xs md:text-sm text-gray-700 focus:outline-none resize-y leading-relaxed"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 우측 -->
+  <div class="w-full md:w-1/3 flex flex-col gap-4">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+      <h3 class="font-bold text-gray-800 mb-2 text-sm">AI 작업창 바로가기</h3>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <a href="https://notebooklm.google.com" target="_blank" rel="noopener" class="flex flex-col items-center p-2 bg-indigo-50 border border-indigo-200 rounded hover:bg-indigo-100 text-center">
+          <span class="font-bold text-indigo-800">Gemini Notebook</span><span class="text-[10px] text-indigo-500 mt-1">자료 분석 전용</span>
+        </a>
+        <a href="https://claude.ai" target="_blank" rel="noopener" class="flex flex-col items-center p-2 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 text-center">
+          <span class="font-bold text-gray-700">Claude</span><span class="text-[10px] text-gray-500 mt-1">글 기안/판단</span>
+        </a>
+        <a href="https://chatgpt.com" target="_blank" rel="noopener" class="flex flex-col items-center p-2 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 text-center">
+          <span class="font-bold text-gray-700">ChatGPT</span><span class="text-[10px] text-gray-500 mt-1">데이터/엑셀</span>
+        </a>
+        <a href="https://gemini.google.com" target="_blank" rel="noopener" class="flex flex-col items-center p-2 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 text-center">
+          <span class="font-bold text-gray-700">Gemini</span><span class="text-[10px] text-gray-500 mt-1">웹 검색</span>
+        </a>
+      </div>
+      <p class="text-[11px] text-gray-400 mt-2 leading-snug">※ 인터넷망 PC에서만 열립니다. 업무망에서는 접속되지 않습니다.</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col">
+      <div class="bg-slate-100 border-b border-gray-200 px-4 py-3 rounded-t-xl">
+        <h3 class="font-bold text-slate-800 text-sm">산출물 결과 검증센터</h3>
+        <p class="text-xs text-slate-500 mt-1">AI 답변을 실무에 쓰기 전 확인하십시오.</p>
+      </div>
+      <div id="checklistBox" class="p-4 space-y-3"></div>
+      <div class="bg-gray-50 border-t border-gray-200 p-3 rounded-b-xl text-center">
+        <button onclick="resetChecklist()" class="text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">체크리스트 초기화</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="editModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col h-[80vh]">
+    <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-slate-50 rounded-t-xl">
+      <h3 class="font-bold text-slate-800">프롬프트 직접 수정</h3>
+      <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    <div class="flex-1 p-5 flex flex-col">
+      <p class="text-sm text-gray-500 mb-3">본인의 업무 상황에 맞게 자유롭게 고쳐 쓸 수 있습니다.</p>
+      <textarea id="modalPromptText" class="flex-1 w-full border border-gray-300 rounded-lg p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none leading-relaxed bg-gray-50"></textarea>
+    </div>
+    <div class="p-4 border-t border-gray-200 bg-slate-50 rounded-b-xl flex justify-end gap-2">
+      <button onclick="closeEditModal()" class="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">취소</button>
+      <button onclick="saveAndCopyFromModal()" class="px-5 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm">수정 완료 및 복사</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none"></div>
+
+<script>
+/* ══════════ 작성 모드 ══════════ */
+const CONDITIONS = {
+  c1: { label:"개조식 작성",  text:"개조식으로 작성하되 항목 부호는 행정 문서 표준 순서(1. → 가. → 1) → 가))를 따를 것" },
+  c2: { label:"공문서 어투",  text:"공공기관의 건조하고 정중한 공문서 어투를 사용할 것" },
+  c3: { label:"객관적 시각",  text:"제3자(언론)의 시각에서 과도한 홍보성 형용사를 배제할 것" },
+  c4: { label:"1페이지 압축", text:"A4 1장(공백 포함 약 1,600자) 분량으로 압축할 것" },
+  c5: { label:"창작 금지",    text:"제공된 자료에 없는 사실·수치·인용문을 임의로 만들어내지 말 것. 자료에 없어 확인이 필요한 부분은 [확인 필요]로 표시할 것" }
+};
+
+const PROFILES = {
+  press:{hint:"보도자료는 개조식이 아닌 서술식입니다. 개조식·공문서 어투를 껐습니다.",persona:"지방자치단체 공보실에서 10년간 보도자료를 써 온 홍보 담당 주무관",on:["c3","c4","c5"],
+    structure:`- 다음 순서로 구성할 것.
+  (1) 제목: 25자 이내, 핵심 사실 한 줄
+  (2) 부제: 보충 사실 1~2줄
+  (3) 리드문: 육하원칙을 담은 3문장 이내
+  (4) 본문: 3~4문단. 중요한 사실부터 배치(역피라미드)
+  (5) 관계자 인용문 1개: 화자의 직위를 명시
+  (6) 끝에 [붙임]과 [문의] 담당 부서·연락처 자리를 비워 표기
+- 문장은 서술식 평서문으로 쓸 것. 개조식 목록으로 만들지 말 것.`,
+    format:"한글(HWP)에 그대로 붙여넣을 수 있는 평문으로 출력할 것. 마크다운 강조 기호(**, ##, ---)는 사용하지 말 것.",
+    check:["인용문의 화자와 발언이 실제 확인된 것입니까?"],
+    purpose:"지역 언론사 기자에게 축제 개최 사실을 알려 기사화를 유도",
+    materials:`- 행사명: 제12회 ○○산 억새축제
+- 기간: 10. 17.(금) ~ 10. 19.(일), 3일간
+- 장소: ○○군 산정면 억새군락지 일원
+- 주최/주관: ○○군 / ○○축제추진위원회
+- 지난해 방문객: 약 3만 2천 명
+- 올해 신설: 야간 억새길 조명 산책로, 지역 농산물 직거래장터(30개 부스)
+- 셔틀버스: ○○역 ↔ 행사장, 30분 간격 운행
+- 담당: 문화관광과 축제팀`},
+
+  plan:{hint:"계획서는 개조식·공문서 어투를 켰습니다.",persona:"지방자치단체 기획예산 부서에서 사업계획을 다뤄 온 15년 차 담당자",on:["c1","c2","c5"],
+    structure:`- 다음 목차로 구성할 것.
+  1. 추진 배경 및 필요성
+  2. 사업 개요 (기간 / 장소 / 대상 / 사업비)
+  3. 세부 추진 계획 (단계별 일정 포함)
+  4. 소요 예산 (항목별 산출 근거를 표로)
+  5. 기대 효과
+  6. 행정 사항 (협조 부서, 향후 일정)
+- 각 항목은 2~4개 하위 항목으로 전개할 것.`,
+    format:"한글(HWP)에 붙여넣을 수 있는 평문으로 출력할 것. 마크다운 강조 기호(**, ##)는 사용하지 말 것.",
+    check:["예산 항목의 합계가 총액과 맞습니까?"],
+    purpose:"부서 내부 검토 및 예산 부서 협의를 위한 초안",
+    materials:`- 사업명: 어르신 스마트폰·AI 활용 교육 「손안의 비서」
+- 배경: 관내 65세 이상 인구 비율 28%, 행정 서비스 온라인 전환 가속
+- 기간: 2027. 3. ~ 11. (9개월)
+- 대상: 관내 65세 이상 주민 300명 (10개 읍면 순회)
+- 방식: 회차당 2시간, 1개 반 20명, 총 15개 반
+- 사업비(안): 4,500만 원 (강사료, 교재, 기기 임차)
+- 협조 필요: 읍면사무소(장소), 노인복지관(모집)`},
+
+  speech:{hint:"축사는 단상에서 읽는 글입니다. 개조식·공문서 어투를 껐습니다.",persona:"단체장의 연설문을 전담해 온 스피치라이터",on:["c5"],
+    structure:`- 낭독용 원고로 작성할 것. 목록이나 항목 부호를 절대 사용하지 말 것.
+- 다음 흐름으로 구성할 것.
+  (1) 첫인사와 참석자에 대한 감사
+  (2) 행사가 갖는 의미 (지역과 연결지어)
+  (3) 준비한 분들에 대한 구체적 감사
+  (4) 앞으로의 약속 또는 당부 한 가지
+  (5) 맺음 인사
+- 소리 내어 읽었을 때 걸리지 않도록 한 문장을 40자 안팎으로 짧게 끊을 것.
+- 분량은 2분 낭독 기준 600~700자.
+- 과장된 수사나 상투적인 미사여구는 피할 것.`,
+    format:"평문으로 출력할 것. 마크다운 기호와 항목 부호를 사용하지 말 것.",
+    check:["단체장이 실제로 약속할 수 있는 내용만 담겼습니까?"],
+    purpose:"축제 개막식에서 군수가 낭독할 개회사",
+    materials:`- 행사: 제12회 ○○산 억새축제 개막식
+- 일시/장소: 10. 17.(금) 11:00, 억새군락지 주무대
+- 참석: 주민, 관광객, 군의회 의원, 축제추진위원, 자원봉사자 200여 명
+- 언급할 점: 12년째 이어온 축제, 올해 야간 조명길 신설, 농산물 직거래장터로 농가 참여 확대
+- 지난해 태풍으로 축소 개최했던 사정
+- 당부: 안전한 관람, 지역 상권 이용`},
+
+  official:{hint:"공문 서식에 맞춰 개조식·공문서 어투를 켰습니다.",persona:"지방자치단체 문서 처리 실무에 밝은 총무 담당자",on:["c1","c2","c5"],
+    structure:`- 공문 서식으로 구성할 것.
+  (1) 제목: 목적이 드러나는 한 줄
+  (2) 첫 항목은 "1. 관련: "으로 시작해 근거를 밝힐 것 (근거가 자료에 없으면 [확인 필요]로 표시)
+  (3) 본문: 요청 사항을 항목으로 나누어 제시
+  (4) 붙임: 문서명과 부수 표기
+- 종결은 "~하여 주시기 바랍니다."로 통일할 것.
+- 수신처의 입장에서 무엇을 언제까지 해야 하는지가 명확히 드러나게 할 것.`,
+    format:"한글(HWP)에 붙여넣을 수 있는 평문으로 출력할 것. 마크다운 강조 기호는 사용하지 말 것.",
+    check:["관련 근거(법령·지침·기존 공문)가 실재하는 것입니까?"],
+    purpose:"관내 읍면사무소에 축제 기간 협조 사항을 통보",
+    materials:`- 목적: 축제 기간 중 읍면 협조 요청
+- 대상: 관내 10개 읍면사무소
+- 요청 사항
+  · 마을 게시판 홍보물 게시 (10. 6.까지)
+  · 마을버스 운행 시간 안내 협조
+  · 자원봉사자 각 읍면 3명 추천 (10. 8.까지 제출)
+- 붙임: 홍보 포스터 1부, 자원봉사자 추천서 서식 1부
+- 담당: 문화관광과 축제팀`},
+
+  minwon:{hint:"민원 답변은 서술식이 자연스럽습니다. 개조식을 껐습니다.",persona:"민원 응대 경험이 많은 지방자치단체 담당 주무관",on:["c2","c5"],
+    structure:`- 다음 순서로 구성할 것.
+  (1) 인사와 민원 제기에 대한 감사
+  (2) 민원 요지를 우리가 정확히 이해했음을 확인하는 한 문단
+  (3) 관련 규정과 처리 근거
+  (4) 실제 조치한 내용과 그 결과
+  (5) 요구를 그대로 수용하기 어려운 부분이 있다면 이유를 솔직히 설명
+  (6) 추가 문의처 안내와 맺음 인사
+- 서술식 문장으로 쓰되 정중한 존댓말을 사용할 것.
+- 법령·조례의 조문 번호는 자료에 있는 것만 인용하고, 없으면 반드시 [확인 필요]로 표시할 것. 조문 번호를 추측해 쓰지 말 것.
+- 확정되지 않은 사항을 약속하는 표현을 쓰지 말 것.`,
+    format:"평문으로 출력할 것. 마크다운 기호를 사용하지 말 것.",
+    check:["인용한 법령·조례 조문을 원문에서 확인했습니까?","지킬 수 없는 약속이 들어가지 않았습니까?"],
+    purpose:"야간 소음 민원을 세 차례 제기한 주민에게 보내는 회신",
+    materials:`- 민원 내용: ○○동 공동주택 신축 공사장 야간 소음 (3회 반복 접수)
+- 민원인 요구: 야간 공사 전면 중단
+- 현장 점검 결과: 9. 3. 야간(21시~23시) 측정, 65dB로 규제 기준(주거지역 야간 65dB) 이내
+- 조치: 시공사에 저소음 공법 적용 및 22시 이후 작업 중단 행정지도, 시공사 수용
+- 공사 예정 기간: 12월 말까지
+- 한계: 기준치 이내여서 공사 중지 명령 근거 없음
+- 담당: 환경위생과 생활환경팀`},
+
+  research:{hint:"조사 과제입니다. 웹 검색이 되는 AI에서 실행하십시오.",persona:"지방행정 정책을 비교 분석해 온 연구원",on:["c1","c5"],
+    structure:`- 웹 검색으로 실제 사례를 찾을 것. 각 사례마다 지자체명, 사업명, 시행 연도, 출처를 반드시 밝힐 것.
+- 검색으로 확인되지 않은 내용은 [출처 확인 필요]로 표시하고, 그럴듯하게 지어내지 말 것.
+- 다음 순서로 정리할 것.
+  1. 유사 사례 3~4건 (지자체 / 사업 내용 / 예산 규모 / 성과)
+  2. 사례 간 공통점과 차이점을 표로 비교
+  3. 우리 지자체 적용 시 예상되는 걸림돌
+  4. 그래서 무엇부터 해야 하는지 3가지`,
+    format:"비교 항목은 표로 정리해도 좋으나, 표 아래에 한글 문서에 옮기기 쉬운 항목 나열본을 함께 제시할 것.",
+    check:["제시된 출처 링크가 실제로 열립니까?","인용된 예산·성과 수치가 출처 문서와 일치합니까?"],
+    purpose:"우리 군 도입 검토를 위한 부서 내부 참고자료",
+    materials:`- 조사 주제: 인구감소지역의 청년 정착 지원 사업
+- 우리 지자체 여건: 인구 3만 명, 청년(19~39세) 비율 14%, 연 순유출 약 400명
+- 알고 싶은 것: 주거 지원과 일자리 연계를 함께 설계한 사례
+- 예산 여건: 연 5억 원 내외 신규 사업 편성 가능
+- 제외 대상: 단순 현금성 지원만 있는 사업`},
+
+  sns:{hint:"홍보물입니다. 개조식·공문서 어투를 껐습니다.",persona:"지자체 SNS를 운영하는 뉴미디어 담당 주무관",on:["c5"],
+    structure:`- 카드뉴스 7장 분량으로 구성할 것.
+  1장: 표지 — 손가락을 멈추게 하는 한 문장
+  2~6장: 내용 — 장당 핵심 문구 25자 이내
+  7장: 마무리 — 참여 방법 또는 문의처
+- 각 장마다 [문구]와 [이미지 컨셉]을 나누어 제시할 것.
+- 행정 용어를 일상어로 바꿔 쓸 것. (예: '개최합니다' → '열려요')
+- 이모지는 장당 1~2개까지만 쓸 것.`,
+    format:"마크다운 강조 기호(**, ##)는 쓰지 말 것. 이모지는 사용해도 됨.",
+    check:["일시·장소·참여 방법이 빠짐없이 들어갔습니까?"],
+    purpose:"20~40대 주민에게 축제 참여를 유도하는 인스타그램 카드뉴스",
+    materials:`- 행사: 제12회 ○○산 억새축제
+- 기간: 10. 17.(금) ~ 10. 19.(일)
+- 장소: ○○군 산정면 억새군락지
+- 볼거리: 은빛 억새 물결 40만㎡, 올해 처음 열리는 야간 조명 산책로(18~21시)
+- 먹거리: 지역 농산물 직거래장터 30개 부스
+- 교통: ○○역에서 무료 셔틀버스 30분 간격
+- 입장료: 무료
+- 인스타그램 인증샷 이벤트: 해시태그 #○○억새축제`},
+
+  shortform:{hint:"영상 대본입니다. 개조식·공문서 어투를 껐습니다.",persona:"지자체 숏폼 영상을 만들어 온 뉴미디어 담당 주무관",on:["c5"],
+    structure:`- 30초 세로형 영상 대본으로 구성할 것.
+- 시간대를 나누어 제시할 것.
+  0~3초: 후킹 — 첫 문장에서 넘기지 않게 만들 것
+  4~22초: 본론 — 컷 3~4개
+  23~30초: 마무리 — 언제, 어디로 오면 되는지
+- 각 컷마다 [화면], [자막], [나레이션 또는 현장음]을 나누어 쓸 것.
+- 자막은 한 줄 15자 이내로 짧게 끊을 것.
+- 나레이션은 실제로 말했을 때의 속도를 고려해 컷당 2초 안에 읽히게 쓸 것.`,
+    format:"마크다운 강조 기호는 쓰지 말 것. 이모지는 자막에 한해 사용해도 됨.",
+    check:["30초 안에 실제로 읽히는 분량입니까?","촬영 가능한 장면으로만 구성되었습니까?"],
+    purpose:"인스타그램 릴스·유튜브 쇼츠용 축제 홍보 영상",
+    materials:`- 행사: 제12회 ○○산 억새축제, 10. 17.~10. 19.
+- 가장 강한 장면: 해질녘 억새밭이 황금빛으로 물드는 순간
+- 올해 새로운 것: 야간 조명 산책로 (18~21시)
+- 촬영 가능한 소재: 억새군락지 드론샷, 산책로 야경, 직거래장터 먹거리
+- 입장료 무료, ○○역 무료 셔틀버스
+- 계정: 인스타그램 @○○군청`}
+};
+
+const BASE_CHECKS = [
+  { t:"수치·데이터 확인", d:"예산, 인원, 날짜가 원본 자료와 일치합니까?" },
+  { t:"고유명사 확인",   d:"기관명, 부서명, 지명, 인명이 정확합니까?" },
+  { t:"[확인 필요] 처리", d:"AI가 표시한 [확인 필요] 항목을 모두 채웠습니까?" },
+  { t:"문체 점검",       d:"이 문서의 성격에 맞는 문체로 나왔습니까?" }
+];
+
+const ANALYZE_CHECKS = [
+  { t:"출처 대조",       d:"AI가 제시한 수치를 원문에서 직접 확인했습니까?" },
+  { t:"[자료 없음] 처리", d:"AI가 자료에 없다고 한 항목을 어디서 채울지 정했습니까?" },
+  { t:"도구 구분",       d:"소스 밖 판단이 필요한 질문을 노트북에 던지지 않았습니까?" },
+  { t:"범위 확인",       d:"올린 자료만으로 결론을 내려도 되는 사안입니까?" }
+];
+
+/* ══════════ 분석 모드: 자료 유형 9종 ══════════ */
+const STEP_TITLES = ["질문 1 · 전체 지도 그리기","질문 2 · 내 업무에 걸리는 것 골라내기","질문 3 · 근거 대조하기","질문 4 · 빠진 것 찾기","질문 5 · 문서로 뽑아내기","확장 질문 · 소스 밖으로 나가기"];
+
+const SETS = {
+  best: {
+    label:"타 지자체 우수사례 및 정책",
+    sources:"타 지자체 홈페이지에 공개된 사업계획서·우수사례집·보도자료, 행정안전부 우수사례 선정 자료.",
+    note:"모두 공개 자료이므로 그대로 올려도 무방합니다.",
+    p:[
+`올린 자료에 담긴 사업들을 표로 정리해 주십시오. 항목은 사업명 / 지자체 / 시행 연도 / 대상 / 사업비 / 추진 체계입니다. 자료에 없는 항목은 [자료 없음]으로 비워 두십시오.`,
+`이 사업들이 공통으로 택한 방식과, 지자체마다 갈린 선택을 나누어 정리해 주십시오. 선택이 갈린 지점마다 그 지자체가 왜 그렇게 했는지 자료에 설명이 있으면 함께 밝혀 주십시오.`,
+`자료에 나온 성과 수치를 모두 뽑아 주십시오. 각 수치가 어느 문서 어느 부분에 나오는지 표기하고, 측정 기준이 밝혀지지 않은 수치는 따로 표시해 주십시오.`,
+`이 자료들이 말하지 않는 것을 찾아 주십시오. 예산 집행 실적, 중단되거나 축소된 부분, 실패 요인처럼 성과 홍보 자료에서 흔히 빠지는 항목 중 무엇이 없는지 알려 주십시오.`,
+`위 내용을 부서 내부 검토용 자료로 정리해 주십시오. A4 2장 분량, 항목 부호는 1. → 가. → 1) 순서를 쓰고 마크다운 기호는 쓰지 마십시오.`,
+`(앞 단계 결과를 붙여넣고 질문하십시오) 우리 지자체는 인구 ○만 명, 관련 예산 ○억 원 규모입니다. 이 사업을 그대로 가져올 때 우리 여건에서 걸릴 문제 세 가지와, 규모를 줄여 시작한다면 무엇부터 해야 할지 알려 주십시오.`]
+  },
+
+  plan: {
+    label:"주요 업무 추진계획",
+    sources:"우리 부서 또는 타 부서의 연간 업무계획, 시·군 업무보고 자료, 공개된 시행계획.",
+    note:"내부 검토 중인 계획은 올리지 마십시오. 실습에는 이미 공개된 업무보고 자료를 쓰십시오.",
+    p:[
+`이 계획에 담긴 과제를 분야별로 묶어 주십시오. 과제마다 목표 / 기한 / 담당 부서 / 예산을 표로 정리하고, 적혀 있지 않은 항목은 [미기재]로 두십시오.`,
+`올해 안에 결과가 나와야 하는 과제와 여러 해에 걸친 과제를 나누어 주십시오. 각 과제가 지금 어느 단계에 있다고 적혀 있는지도 함께 표기해 주십시오.`,
+`각 과제의 성과지표가 무엇으로 측정되는지 뽑아 주십시오. 측정 방법이 적혀 있지 않거나 "추진", "활성화"처럼 측정할 수 없는 표현으로 된 지표를 따로 모아 주십시오.`,
+`일정이 서로 겹치거나 한 부서에 몰린 과제가 있는지 찾아 주십시오. 특정 분기에 집중된 과제도 함께 알려 주십시오.`,
+`간부 보고용으로 진행 상황을 한눈에 보는 표를 만들어 주십시오. 항목은 과제 / 현재 단계 / 남은 기간 / 주의할 점입니다.`,
+`(앞 단계 표를 붙여넣고 질문하십시오) 이 과제 목록에서 상반기에 삐끗하면 하반기 전체가 밀리는 과제가 어느 것일지, 이유와 함께 짚어 주십시오.`]
+  },
+
+  law: {
+    label:"법령 및 상급기관 지침",
+    sources:"법제처 국가법령정보센터 조문, 중앙부처 공모 지침 PDF, 시달된 지침(공개본), 조례.",
+    note:"공개 법령과 공모 지침은 그대로 올려도 됩니다. 대외주의 표시가 있는 시달 문서는 올리지 마십시오.",
+    p:[
+`이 지침에서 우리 지자체가 해야 할 일을 모두 뽑아 주십시오. 기한이 있는 것부터 순서대로 정리해 주십시오.`,
+`제출해야 하는 서류와 각 서류의 요건을 목록으로 만들어 주십시오. 서식이 지정된 것은 서식명을 함께 적어 주십시오.`,
+`각 항목이 지침 몇 조 몇 항에 근거하는지 표기해 주십시오. 근거를 특정할 수 없는 항목은 [조문 확인 필요]로 표시하고, 조문 번호를 추측해 쓰지 마십시오.`,
+`해석이 갈릴 수 있는 표현을 찾아 주십시오. "등", "필요한 경우", "협의하여", "원칙적으로" 같은 표현이 어디에 쓰였는지, 어떻게 읽느냐에 따라 우리 부담이 어떻게 달라지는지 설명해 주십시오.`,
+`담당자가 그대로 쓸 체크리스트로 만들어 주십시오. 항목은 할 일 / 근거 조문 / 기한 / 담당입니다.`,
+`(앞 단계 체크리스트를 붙여넣고 질문하십시오) 이 요건 중 놓치면 감사에서 지적받을 가능성이 큰 항목이 무엇일지, 왜 그런지 알려 주십시오.`]
+  },
+
+  stat: {
+    label:"지역 통계 및 실태조사",
+    sources:"KOSIS 통계표, 시·군 통계연보, 공개된 실태조사 보고서, 주민 설문 결과(집계표).",
+    note:"응답자 개별 응답이 담긴 원자료는 올리지 마십시오. 집계된 표만 사용하십시오.",
+    p:[
+`이 자료에 담긴 지표를 목록으로 만들어 주십시오. 지표마다 조사 시점 / 조사 대상 / 표본 수를 함께 적고, 적혀 있지 않으면 [미기재]로 두십시오.`,
+`최근 3~5년 사이 뚜렷하게 변한 지표를 골라 주십시오. 변화 폭을 수치와 비율로 함께 제시해 주십시오.`,
+`각 수치가 자료의 어느 표에서 나온 것인지 표기해 주십시오. 서로 다른 표에서 같은 항목의 수치가 어긋나는 곳이 있으면 알려 주십시오.`,
+`이 조사가 다루지 않은 항목을 짚어 주십시오. 조사 대상에서 빠진 집단이나 지역이 있는지도 함께 알려 주십시오.`,
+`보고서에 넣을 요약 표를 만들고, 그 아래 붙일 설명 문단 세 개를 작성해 주십시오. 문단마다 근거가 된 수치를 함께 밝혀 주십시오.`,
+`(앞 단계 요약을 붙여넣고 질문하십시오) 이 수치만으로는 단정할 수 없는데 자칫 단정하기 쉬운 해석이 무엇일지 알려 주십시오.`]
+  },
+
+  budget: {
+    label:"예산 및 재정 자료",
+    sources:"공개된 세출예산서, 결산서, 지방재정공시 자료, 재정운용계획.",
+    note:"지방재정365와 지자체 홈페이지에 공개된 자료를 쓰십시오. 확정 전 예산안은 올리지 마십시오.",
+    p:[
+`이 자료의 예산 항목을 분야별로 묶어 주십시오. 항목마다 금액과 전체에서 차지하는 비중을 표로 정리해 주십시오.`,
+`전년 대비 늘거나 줄어든 항목을 뽑아 주십시오. 증감액과 증감률을 함께 제시하고, 변동이 큰 순서로 정렬해 주십시오.`,
+`각 금액이 자료 어느 부분에 나오는지 표기해 주십시오. 소계와 합계가 맞는지 확인하고, 맞지 않으면 어느 항목에서 어긋나는지 알려 주십시오.`,
+`산출 근거가 적혀 있지 않은 항목을 찾아 주십시오. 해마다 반복 편성되었는데 집행 실적이 나와 있지 않은 항목도 함께 알려 주십시오.`,
+`의회 설명용으로 증감이 큰 항목 상위 10개와 그 사유를 표로 만들어 주십시오. 사유가 자료에 없으면 [사유 확인 필요]로 표시해 주십시오.`,
+`(앞 단계 표를 붙여넣고 질문하십시오) 이 예산 구조를 두고 의원들이 가장 먼저 물을 것 같은 질문 다섯 개와, 각각에 무엇을 준비해 두어야 하는지 알려 주십시오.`]
+  },
+
+  minwon: {
+    label:"민원 분석 및 요약",
+    sources:"국민신문고 공개 민원 사례집, 민원 처리 결과 공개 자료, 개인정보를 지운 민원 대장.",
+    note:"이 유형이 가장 위험합니다. 이름·연락처·주소·동호수를 모두 지운 뒤에만 올리십시오. 실습에서는 공개 사례집을 쓰십시오.",
+    p:[
+`이 민원들을 내용에 따라 유형으로 묶어 주십시오. 유형별 건수와 각 유형을 대표하는 요구가 무엇인지 정리해 주십시오.`,
+`표현은 다르지만 사실상 같은 요구인 것들을 찾아 묶어 주십시오. 반복해서 제기되는 요구가 무엇인지 횟수와 함께 알려 주십시오.`,
+`각 유형이 어느 부서 소관인지 자료에 근거해 정리해 주십시오. 소관이 명시되지 않았거나 여러 부서에 걸친 건은 따로 모아 주십시오.`,
+`민원인이 요구했는데 현재 답변에서 다루지 않은 부분을 찾아 주십시오. 같은 민원이 반복 접수된 사례가 있다면 무엇이 해소되지 않았는지 알려 주십시오.`,
+`유형별 대응 방향을 한 장 표로 정리해 주십시오. 항목은 유형 / 건수 / 현재 대응 / 보완 필요입니다.`,
+`(앞 단계 표를 붙여넣고 질문하십시오) 이 유형 중 방치하면 집단 민원이나 언론 보도로 번질 수 있는 것이 어느 것일지, 근거와 함께 알려 주십시오.`]
+  },
+
+  minutes: {
+    label:"회의록 및 면담 결과",
+    sources:"의회 회의록(공개), 위원회 회의록, 주민간담회 결과 자료.",
+    note:"발언자 실명이 담긴 내부 회의록은 올리지 마십시오. 실습에는 의회 공개 회의록을 쓰면 형식이 거의 같습니다.",
+    p:[
+`이 회의에서 논의된 안건을 순서대로 정리해 주십시오. 안건마다 결론이 났는지 여부를 함께 표시해 주십시오.`,
+`조치가 필요한 사항을 부서별로 묶어 주십시오. 항목은 담당 / 할 일 / 기한이며, 기한이 정해지지 않았으면 [미정]으로 표시해 주십시오.`,
+`각 조치사항이 회의록의 어느 발언에서 나온 것인지 함께 적어 주십시오. 발언에서 명확히 확인되지 않는 항목은 표시해 주십시오.`,
+`논의만 되고 결론이 나지 않은 안건, 다음 회의로 넘긴 안건을 따로 모아 주십시오. 아무도 담당으로 지목되지 않은 사항도 알려 주십시오.`,
+`참석자에게 회람할 회의 결과 알림 문안을 만들어 주십시오. 결정사항과 부서별 조치사항이 한눈에 들어오게 정리해 주십시오.`,
+`(앞 단계 미결 목록을 붙여넣고 질문하십시오) 미결로 남은 안건 중 지금 처리하지 않으면 나중에 비용이 커지는 것이 무엇일지 알려 주십시오.`]
+  },
+
+  press: {
+    label:"보도자료 및 홍보자료",
+    sources:"우리 지자체가 배포한 보도자료 모음, 타 지자체 보도자료, 실제 보도된 기사.",
+    note:"이미 배포된 보도자료는 공개 자료입니다. 배포 전 초안은 올리지 마십시오.",
+    p:[
+`이 보도자료들이 다룬 주제와 배포 시점을 정리해 주십시오. 어떤 주제가 자주 다뤄졌는지 빈도와 함께 알려 주십시오.`,
+`자주 쓰인 표현과 문장 구조를 뽑아 주십시오. 제목이 어떤 형식으로 만들어졌는지도 유형별로 정리해 주십시오.`,
+`보도자료에 담긴 수치와 대외 약속을 모두 뽑아 주십시오. 각각 어느 자료 어느 부분에 나오는지 표기해 주십시오.`,
+`실제 기사로 이어진 자료와 그렇지 않은 자료 사이에 어떤 차이가 있는지 살펴 주십시오. 기사 자료를 함께 올리지 않았다면 그 점을 알려 주십시오.`,
+`우리 부서 보도자료 작성 지침 초안을 만들어 주십시오. 제목 형식 / 리드문 구성 / 피해야 할 표현을 항목으로 정리해 주십시오.`,
+`(앞 단계 지침안을 붙여넣고 질문하십시오) 이 보도자료들에서 기자가 그대로 옮겨 쓰기 어려웠을 문장이 무엇일지, 이유와 함께 알려 주십시오.`]
+  },
+
+  report: {
+    label:"정책연구 보고서",
+    sources:"연구원 발간 보고서, 용역 결과보고서(공개본), 정책연구관리시스템(PRISM) 공개 보고서.",
+    note:"공개된 최종 보고서를 쓰십시오. 검토 중인 중간보고서는 올리지 마십시오.",
+    p:[
+`이 보고서의 연구 목적 / 연구 방법 / 주요 결론을 각각 한 문단으로 정리해 주십시오.`,
+`보고서가 제안한 정책 대안을 모두 뽑아 주십시오. 대안마다 소요 자원과 예상 효과가 어떻게 제시되었는지 함께 정리해 주십시오.`,
+`각 결론이 어느 데이터나 조사 결과에 근거하는지 표기해 주십시오. 근거가 제시되지 않은 주장은 따로 모아 주십시오.`,
+`제안 중 현행 법령이나 예산 여건상 바로 실행하기 어려운 것이 있는지 살펴 주십시오. 보고서가 그 제약을 다루었는지도 함께 알려 주십시오.`,
+`제안을 단기(1년 내) / 중기 / 장기로 나누어 표로 정리해 주십시오. 항목은 제안 / 소요 자원 / 선행 조건 / 담당 부서(추정)입니다.`,
+`(앞 단계 표를 붙여넣고 질문하십시오) 이 보고서의 제안 중 인구 ○만 명 규모 지자체에서 실제로 굴러갈 만한 것 세 가지를 골라, 왜 그것인지 설명해 주십시오.`]
+  }
+};
+
+/* ══════════ 공통 ══════════ */
+let currentMode = 'create';
+const docMaterials = document.getElementById('docMaterials');
+
+function renderConditions(on) {
+  document.getElementById('conditionBox').innerHTML = Object.keys(CONDITIONS).map(k =>
+    `<label class="flex items-center p-2 border border-gray-200 rounded hover:bg-blue-50 cursor-pointer bg-white">
+       <input type="checkbox" name="conditions" value="${k}" ${on.includes(k)?'checked':''} class="w-4 h-4 rounded">
+       <span class="ml-2 text-sm text-gray-600">${CONDITIONS[k].label}</span>
+     </label>`).join('');
+}
+
+function renderChecklist(items) {
+  document.getElementById('checklistBox').innerHTML = items.map(i =>
+    `<label class="flex items-start space-x-3 cursor-pointer">
+       <input type="checkbox" class="verify-check h-5 w-5 mt-0.5 rounded border-gray-300">
+       <div class="flex-1">
+         <span class="text-sm font-medium text-gray-800">${i.t}</span>
+         <p class="text-xs text-gray-500">${i.d}</p>
+       </div>
+     </label>`).join('');
+}
+
+function applyProfile(flash) {
+  const p = PROFILES[document.getElementById('docType').value];
+  renderConditions(p.on);
+  renderChecklist(BASE_CHECKS.concat(p.check.map(d => ({ t:"이 문서에서 특히", d }))));
+  document.getElementById('profileHint').textContent = p.hint;
+  if (flash) {
+    const b = document.getElementById('conditionBox');
+    b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash');
+  }
+}
+
+function loadSample() {
+  const p = PROFILES[document.getElementById('docType').value];
+  document.getElementById('docPurpose').value = p.purpose;
+  docMaterials.value = p.materials;
+  updateCount();
+  showToast("예시 자료를 불러왔습니다. 바로 만들어 보십시오.");
+}
+
+function switchTab(mode) {
+  currentMode = mode;
+  const isCreate = mode === 'create';
+  document.getElementById('tab-create').classList.toggle('active', isCreate);
+  document.getElementById('tab-analyze').classList.toggle('active', !isCreate);
+  document.getElementById('content-create').classList.toggle('hidden', !isCreate);
+  document.getElementById('content-analyze').classList.toggle('hidden', isCreate);
+  document.getElementById('createOutput').classList.toggle('hidden', !isCreate);
+  if (isCreate) applyProfile(false);
+  else { renderChecklist(ANALYZE_CHECKS); renderSourceGuide(); }
+}
+
+
+/* ─── 개인정보 감지 — 두 실습 앱 공통 모듈 ─────────────────────
+   (주)한국공공자치연구원 AI행정혁신연구소
+   [1층] 형태가 정해진 정보를 값에서 잡는다
+   [2층] 표의 열 이름에 쓰인 개인정보 항목명을 잡는다
+   두 앱이 같은 규칙을 쓰고, 안내 문구만 달리한다.
+   ───────────────────────────────────────────────────────── */
+const PII_RULES = [
+  { label:"주민등록번호",     re:/\b\d{6}[-\u2013\s]?[1-4]\d{6}\b/ },
+  { label:"휴대전화번호",     re:/\b01[016789][-\u2013\s]?\d{3,4}[-\u2013\s]?\d{4}\b/ },
+  { label:"유선전화번호",     re:/\b0(?:2|[3-6]\d)[-\u2013\s]\d{3,4}[-\u2013\s]\d{4}\b/ },
+  { label:"전자우편 주소",    re:/[\w.+-]+@[\w-]+\.[\w.]{2,}/ },
+  { label:"차량번호",         re:/\b(?:[\uac00-\ud7a3]{2}\s?)?\d{2,3}[\uac00\ub098\ub2e4\ub77c\ub9c8\uac70\ub108\ub354\ub7ec\uba38\ubc84\uc11c\uc5b4\uc800\uace0\ub178\ub3c4\ub85c\ubaa8\ubcf4\uc18c\uc624\uc870\uad6c\ub204\ub450\ub8e8\ubb34\ubd80\uc218\uc6b0\uc8fc\ubc14\uc0ac\uc544\uc790\ud558\ud5c8\ud638\ubc30]\s?\d{4}\b/ },
+  { label:"사업자등록번호",   re:/\b\d{3}[-\u2013]\d{2}[-\u2013]\d{5}\b/ },
+  { label:"상세 주소(동·호)", re:/\d{1,4}\s?동\s?\d{1,4}\s?호/ },
+  { label:"개인정보 항목명",  re:/(?<![\uc5f4\uce78\ud589\ud45c\ud30c\uc77c\uc0ac\uc5c5\uc9c0\uc5ed\ubd80\uc11c\uae30\uad00]\s?)(\uc131\uba85|\uc774\ub984|\uc8fc\ubbfc\ub4f1\ub85d\ubc88\ud638|\uc0dd\ub144\uc6d4\uc77c|\uc5f0\ub77d\ucc98|\ud734\ub300\ud3f0|\ud734\ub300\uc804\ud654|\uc804\ud654\ubc88\ud638|\uc790\ud0dd|\uc8fc\uc18c|\uc138\ub300\uc8fc|\ub300\ud45c\uc790|\ucc28\ub7c9\ubc88\ud638|\uacc4\uc88c\ubc88\ud638|\uc0ac\uc5c5\uc790\ub4f1\ub85d\ubc88\ud638)/ }
+];
+
+function detectPII(text) {
+  if (!text) return [];
+  return PII_RULES.filter(r => r.re.test(text)).map(r => r.label);
+}
+
+function updateCount() {
+  document.getElementById('charCountCreate').textContent = docMaterials.value.length.toLocaleString() + '자';
+  const hits = detectPII(docMaterials.value);
+  const box = document.getElementById('piiWarningCreate');
+  box.classList.toggle('hidden', hits.length === 0);
+  if (hits.length) {
+    box.textContent = '\u26a0\ufe0f 개인정보로 보이는 항목이 감지되었습니다 — ' + hits.join(', ') + '. 비식별화한 뒤 사용하십시오.';
+  }
+}
+docMaterials.addEventListener('input', updateCount);
+
+/* ══════════ 분석 모드 동작 ══════════ */
+function renderSourceGuide() {
+  const s = SETS[document.getElementById('analyzeType').value];
+  document.getElementById('sourceGuide').innerHTML =
+    `<p class="font-semibold text-blue-900 mb-1">Gemini Notebook에 올릴 자료</p>
+     <p class="text-blue-800 leading-relaxed">${s.sources}</p>
+     <p class="text-red-700 text-xs mt-2 leading-relaxed"><strong>주의</strong> ${s.note}</p>`;
+  document.getElementById('promptSet').innerHTML = '';
+}
+
+function buildPromptSet() {
+  const s = SETS[document.getElementById('analyzeType').value];
+  const box = document.getElementById('promptSet');
+  box.innerHTML =
+    `<div class="flex justify-between items-center pt-2">
+       <p class="text-sm font-bold text-gray-700">${s.label} — 프롬프트 ${s.p.length}개</p>
+       <button onclick="copyAll()" class="text-xs font-semibold text-gray-600 border border-gray-300 rounded px-2.5 py-1.5 hover:bg-gray-50">전체 복사</button>
+     </div>` +
+    s.p.map((text, i) => {
+      const isExt = i === s.p.length - 1;
+      const badge = isExt
+        ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">일반 AI용</span>`
+        : `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-100 text-indigo-800">노트북용</span>`;
+      return `<div class="border ${isExt?'border-amber-200 bg-amber-50':'border-gray-200 bg-white'} rounded-lg p-3">
+        <div class="flex justify-between items-center mb-2 gap-2">
+          <div class="flex items-center gap-2 min-w-0">
+            ${badge}
+            <span class="text-xs font-semibold text-gray-700 truncate">${STEP_TITLES[i]}</span>
+          </div>
+          <button onclick="copyStep(${i})" class="shrink-0 text-xs font-semibold text-blue-700 border border-blue-200 bg-white rounded px-2 py-1 hover:bg-blue-50">복사</button>
+        </div>
+        <p id="step-${i}" class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">${text}</p>
+      </div>`;
+    }).join('');
+  box.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  showToast("프롬프트 세트를 만들었습니다. 질문 1부터 순서대로 던지십시오.");
+}
+
+function copyStep(i) {
+  executeCopy(SETS[document.getElementById('analyzeType').value].p[i]);
+}
+function copyAll() {
+  const s = SETS[document.getElementById('analyzeType').value];
+  executeCopy(s.p.map((t, i) => `[${STEP_TITLES[i]}]\n${t}`).join("\n\n"));
+}
+
+/* ══════════ 작성 모드 프롬프트 조립 ══════════ */
+function generatePrompt() {
+  const sel = document.getElementById('docType');
+  const p = PROFILES[sel.value];
+  const typeName = sel.options[sel.selectedIndex].text;
+  const purpose = document.getElementById('docPurpose').value.trim();
+  const materials = docMaterials.value.trim();
+
+  if (!materials) {
+    showToast("기초 자료를 입력하거나 예시 자료를 불러오십시오.", "error");
+    docMaterials.focus();
+    return;
+  }
+
+  const picked = [...document.querySelectorAll('input[name="conditions"]:checked')]
+                 .map(cb => "- " + CONDITIONS[cb.value].text);
+
+  document.getElementById('finalPrompt').value =
+`당신은 ${p.persona}입니다. 아래 자료를 바탕으로 요청한 문서를 작성해 주십시오.
+
+[작성 대상]
+- 문서 종류: ${typeName}
+- 독자와 목적: ${purpose || "제공된 자료에 맞는 독자와 목적을 스스로 판단할 것"}
+
+[문서 구성]
+${p.structure}
+
+[출력 조건]
+${picked.length ? picked.join("\n") : "- 명확하고 간결하게 작성할 것"}
+
+[서식]
+- ${p.format}
+
+[기초 자료]
+"""
+${materials}
+"""
+
+위 구성과 조건에 맞추어, 담당자가 검토만 하면 바로 쓸 수 있는 수준으로 작성해 주십시오.`;
+
+  document.getElementById('finalPrompt').scrollIntoView({ behavior:'smooth', block:'center' });
+  showToast("프롬프트를 만들었습니다. 복사 전에 한 번 읽어보십시오.");
+}
+
+/* ══════════ 복사 / 모달 / 알림 ══════════ */
+function openEditModal() {
+  const cur = document.getElementById('finalPrompt').value;
+  if (!cur) { showToast("먼저 프롬프트를 만드십시오.", "error"); return; }
+  document.getElementById('modalPromptText').value = cur;
+  const m = document.getElementById('editModal');
+  m.classList.remove('hidden'); m.classList.add('flex');
+  document.body.style.overflow = 'hidden';
+}
+function closeEditModal() {
+  const m = document.getElementById('editModal');
+  m.classList.add('hidden'); m.classList.remove('flex');
+  document.body.style.overflow = '';
+}
+function saveAndCopyFromModal() {
+  const t = document.getElementById('modalPromptText').value;
+  document.getElementById('finalPrompt').value = t;
+  executeCopy(t); closeEditModal();
+}
+function copyPrompt() {
+  const t = document.getElementById('finalPrompt').value;
+  if (!t) { showToast("먼저 프롬프트를 만드십시오.", "error"); return; }
+  executeCopy(t);
+}
+function executeCopy(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast("복사했습니다. AI 창에 붙여넣으십시오."))
+      .catch(() => legacyCopy(text));
+  } else legacyCopy(text);
+}
+function legacyCopy(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.setAttribute('readonly','');
+  ta.style.position="fixed"; ta.style.top="0"; ta.style.opacity="0";
+  document.body.appendChild(ta);
+  ta.select(); ta.setSelectionRange(0, text.length);
+  try { document.execCommand('copy'); showToast("복사했습니다. AI 창에 붙여넣으십시오."); }
+  catch(e) { showToast("복사에 실패했습니다. 텍스트를 직접 선택해 복사하십시오.", "error"); }
+  document.body.removeChild(ta);
+}
+function resetChecklist() {
+  document.querySelectorAll('.verify-check').forEach(cb => cb.checked = false);
+  showToast("체크리스트를 초기화했습니다.");
+}
+function showToast(message, type) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast-animate px-4 py-3 rounded-lg shadow-lg text-sm font-medium mb-3 ${type==='error'?'bg-red-600 text-white':'bg-slate-800 text-white'}`;
+  t.textContent = message;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity='0'; t.style.transition='opacity .3s';
+    setTimeout(() => c.contains(t) && c.removeChild(t), 300);
+  }, 2500);
+}
+
+applyProfile(false);
+updateCount();
+renderSourceGuide();
+</script>
+
+<!-- ─── 보관함(저장 기능) ─── (주)한국공공자치연구원 AI행정혁신연구소 ─── -->
+<script>
+/* ─────────────────────────────────────────────────────────────
+   보관함 (SaveKit) — 실습 앱 공통 저장 모듈
+   (주)한국공공자치연구원 AI행정혁신연구소
+
+   ① 입력하는 즉시 이 기기의 브라우저에 자동 저장한다.
+      창을 닫거나 새로 고쳐도 그 자리에서 이어서 진행할 수 있다.
+   ② 「이어하기 파일 저장」으로 파일을 내려받아
+      다른 기기 또는 다음 날의 실습에서 「불러오기」로 여는 것이 가능하다.
+   ③ 「기록 지우기」로 이 기기에 남은 입력 흔적을 즉시 삭제한다.
+      공용 PC에서 실습을 마친 경우 반드시 눌러야 한다.
+
+   저장 위치는 이 기기의 브라우저 안이며, 외부로 전송하지 아니한다.
+   ───────────────────────────────────────────────────────────── */
+(function () {
+  'use strict';
+
+  var KEY_PREFIX = 'kilg.';      // 한국공공자치연구원 실습 앱 공통 접두사
+  var SAVE_DELAY = 400;          // 입력이 멎고 0.4초 뒤에 저장한다
+  var cfg = null, timer = null, restoring = false, wiped = false, lastSaved = null;
+
+  /* ── 필드 식별키 ──────────────────────────────────────────
+     id 가 있으면 id 를, 라디오·체크박스는 name+value 를,
+     둘 다 없으면 종류별 등장 순서를 키로 삼는다.            */
+  function fieldKey(el, seq) {
+    var t = (el.type || '').toLowerCase();
+    if ((t === 'radio' || t === 'checkbox') && el.name) return '@' + el.name + '=' + el.value;
+    if (el.id) return '#' + el.id;
+    if (el.name) return '@' + el.name;
+    return '~' + el.tagName.toLowerCase() + ':' + seq;
+  }
+
+  function eachField(fn) {
+    var seq = {};
+    var list = document.querySelectorAll('input, textarea, select');
+    for (var i = 0; i < list.length; i++) {
+      var el = list[i];
+      var t = (el.type || '').toLowerCase();
+      if (t === 'file' || t === 'password' || t === 'button' || t === 'submit') continue;
+      if (el.closest && el.closest('[data-savekit-skip]')) continue;
+      var tag = el.tagName.toLowerCase();
+      seq[tag] = (seq[tag] || 0) + 1;
+      fn(el, fieldKey(el, seq[tag]));
+    }
+  }
+
+  function collect() {
+    var f = {};
+    eachField(function (el, k) {
+      var t = (el.type || '').toLowerCase();
+      f[k] = (t === 'radio' || t === 'checkbox') ? !!el.checked : el.value;
+    });
+    var extra = null;
+    try { extra = cfg.extra ? cfg.extra() : null; } catch (e) { extra = null; }
+    return { app: cfg.appName, appKey: cfg.appKey, savedAt: new Date().toISOString(), fields: f, extra: extra };
+  }
+
+  function applyFields(data) {
+    if (!data || !data.fields) return;
+    eachField(function (el, k) {
+      if (!(k in data.fields)) return;
+      var v = data.fields[k];
+      var t = (el.type || '').toLowerCase();
+      if (t === 'radio' || t === 'checkbox') {
+        if (el.checked !== !!v) { el.checked = !!v; fire(el, 'change'); }
+      } else if (el.value !== v) {
+        el.value = v;
+        fire(el, 'input'); fire(el, 'change');
+      }
+    });
+  }
+
+  function fire(el, type) {
+    try { el.dispatchEvent(new Event(type, { bubbles: true })); } catch (e) { /* 무시 */ }
+  }
+
+  /* ── 브라우저 저장 ────────────────────────────────────── */
+  function storeKey() { return KEY_PREFIX + cfg.appKey; }
+
+  /* 사람이 실제로 적어 넣은 내용이 하나라도 있는지 본다.
+     빈 화면을 저장해 두면 「기록 지우기」 뒤에도 흔적이 남으므로 저장하지 아니한다. */
+  function hasContent() {
+    var yes = false;
+    eachField(function (el) {
+      if (yes) return;
+      var t = (el.type || '').toLowerCase(), tag = el.tagName.toLowerCase();
+      if (t === 'radio' || t === 'checkbox' || tag === 'select') return;
+      if (String(el.value || '').trim()) yes = true;
+    });
+    return yes;
+  }
+
+  function save() {
+    if (restoring || wiped) return;
+    try {
+      if (!hasContent()) {                       // 적은 것이 없으면 저장하지 아니하고 기존 기록도 지운다
+        localStorage.removeItem(storeKey());
+        return;
+      }
+      var d = collect();
+      localStorage.setItem(storeKey(), JSON.stringify(d));
+      lastSaved = new Date();
+      paint('자동 저장됨 · ' + hhmm(lastSaved));
+    } catch (e) {
+      paint('이 브라우저는 자동 저장을 쓸 수 없는 설정입니다. 「이어하기 파일 저장」을 이용하십시오.', true);
+    }
+  }
+
+  function scheduleSave() {
+    if (restoring || wiped) return;
+    clearTimeout(timer);
+    timer = setTimeout(save, SAVE_DELAY);
+  }
+
+  function restore(data, source) {
+    if (!data) return false;
+    restoring = true;
+    try {
+      applyFields(data);                                   // 1차 — 지금 화면에 있는 칸
+      if (cfg.afterRestore) { try { cfg.afterRestore(data.extra || {}); } catch (e) { } }
+      applyFields(data);                                   // 2차 — 1차 뒤에 새로 그려진 칸
+    } finally {
+      restoring = false;
+    }
+    var when = data.savedAt ? new Date(data.savedAt) : null;
+    var msg = source === 'file'
+      ? '이어하기 파일을 불러왔습니다.'
+      : '이전에 입력하신 내용을 불러왔습니다' + (when ? ' (' + mmdd(when) + ' ' + hhmm(when) + ')' : '') + '.';
+    paint(msg);
+    toast(msg);
+    setTimeout(function () { paint('자동 저장됨 · ' + hhmm(new Date())); }, 4000);
+    return true;
+  }
+
+  function restoreFromBrowser() {
+    var raw;
+    try { raw = localStorage.getItem(storeKey()); } catch (e) { return false; }
+    if (!raw) return false;
+    var data;
+    try { data = JSON.parse(raw); } catch (e) { return false; }
+    return restore(data, 'browser');
+  }
+
+  /* ── 파일 내보내기 · 불러오기 ─────────────────────────── */
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function hhmm(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function mmdd(d) { return (d.getMonth() + 1) + '월 ' + d.getDate() + '일'; }
+  function stamp(d) {
+    return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes());
+  }
+
+  function exportFile() {
+    var d = collect();
+    d._안내 = '이 파일은 「' + cfg.appName + '」의 이어하기 파일입니다. '
+            + '앱 화면 아래쪽 보관함의 「이어하기 파일 열기」로 이 파일을 여시면 저장한 시점부터 이어서 진행할 수 있습니다.';
+    var body = '﻿' + JSON.stringify(d, null, 2);
+    var when = stamp(new Date());
+    // 브라우저가 한글 파일명을 지우는 경우가 있어, 내려받기 이름은 영문으로 둔다.
+    var asciiName = cfg.fileName + '_resume_' + when + '.json';
+    var korName = cfg.appName.replace(/\s+/g, '') + '_이어하기_' + when + '.json';
+    var done = function () {
+      toast('이어하기 파일을 저장하였습니다. 다음 실습에서 「이어하기 파일 열기」로 여십시오.');
+      paint('이어하기 파일로 저장함 · ' + hhmm(new Date()));
+    };
+
+    // ① 저장 위치를 고를 수 있는 브라우저에서는 한글 이름을 그대로 쓴다.
+    if (typeof window.showSaveFilePicker === 'function') {
+      window.showSaveFilePicker({
+        suggestedName: korName,
+        types: [{ description: '이어하기 파일', accept: { 'application/json': ['.json'] } }]
+      }).then(function (h) {
+        return h.createWritable().then(function (w) {
+          return w.write(body).then(function () { return w.close(); });
+        });
+      }).then(done).catch(function (e) {
+        if (e && e.name === 'AbortError') return;   // 이용자가 취소한 경우
+        blobDownload(body, asciiName); done();
+      });
+      return;
+    }
+    // ② 그 밖의 브라우저는 곧바로 내려받는다.
+    blobDownload(body, asciiName);
+    done();
+  }
+
+  function blobDownload(body, name) {
+    var blob = new Blob([body], { type: 'application/json;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name; a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }
+
+  function importFile(file) {
+    var r = new FileReader();
+    r.onload = function () {
+      var text = String(r.result || '').replace(/^﻿/, '');
+      var data;
+      try { data = JSON.parse(text); } catch (e) {
+        toast('이어하기 파일이 아닙니다. 앱에서 내려받은 파일인지 확인하십시오.', 'error');
+        return;
+      }
+      if (data.appKey && data.appKey !== cfg.appKey) {
+        toast('다른 앱의 이어하기 파일입니다. (' + (data.app || '알 수 없음') + ')', 'error');
+        return;
+      }
+      restore(data, 'file');
+      save();
+    };
+    r.readAsText(file, 'utf-8');
+  }
+
+  function wipe() {
+    if (!confirm('이 기기에 저장된 입력 내용을 지웁니다.\n지운 뒤에는 되돌릴 수 없으므로, 필요한 내용은 먼저 「이어하기 파일 저장」을 눌러 두십시오.\n\n지우시겠습니까?')) return;
+    wiped = true;                               // 이후의 자동 저장을 모두 막는다
+    clearTimeout(timer);
+    // 화면에 남은 입력도 함께 비운다. 비우지 아니하면 페이지를 떠나는 순간 다시 저장된다.
+    eachField(function (el) {
+      var t = (el.type || '').toLowerCase();
+      if (t === 'radio' || t === 'checkbox' || el.tagName.toLowerCase() === 'select') return;
+      el.value = '';
+    });
+    try { localStorage.removeItem(storeKey()); } catch (e) { }
+    paint('기록을 지웠습니다.');
+    toast('이 기기에 남아 있던 입력 내용을 지웠습니다.');
+    setTimeout(function () { location.reload(); }, 700);
+  }
+
+  /* ── 화면 아래 보관함 막대 ───────────────────────────── */
+  var bar, label;
+
+  function paint(text, warn) {
+    if (!label) return;
+    label.textContent = text;
+    label.style.color = warn ? '#b91c1c' : '#334155';
+  }
+
+  function toast(msg, type) {
+    if (typeof window.showToast === 'function') { try { window.showToast(msg, type); return; } catch (e) { } }
+    paint(msg, type === 'error');
+  }
+
+  function buildBar() {
+    var css = document.createElement('style');
+    css.textContent = [
+      '#savekit-bar{position:fixed;left:0;right:0;bottom:0;z-index:9999;',
+      'display:flex;align-items:center;gap:8px;flex-wrap:wrap;',
+      'padding:8px 14px;background:#f8fafc;border-top:1px solid #cbd5e1;',
+      'font-family:inherit;font-size:13px;box-shadow:0 -2px 8px rgba(15,23,42,.06)}',
+      '#savekit-bar .sk-t{font-weight:700;color:#0f172a;margin-right:2px;white-space:nowrap}',
+      '#savekit-bar .sk-s{flex:1 1 160px;min-width:120px;color:#334155}',
+      '#savekit-bar button{border:1px solid #cbd5e1;background:#fff;color:#0f172a;',
+      'border-radius:6px;padding:5px 11px;font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit}',
+      '#savekit-bar button:hover{background:#e2e8f0}',
+      '#savekit-bar button.sk-danger{color:#b91c1c;border-color:#fecaca}',
+      '#savekit-bar button.sk-danger:hover{background:#fee2e2}',
+      '@media print{#savekit-bar{display:none}}'
+    ].join('');
+    document.head.appendChild(css);
+
+    bar = document.createElement('div');
+    bar.id = 'savekit-bar';
+    bar.setAttribute('data-savekit-skip', '1');
+    bar.innerHTML =
+      '<span class="sk-t">보관함</span>' +
+      '<span class="sk-s" id="savekit-status">입력하시면 이 기기에 자동으로 저장됩니다.</span>' +
+      '<button type="button" id="savekit-export">이어하기 파일 저장</button>' +
+      '<button type="button" id="savekit-import">이어하기 파일 열기</button>' +
+      '<button type="button" class="sk-danger" id="savekit-wipe">기록 지우기</button>' +
+      '<input type="file" id="savekit-file" accept=".json,application/json" style="display:none">';
+    document.body.appendChild(bar);
+    label = document.getElementById('savekit-status');
+
+    document.getElementById('savekit-export').onclick = exportFile;
+    document.getElementById('savekit-wipe').onclick = wipe;
+    document.getElementById('savekit-import').onclick = function () {
+      document.getElementById('savekit-file').click();
+    };
+    document.getElementById('savekit-file').onchange = function (e) {
+      if (e.target.files && e.target.files[0]) importFile(e.target.files[0]);
+      e.target.value = '';
+    };
+
+    fitBody();
+    window.addEventListener('resize', fitBody);
+  }
+
+  /* 막대가 화면 아래를 차지하므로 그만큼 본문 자리를 좁힌다.
+     화면 전체를 쓰는 앱(h-screen)과 아래로 흐르는 앱을 나누어 처리한다. */
+  function fitBody() {
+    if (!bar) return;
+    var h = bar.offsetHeight;
+    var b = document.body, cs = window.getComputedStyle(b);
+    var full = (cs.overflowY === 'hidden' || cs.overflow === 'hidden')
+               && b.getBoundingClientRect().height >= window.innerHeight - 2;
+    if (full) {                                   // 화면에 꽉 채워 쓰는 앱
+      var mt = parseFloat(cs.marginTop) || 0, mb = parseFloat(cs.marginBottom) || 0;
+      b.style.height = 'calc(100vh - ' + (h + mt + mb) + 'px)';
+      b.style.paddingBottom = '';
+    } else {                                      // 아래로 길어지는 앱
+      b.style.paddingBottom = (h + 10) + 'px';
+    }
+  }
+
+  /* ── 시작 ────────────────────────────────────────────── */
+  function start(options) {
+    cfg = options;
+    buildBar();
+    restoreFromBrowser();
+    document.addEventListener('input', scheduleSave, true);
+    document.addEventListener('change', scheduleSave, true);
+    window.addEventListener('beforeunload', function () { clearTimeout(timer); save(); });
+    // 앱이 스스로 값을 바꾸는 경우(예시 불러오기·단계 이동)도 주기적으로 담아 둔다
+    setInterval(save, 5000);
+  }
+
+  window.SaveKit = { init: function (o) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { start(o); });
+    } else { start(o); }
+  } };
+})();
+
+SaveKit.init({
+  appKey  : 'prompt-assembler',
+  appName : 'AI 행정 프롬프트 조립기',
+  fileName: '02-01_prompt-assembler',
+  extra   : function () {
+      var t = document.getElementById('tab-analyze');
+      return { tab: (t && t.classList.contains('active')) ? 'analyze' : 'create' };
+    },
+  afterRestore: function (x) {
+      // 탭을 먼저 되돌린 뒤 업무 유형에 맞는 조건·검증 항목을 다시 그린다.
+      if (typeof switchTab === 'function') switchTab(x.tab === 'analyze' ? 'analyze' : 'create');
+      else if (typeof applyProfile === 'function') applyProfile(false);
+      if (typeof updateCount === 'function') updateCount();
+      if (typeof renderSourceGuide === 'function') renderSourceGuide();
+    }
+});
+</script>
+</body>
+</html>
