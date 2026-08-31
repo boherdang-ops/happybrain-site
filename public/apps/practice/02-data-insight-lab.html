@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- 저작물 명칭: AI 행정 데이터 인사이트 실습기 (v1.0)
+     파일명: 02-data-insight-lab.html
+     사용 과정: 02 역량강화 워크숍 · 03 심화 워크숍
+     저작권자: (주)한국공공자치연구원 AI행정혁신연구소 -->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 행정 데이터 인사이트 실습기 v1.0</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family:'Pretendard','Malgun Gothic','맑은 고딕',sans-serif; background:#f8fafc; color:#0f172a; }
+  textarea::-webkit-scrollbar { width:8px; }
+  textarea::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+  @keyframes slideUp { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
+  .toast-animate { animation:slideUp .3s ease-out forwards; }
+  @keyframes flash { 0%{background:#d1fae5} 100%{background:transparent} }
+  .flash { animation:flash 1s ease-out; }
+  input[type="checkbox"] { accent-color:#059669; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<header class="bg-slate-900 text-white shadow-md flex-shrink-0">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center space-x-3">
+    <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+    <h1 class="text-lg md:text-xl font-bold tracking-tight">AI 행정 데이터 인사이트 실습기</h1>
+  </div>
+  <div class="bg-rose-50 text-rose-700 px-4 py-2 text-xs md:text-sm flex items-center justify-center border-b border-rose-200 text-center">
+    <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+    <span><strong>[보안 주의]</strong>&nbsp;성명·연락처·주소가 담긴 명부는 붙여넣지 마십시오. 집계된 표만 사용하십시오.</span>
+  </div>
+</header>
+
+<main class="flex-1 max-w-7xl w-full mx-auto p-4 flex flex-col md:flex-row gap-4">
+
+  <div class="w-full md:w-2/3 flex flex-col gap-4">
+
+    <!-- STEP 0 : 데이터 -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 md:p-6 space-y-5">
+      <div>
+        <h2 class="text-lg font-bold text-slate-800 mb-1">1. 분석할 데이터</h2>
+        <p class="text-sm text-slate-500">예시 데이터를 불러오거나, 엑셀에서 표를 복사해 붙여넣으십시오.</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-1">예시 데이터</label>
+        <div class="flex gap-2">
+          <select id="sampleSel" class="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm bg-white outline-none focus:ring-2 focus:ring-emerald-500">
+            <option value="pop">읍면별 인구·전입전출 현황</option>
+            <option value="traffic">읍면별 교통사고 발생 현황</option>
+            <option value="disaster">읍면별 화재·풍수해 피해 현황</option>
+            <option value="medical">읍면별 응급환자 이송 현황</option>
+          </select>
+          <button onclick="loadSample()" class="shrink-0 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-4 hover:bg-emerald-100">불러오기</button>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-1.5">가상의 ○○군 데이터입니다. 실제 수치가 아니며, 분포와 형식만 실제 통계를 따랐습니다.</p>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-slate-700 mb-1 flex justify-between">
+          <span>데이터 붙여넣기 <span class="font-normal text-slate-400">(엑셀에서 Ctrl+C → Ctrl+V)</span></span>
+          <button onclick="clearAll()" class="text-xs text-slate-400 hover:text-rose-500 underline font-normal">지우기</button>
+        </label>
+        <textarea id="rawData" rows="8" oninput="onDataInput()" class="w-full border border-slate-300 rounded-lg p-3 text-sm font-mono outline-none focus:ring-2 focus:ring-emerald-500 resize-y bg-white"></textarea>
+        <p id="dataStatus" class="text-xs text-slate-400 mt-1"></p>
+        <p id="piiWarning" class="hidden text-xs text-rose-600 mt-1 font-semibold">⚠️ 개인정보로 보이는 항목이 감지되었습니다. 집계표로 바꾼 뒤 사용하십시오.</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-1">
+          이 데이터는 무엇입니까?
+          <span class="font-normal text-emerald-700 text-xs ml-1">— 이 한 칸이 결과를 크게 바꿉니다</span>
+        </label>
+        <textarea id="dataDesc" rows="3" placeholder="예: 2026년 6월 말 기준 ○○군 읍면별 주민등록인구. 전입·전출은 2026년 상반기 누계이며 단위는 명입니다." class="w-full border border-slate-300 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 resize-y bg-white"></textarea>
+          <p class="text-[11px] text-slate-400 mt-1">기준 시점, 단위, 집계 범위를 적어 주십시오. 이것이 없으면 AI가 열 이름만 보고 추측합니다.</p>
+      </div>
+
+      <div class="border-t border-slate-200 pt-5">
+        <h2 class="text-lg font-bold text-slate-800 mb-1">2. 결정할 일</h2>
+        <p class="text-sm text-slate-500 mb-3">이 분석의 도착점입니다. 지시받은 과업이 있으면 그 상황을, 자유 실습에서는 본인이 정한 문제를 적으십시오.</p>
+        <label class="block text-sm font-semibold text-slate-700 mb-1">
+          지금 결정해야 할 것은 무엇입니까?
+        </label>
+        <textarea id="decision" rows="3" placeholder="예1(과업) 내년도 교통안전시설비 3억 원을 어느 읍면에 어떤 근거로 배분할 것인가. 한 읍면 1억 원 상한, 3개 읍면 이상 배분.&#10;예2(자유) 우리 군이 지금 다루어야 할 문제가 무엇인지부터 스스로 정한다." class="w-full border border-slate-300 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 resize-y bg-white"></textarea>
+        <p class="text-[11px] text-slate-400 mt-1">결정할 사람, 결정할 내용, 제약(예산·기간·권한)을 적어 주십시오. 비워 두면 마지막 질문이 일반적인 정리로 끝납니다.</p>
+      </div>
+
+      <div class="-mt-1">
+        <label class="block text-sm font-semibold text-slate-700 mb-2">마지막 질문을 무엇으로 끝낼까요?</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <label class="flex items-start gap-2 p-3 border border-slate-300 rounded-lg cursor-pointer hover:bg-emerald-50 bg-white">
+            <input type="radio" name="finalType" value="decide" checked class="mt-1">
+            <span>
+              <span class="text-sm font-bold text-slate-800">결정형</span>
+              <span class="block text-xs text-slate-500 mt-0.5">배분표·선정표를 확정하고 설명 논리까지. 지시받은 일을 처리할 때</span>
+            </span>
+          </label>
+          <label class="flex items-start gap-2 p-3 border border-slate-300 rounded-lg cursor-pointer hover:bg-emerald-50 bg-white">
+            <input type="radio" name="finalType" value="plan" class="mt-1">
+            <span>
+              <span class="text-sm font-bold text-slate-800">기획형</span>
+              <span class="block text-xs text-slate-500 mt-0.5">문제 정의 → 대안 → 기획안 + 근거 대조표. 스스로 사업을 만들 때</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <button onclick="buildSteps()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-lg shadow">3. 분석 프롬프트 만들기 (질문 5개)</button>
+    </div>
+
+    <!-- STEP 결과 -->
+    <div id="stepBox" class="space-y-3"></div>
+  </div>
+
+  <!-- 우측 -->
+  <div class="w-full md:w-1/3 flex flex-col gap-4">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+      <h3 class="font-bold text-slate-800 mb-2 text-sm">AI 작업창 바로가기</h3>
+      <div class="grid grid-cols-3 gap-2 text-sm">
+        <a href="https://claude.ai" target="_blank" rel="noopener" class="flex flex-col items-center p-2 bg-slate-50 border border-slate-200 rounded hover:bg-slate-100 text-center"><span class="font-bold text-slate-700">Claude</span></a>
+        <a href="https://chatgpt.com" target="_blank" rel="noopener" class="flex flex-col items-center p-2 bg-slate-50 border border-slate-200 rounded hover:bg-slate-100 text-center"><span class="font-bold text-slate-700">ChatGPT</span></a>
+        <a href="https://gemini.google.com" target="_blank" rel="noopener" class="flex flex-col items-center p-2 bg-slate-50 border border-slate-200 rounded hover:bg-slate-100 text-center"><span class="font-bold text-slate-700">Gemini</span></a>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-2">※ 인터넷망 PC에서만 열립니다.</p>
+    </div>
+
+    <div id="sourceBox" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 text-sm"></div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col">
+      <div class="bg-slate-100 border-b border-slate-200 px-4 py-3 rounded-t-xl">
+        <h3 class="font-bold text-slate-800 text-sm">분석 결과 검증</h3>
+        <p class="text-xs text-slate-500 mt-1">보고서에 옮기기 전 확인하십시오.</p>
+      </div>
+      <div class="p-4 space-y-3">
+        <label class="flex items-start space-x-3 cursor-pointer"><input type="checkbox" class="verify h-5 w-5 mt-0.5 rounded border-slate-300"><div><span class="text-sm font-medium text-slate-800">계산 검산</span><p class="text-xs text-slate-500">AI가 만든 비율·평균을 직접 다시 계산해 봤습니까?</p></div></label>
+        <label class="flex items-start space-x-3 cursor-pointer"><input type="checkbox" class="verify h-5 w-5 mt-0.5 rounded border-slate-300"><div><span class="text-sm font-medium text-slate-800">가설과 사실 구분</span><p class="text-xs text-slate-500">원인 설명이 데이터에서 나온 것인지, AI의 추측인지 구분했습니까?</p></div></label>
+        <label class="flex items-start space-x-3 cursor-pointer"><input type="checkbox" class="verify h-5 w-5 mt-0.5 rounded border-slate-300"><div><span class="text-sm font-medium text-slate-800">표본 확인</span><p class="text-xs text-slate-500">건수가 적은 항목을 비율로만 보고 판단하지 않았습니까?</p></div></label>
+        <label class="flex items-start space-x-3 cursor-pointer"><input type="checkbox" class="verify h-5 w-5 mt-0.5 rounded border-slate-300"><div><span class="text-sm font-medium text-slate-800">확인 자료 목록</span><p class="text-xs text-slate-500">가설을 확인하려면 무엇을 더 봐야 하는지 적어 두었습니까?</p></div></label>
+      </div>
+      <div class="bg-slate-50 border-t border-slate-200 p-3 rounded-b-xl text-center">
+        <button onclick="resetVerify()" class="text-xs text-slate-500 hover:text-slate-700 underline underline-offset-2">체크리스트 초기화</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none"></div>
+
+<script>
+/* ══════════ 예시 데이터 4종 ══════════ */
+const SAMPLES = {
+pop:{
+  desc:"2026년 6월 말 기준 가상의 ○○군 읍면별 주민등록인구입니다. 전입·전출은 2026년 상반기 누계이며 단위는 명입니다. 순이동은 전입에서 전출을 뺀 값입니다.",
+  source:"실제 자료는 KOSIS(국가통계포털) → 인구·가구 → 주민등록인구현황, 국내인구이동통계에서 시군구·읍면동 단위로 받을 수 있습니다.",
+  data:`읍면\t총인구\t65세이상\t전입\t전출\t순이동
+중앙읍\t8241\t2310\t412\t480\t-68
+금천면\t3620\t1158\t121\t168\t-47
+한들면\t3105\t1204\t96\t152\t-56
+청호면\t2880\t979\t88\t133\t-45
+새들면\t2470\t742\t214\t131\t83
+산정면\t2240\t901\t55\t96\t-41
+도곡면\t1980\t986\t41\t88\t-47
+월봉면\t1690\t761\t33\t70\t-37
+백운면\t1455\t703\t28\t61\t-33
+대성면\t1120\t592\t19\t44\t-25`},
+
+traffic:{
+  desc:"2025년 한 해 동안 발생한 가상의 ○○군 읍면별 교통사고 현황입니다. 사고건수·사망·부상은 건수와 명이며, 노인관련은 65세 이상이 당사자로 포함된 사고 건수입니다.",
+  source:"실제 자료는 TAAS 교통사고분석시스템(도로교통공단)과 KOSIS → 교통·정보통신 → 교통사고통계에서 받을 수 있습니다.",
+  data:`읍면\t총인구\t사고건수\t사망\t부상\t노인관련사고
+중앙읍\t8241\t86\t1\t112\t18
+금천면\t3620\t44\t2\t58\t15
+한들면\t3105\t24\t0\t30\t12
+청호면\t2880\t33\t0\t41\t9
+새들면\t2470\t41\t3\t55\t8
+산정면\t2240\t26\t1\t34\t11
+도곡면\t1980\t22\t2\t29\t14
+월봉면\t1690\t18\t1\t23\t9
+백운면\t1455\t14\t1\t17\t8
+대성면\t1120\t19\t2\t25\t13`},
+
+disaster:{
+  desc:"최근 5년(2021~2025) 가상의 ○○군 읍면별 화재·풍수해 발생 및 피해 현황입니다. 피해액 단위는 백만 원이며, 최근3년발생은 2023~2025년에 발생한 건수입니다.",
+  source:"실제 자료는 국가재난정보관리시스템, 소방청 화재통계연감, KOSIS → 공공·안전 → 재해연보에서 받을 수 있습니다.",
+  data:`읍면\t총인구\t5년발생건수\t피해액\t최근3년발생\t주택피해세대
+중앙읍\t8241\t24\t1850\t9\t31
+금천면\t3620\t7\t640\t2\t8
+한들면\t3105\t6\t120\t5\t11
+청호면\t2880\t5\t220\t2\t6
+새들면\t2470\t5\t95\t4\t7
+산정면\t2240\t4\t310\t1\t4
+도곡면\t1980\t11\t180\t9\t19
+월봉면\t1690\t12\t210\t10\t22
+백운면\t1455\t9\t88\t8\t14
+대성면\t1120\t3\t45\t3\t5`},
+
+medical:{
+  desc:"2025년 가상의 ○○군 읍면별 119 구급대 응급환자 이송 현황입니다. 평균이송시간은 신고 접수부터 병원 도착까지의 분(分)이고, 병원거리는 관할 응급의료기관까지의 도로 거리(km)입니다. 야간비율은 전체 이송 중 18시~익일 06시에 발생한 비율(%)입니다.",
+  source:"실제 자료는 국가응급진료정보망(NEDIS), 소방청 구급활동 통계, KOSIS → 보건 → 응급의료통계에서 받을 수 있습니다.",
+  data:`읍면\t이송건수\t평균이송시간\t병원거리\t야간비율\t65세이상비율
+중앙읍\t412\t22\t6\t30\t28
+금천면\t121\t24\t20\t36\t32
+청호면\t84\t26\t17\t40\t34
+새들면\t88\t26\t22\t39\t30
+한들면\t96\t27\t11\t41\t39
+산정면\t74\t28\t9\t44\t40
+월봉면\t52\t33\t14\t55\t45
+도곡면\t61\t36\t12\t62\t50
+백운면\t45\t38\t8\t66\t48
+대성면\t33\t40\t16\t71\t53`}
+};
+
+/* ══════════ 5단계 프롬프트 ══════════ */
+const STEPS = [
+ { title:"질문 1 · 이 데이터 읽기", tag:"데이터 포함",
+   tip:"내 업무 데이터라면 3번 항목에 '이 데이터로 우리 부서가 답해야 할 질문'을 직접 적어 보십시오.",
+   body:`아래 표를 읽고 다음을 정리해 주십시오.
+
+1. 이 표가 무엇을 담고 있는지 한 문단으로 설명해 주십시오.
+2. 각 열이 무엇을 뜻하는지, 단위가 무엇인지 정리해 주십시오. 설명만으로 확실하지 않은 열은 [확인 필요]로 표시해 주십시오.
+3. 이 데이터로 답할 수 있는 질문과 답할 수 없는 질문을 나누어 알려 주십시오.
+
+표에 없는 사실을 덧붙이지 마십시오.` },
+
+ { title:"질문 2 · 눈에 띄는 것 찾기", tag:"이어서 질문",
+   tip:"보고 싶은 기준이 정해져 있다면 적어 넣으십시오. 예: '작년 대비 변화가 큰 곳', '목표치에 못 미친 곳'.",
+   body:`이어서 질문합니다. 이 데이터에서 눈에 띄는 것을 찾아 주십시오.
+
+1. 다른 항목들과 뚜렷하게 다른 값을 보이는 항목을 모두 짚어 주십시오.
+2. 값이 가장 크고 작은 곳, 격차가 벌어지는 지점을 정리해 주십시오.
+3. 전체 흐름과 반대로 움직이는 항목이 있으면 따로 알려 주십시오.
+
+각 지적마다 근거가 되는 수치를 함께 제시해 주십시오.` },
+
+ { title:"질문 3 · 각도 바꿔 보기", tag:"이어서 질문",
+   tip:"이 질문이 핵심입니다. 앞의 1~3번은 「계산해서 보기」, 뒤의 4~6번은 「열끼리 맞대어 보기」입니다. 결정할 일이 어떤 전제 위에 있다면 그 전제를 4~6번으로 확인하십시오.",
+   body:`이어서 질문합니다. 지금까지는 표에 있는 값을 그대로 봤습니다. 이제 계산해서 봐야 보이는 것과, 열끼리 맞대어야 보이는 것을 찾아 주십시오.
+
+[계산해서 보기]
+1. 이 표의 열들을 조합해 만들 수 있는 비율·1인당·증감률 같은 파생 지표를 제안해 주십시오. 왜 그 지표가 의미 있는지도 함께 설명해 주십시오.
+2. 그 지표로 다시 계산해 순위를 매겨 주십시오.
+3. 원래 순위와 새 순위가 뒤바뀐 곳이 있으면 반드시 짚어 주십시오. 그것이 왜 중요한지 설명해 주십시오.
+
+[열끼리 맞대어 보기]
+4. 이 표에 열이 셋 이상이면, 가장 관심 있는 열 하나를 기준으로 삼고 나머지 열을 각각 나란히 놓아 순위를 대조해 주십시오. 순위가 함께 움직이는 열과 그렇지 아니한 열을 구분하여 표로 보여 주십시오.
+5. 관심 열과 반대 방향으로 움직이거나 아무 관계가 없는 열이 있으면, 그 사실 자체를 중요한 발견으로 보고해 주십시오. 어느 행이 반례인지 이름과 숫자로 지목해 주십시오.
+6. 「결정할 일」에 어떤 전제나 가설이 들어 있다면, 그것이 이 표에서 성립하는지 4~5번의 결과로 판정해 주십시오. 성립하지 아니하면 그렇게 말씀해 주십시오.
+
+계산 과정을 함께 보여 주시고, 건수가 적어 비율이 불안정한 항목은 표시해 주십시오.
+순위가 함께 움직인다는 것은 함께 움직인다는 사실일 뿐입니다. 한쪽이 다른 쪽의 원인이라고 쓰지 마십시오. 원인은 다음 단계에서 가설로만 다룹니다.` },
+
+ { title:"질문 4 · 가설 세우고 확인 방법 찾기", tag:"이어서 질문",
+   tip:"우리 지역 사정을 한두 줄 덧붙이면 가설이 훨씬 쓸모 있어집니다. 예: '작년에 산업단지가 들어섰습니다'.",
+   body:`이어서 질문합니다. 앞에서 찾아낸 특이한 지점에 대해 묻습니다.
+
+1. 왜 그런 결과가 나왔을지 설명할 수 있는 가설을 각각 2~3가지 세워 주십시오.
+2. 각 가설이 맞는지 확인하려면 어떤 자료를 더 봐야 하는지, 어느 기관·시스템에서 구할 수 있는지 알려 주십시오.
+
+중요: 원인을 단정하지 마십시오. 이 데이터만으로는 확인할 수 없다는 점을 분명히 하고, 반드시 "가설"과 "확인 방법"으로만 답해 주십시오.` },
+
+ { title:"질문 5 · 결정하고 문서로 남기기", tag:"이어서 질문", key:"decide",
+   tip:"결과물 형태를 내 상황에 맞게 바꾸십시오. 예: '과장 보고용 한 장', '의회 답변 자료'.",
+   body:`이어서 질문합니다. 지금까지의 분석을 바탕으로, 위에 적힌 [결정해야 할 것]에 대한 답을 문서로 만들어 주십시오.
+
+1. 판단 기준을 먼저 제시해 주십시오. 앞 단계에서 나온 지표 중 무엇을 기준으로 삼을 것인지, 왜 그것인지 세 줄로 밝혀 주십시오.
+2. 그 기준에 따라 실제 숫자를 확정한 표를 만들어 주십시오. 제약 조건(총액·상한·대상 수)을 반드시 지켜 주십시오. 합계가 맞는지 검산해 주십시오.
+3. 선택받지 못한 쪽에 할 설명을 두 줄로 작성해 주십시오. 왜 후순위인지 납득할 수 있어야 합니다.
+4. 이 결정의 한계를 한 줄로 밝혀 주십시오. 데이터로 판단할 수 없었던 부분입니다.
+5. 위 내용을 A4 한 장 분량의 행정 문서로 정리해 주십시오.
+
+숫자를 확정하지 않고 "검토가 필요하다"로 넘기지 마십시오. 표의 모든 칸을 채워 주십시오.
+한글(HWP)에 붙여넣을 수 있는 평문으로 출력하고, 마크다운 강조 기호(**, ##)는 쓰지 마십시오.` },
+
+ { title:"질문 5 · 문제를 정의하고 기획안 만들기", tag:"이어서 질문", key:"plan",
+   tip:"문제 규정이 일반론이 되지 않도록, 반드시 앞 단계에서 나온 수치를 근거로 삼게 하십시오.",
+   body:`이어서 질문합니다. 지금까지의 분석을 바탕으로 신규 사업 기획안을 만들어 주십시오.
+
+1. 먼저 문제를 규정해 주십시오. 이 데이터가 드러낸 것 중 우리 지자체가 지금 다루어야 할 문제가 무엇인지, 왜 지금인지 밝혀 주십시오. 반드시 앞 단계에서 확인된 수치를 근거로 삼아 주십시오. "고령화가 심각하다"와 같은 일반론은 쓰지 마십시오.
+2. 해결 방안을 세 가지 제시해 주십시오. 각 방안마다 대상, 방법, 개략적 소요 예산, 예상되는 걸림돌을 함께 적어 주십시오.
+3. 세 가지 중 하나를 골라 기획안으로 작성해 주십시오. 사업명 / 문제 규정 / 대상과 범위 / 추진 방법 / 소요 예산 / 성과지표 순으로 정리해 주십시오. 성과지표는 이 데이터로 매년 같은 방식으로 측정할 수 있는 것이어야 합니다.
+4. 마지막에 근거 대조표를 붙여 주십시오. 표는 세 열로 만들어 주십시오.
+   [기획안의 주장] [근거 수치] [어느 데이터의 어느 열]
+   기획안 본문의 주요 주장을 다섯 개 이상 옮겨 적고, 근거를 댈 수 없는 주장은 근거 수치 칸에 [근거 없음]이라고 표시해 주십시오.
+5. [근거 없음]이 절반을 넘으면 그 사실을 맨 앞에 알려 주시고, 근거가 있는 주장 위주로 기획안을 다시 써 주십시오.
+
+한글(HWP)에 붙여넣을 수 있는 평문으로 출력하고, 마크다운 강조 기호(**, ##)는 쓰지 마십시오.` }
+];
+
+/* ══════════ 표 변환 ══════════ */
+function toMarkdown(raw) {
+  const lines = raw.replace(/\r/g, '').split('\n').filter(l => l.trim() !== '');
+  if (!lines.length) return { md:"", cols:0, rows:0, warn:"" };
+
+  let rows = lines.map(l => l.split('\t').map(c => c.trim().replace(/\|/g, '｜')));
+
+  // 첫 행이 한 칸만 채워져 있으면 제목행으로 보고 분리
+  let title = "";
+  if (rows.length > 1 && rows[0].filter(c => c !== '').length === 1 && rows[1].filter(c => c !== '').length > 1) {
+    title = rows[0].find(c => c !== '') || "";
+    rows = rows.slice(1);
+  }
+
+  const width = Math.max(...rows.map(r => r.length));
+  const uneven = rows.some(r => r.length !== width);
+  rows = rows.map(r => { while (r.length < width) r.push(''); return r; });
+
+  let md = "";
+  if (title) md += title + "\n\n";
+  md += "| " + rows[0].join(" | ") + " |\n";
+  md += "| " + rows[0].map(() => "---").join(" | ") + " |\n";
+  rows.slice(1).forEach(r => { md += "| " + r.join(" | ") + " |\n"; });
+
+  let warn = "";
+  if (uneven) warn = "행마다 열 개수가 다릅니다. 병합된 셀이 있는지 확인하십시오.";
+  if (width === 1) warn = "열이 하나로 인식되었습니다. 엑셀에서 표를 드래그해 복사했는지 확인하십시오.";
+  return { md, cols:width, rows:rows.length - 1, warn };
+}
+
+/* ══════════ 동작 ══════════ */
+
+/* ─── 개인정보 감지 — 두 실습 앱 공통 모듈 ─────────────────────
+   (주)한국공공자치연구원 AI행정혁신연구소
+   [1층] 형태가 정해진 정보를 값에서 잡는다
+   [2층] 표의 열 이름에 쓰인 개인정보 항목명을 잡는다
+   두 앱이 같은 규칙을 쓰고, 안내 문구만 달리한다.
+   ───────────────────────────────────────────────────────── */
+const PII_RULES = [
+  { label:"주민등록번호",     re:/\b\d{6}[-\u2013\s]?[1-4]\d{6}\b/ },
+  { label:"휴대전화번호",     re:/\b01[016789][-\u2013\s]?\d{3,4}[-\u2013\s]?\d{4}\b/ },
+  { label:"유선전화번호",     re:/\b0(?:2|[3-6]\d)[-\u2013\s]\d{3,4}[-\u2013\s]\d{4}\b/ },
+  { label:"전자우편 주소",    re:/[\w.+-]+@[\w-]+\.[\w.]{2,}/ },
+  { label:"차량번호",         re:/\b(?:[\uac00-\ud7a3]{2}\s?)?\d{2,3}[\uac00\ub098\ub2e4\ub77c\ub9c8\uac70\ub108\ub354\ub7ec\uba38\ubc84\uc11c\uc5b4\uc800\uace0\ub178\ub3c4\ub85c\ubaa8\ubcf4\uc18c\uc624\uc870\uad6c\ub204\ub450\ub8e8\ubb34\ubd80\uc218\uc6b0\uc8fc\ubc14\uc0ac\uc544\uc790\ud558\ud5c8\ud638\ubc30]\s?\d{4}\b/ },
+  { label:"사업자등록번호",   re:/\b\d{3}[-\u2013]\d{2}[-\u2013]\d{5}\b/ },
+  { label:"상세 주소(동·호)", re:/\d{1,4}\s?동\s?\d{1,4}\s?호/ },
+  { label:"개인정보 항목명",  re:/(?<![\uc5f4\uce78\ud589\ud45c\ud30c\uc77c\uc0ac\uc5c5\uc9c0\uc5ed\ubd80\uc11c\uae30\uad00]\s?)(\uc131\uba85|\uc774\ub984|\uc8fc\ubbfc\ub4f1\ub85d\ubc88\ud638|\uc0dd\ub144\uc6d4\uc77c|\uc5f0\ub77d\ucc98|\ud734\ub300\ud3f0|\ud734\ub300\uc804\ud654|\uc804\ud654\ubc88\ud638|\uc790\ud0dd|\uc8fc\uc18c|\uc138\ub300\uc8fc|\ub300\ud45c\uc790|\ucc28\ub7c9\ubc88\ud638|\uacc4\uc88c\ubc88\ud638|\uc0ac\uc5c5\uc790\ub4f1\ub85d\ubc88\ud638)/ }
+];
+
+function detectPII(text) {
+  if (!text) return [];
+  return PII_RULES.filter(r => r.re.test(text)).map(r => r.label);
+}
+
+
+function onDataInput() {
+  const raw = document.getElementById('rawData').value;
+  const st = document.getElementById('dataStatus');
+  const hits = detectPII(raw);
+  const piiBox = document.getElementById('piiWarning');
+  piiBox.classList.toggle('hidden', hits.length === 0);
+  if (hits.length) {
+    piiBox.textContent = '\u26a0\ufe0f 개인정보로 보이는 항목이 감지되었습니다 — ' + hits.join(', ') + '. 집계표로 바꾼 뒤 사용하십시오.';
+  }
+  if (!raw.trim()) { st.textContent = ""; return; }
+  const r = toMarkdown(raw);
+  st.textContent = `${r.rows}행 × ${r.cols}열로 인식했습니다.` + (r.warn ? "  ⚠ " + r.warn : "");
+  st.className = "text-xs mt-1 " + (r.warn ? "text-amber-600 font-medium" : "text-slate-400");
+}
+
+function loadSample() {
+  const s = SAMPLES[document.getElementById('sampleSel').value];
+  document.getElementById('rawData').value = s.data;
+  document.getElementById('dataDesc').value = s.desc;
+  onDataInput();
+  renderSource();
+  const d = document.getElementById('dataDesc');
+  d.classList.remove('flash'); void d.offsetWidth; d.classList.add('flash');
+  showToast("예시 데이터를 불러왔습니다.");
+}
+
+function renderSource() {
+  const s = SAMPLES[document.getElementById('sampleSel').value];
+  document.getElementById('sourceBox').innerHTML =
+    `<h3 class="font-bold text-slate-800 mb-1.5 text-sm">실제 데이터는 어디서 받나</h3>
+     <p class="text-slate-600 text-xs leading-relaxed">${s.source}</p>`;
+}
+
+function clearAll() {
+  document.getElementById('rawData').value = '';
+  document.getElementById('dataDesc').value = '';
+  document.getElementById('decision').value = '';
+  document.getElementById('stepBox').innerHTML = '';
+  onDataInput();
+}
+
+let BASE = [];
+let ACTIVE = [];
+
+function buildSteps() {
+  const raw = document.getElementById('rawData').value.trim();
+  const desc = document.getElementById('dataDesc').value.trim();
+  if (!raw) { showToast("데이터를 붙여넣거나 예시를 불러오십시오.", "error"); return; }
+
+  const r = toMarkdown(raw);
+  const decision = document.getElementById('decision').value.trim();
+  const mode = document.querySelector('input[name="finalType"]:checked').value;
+  ACTIVE = STEPS.filter(s => !s.key || s.key === mode);
+
+  const head = desc
+    ? `[이 데이터에 대한 설명]\n${desc}\n\n`
+    : `[이 데이터에 대한 설명]\n(설명이 입력되지 않았습니다. 기준 시점과 단위를 모른 채 해석해야 한다는 점을 감안해 주십시오.)\n\n`;
+
+  const goal = decision
+    ? `[지금 결정해야 할 것]\n${decision}\n\n이 결정에 도달하는 것이 이 분석의 목적입니다. 이후 모든 답변은 이 결정에 도움이 되는 방향으로 해 주십시오.\n\n`
+    : '';
+
+  BASE = ACTIVE.map((s, i) =>
+    i === 0
+      ? `당신은 지방자치단체의 정책 데이터를 다뤄 온 분석 담당자입니다.\n\n${head}${goal}${s.body}\n\n[데이터]\n${r.md}`
+      : (i === ACTIVE.length - 1 && decision ? `${s.body}\n\n[다시 확인] 결정해야 할 것: ${decision}` : s.body)
+  );
+
+  document.getElementById('stepBox').innerHTML =
+    `<div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm text-emerald-900 leading-relaxed">
+       <strong>질문 1을 AI 창에 붙여넣고, 답을 받은 뒤 같은 대화창에 질문 2를 이어서 넣으십시오.</strong>
+       데이터와 결정 사항은 질문 1에만 들어 있습니다. 순위가 뒤집히는 지점은 질문 3에서 드러납니다.<br>
+       <span class="text-emerald-700">아래 프롬프트는 그대로 고쳐 쓸 수 있습니다. 회색 안내를 참고해 내 업무에 맞게 바꿔 보십시오.</span>
+     </div>` +
+    ACTIVE.map((s, i) => {
+      const first = i === 0;
+      return `<div class="bg-white border ${first?'border-emerald-300':'border-slate-200'} rounded-xl p-4 shadow-sm">
+        <div class="flex justify-between items-center mb-2 gap-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded ${first?'bg-emerald-100 text-emerald-800':'bg-slate-100 text-slate-600'}">${s.tag}</span>
+            <span class="text-sm font-bold text-slate-800 truncate">${s.title}</span>
+            <span id="mark-${i}" class="hidden text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">수정함</span>
+          </div>
+          <div class="flex gap-1 shrink-0">
+            <button onclick="revertStep(${i})" id="rev-${i}" class="hidden text-xs font-semibold text-slate-500 border border-slate-300 rounded px-2 py-1.5 hover:bg-slate-50">되돌리기</button>
+            <button onclick="copyStep(${i})" class="text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded px-3 py-1.5">복사</button>
+          </div>
+        </div>
+        <textarea id="ta-${i}" oninput="onEdit(${i})" spellcheck="false"
+          class="w-full border border-slate-200 rounded-lg p-3 text-sm text-slate-700 leading-relaxed bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none resize-none overflow-hidden"></textarea>
+        <p class="text-xs text-slate-400 mt-2 leading-relaxed">✏ ${s.tip}</p>
+        ${first ? `<p class="text-xs text-slate-400 mt-1">위 [데이터] 아래에 표(${r.rows}행 × ${r.cols}열)가 함께 들어 있습니다.</p>` : ''}
+      </div>`;
+    }).join('') +
+    `<div class="flex flex-col sm:flex-row gap-2 pt-1">
+       <button onclick="copyAllSteps()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold py-2.5 rounded-lg">질문 5개 전체 복사</button>
+       <button onclick="downloadSteps()" class="flex-1 bg-white border border-slate-300 text-slate-700 text-sm font-bold py-2.5 rounded-lg hover:bg-slate-50">내 프롬프트로 저장 (txt)</button>
+     </div>
+     <p class="text-xs text-slate-400 text-center">고친 내용은 이 기기에 임시 저장되지만, 데이터를 바꾸어 다시 만들면 초기화됩니다. 계속 쓰실 것이면 파일로 저장해 두십시오.</p>`;
+
+  BASE.forEach((t, i) => { const ta = document.getElementById('ta-'+i); ta.value = t; grow(ta); });
+  document.getElementById('stepBox').scrollIntoView({ behavior:'smooth', block:'start' });
+  showToast("질문 5개를 만들었습니다. 고쳐 쓰셔도 됩니다.");
+}
+
+function grow(ta) { ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight + 2) + 'px'; }
+
+function onEdit(i) {
+  const ta = document.getElementById('ta-'+i);
+  grow(ta);
+  const changed = ta.value !== BASE[i];
+  document.getElementById('mark-'+i).classList.toggle('hidden', !changed);
+  document.getElementById('rev-'+i).classList.toggle('hidden', !changed);
+}
+
+function revertStep(i) {
+  const ta = document.getElementById('ta-'+i);
+  ta.value = BASE[i];
+  onEdit(i);
+  showToast("원래 프롬프트로 되돌렸습니다.");
+}
+
+function stepText(i) { return document.getElementById('ta-'+i).value; }
+function copyStep(i) { executeCopy(stepText(i)); }
+
+function allText() {
+  return ACTIVE.map((s, i) => `[${s.title}]\n${stepText(i)}`).join("\n\n" + "─".repeat(30) + "\n\n");
+}
+function copyAllSteps() { executeCopy(allText()); }
+
+function downloadSteps() {
+  const blob = new Blob(["\ufeff" + allText()], { type:"text/plain;charset=utf-8" });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = "my_analysis_prompts.txt";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  showToast("텍스트 파일로 저장했습니다.");
+}
+
+function executeCopy(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast("복사했습니다. AI 창에 붙여넣으십시오."))
+      .catch(() => legacyCopy(text));
+  } else legacyCopy(text);
+}
+function legacyCopy(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.setAttribute('readonly','');
+  ta.style.position="fixed"; ta.style.top="0"; ta.style.opacity="0";
+  document.body.appendChild(ta);
+  ta.select(); ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch(e) { ok = false; }
+  document.body.removeChild(ta);
+  showToast(ok ? "복사했습니다. AI 창에 붙여넣으십시오." : "복사에 실패했습니다. 텍스트를 직접 선택해 복사하십시오.", ok ? "" : "error");
+}
+
+function resetVerify() {
+  document.querySelectorAll('.verify').forEach(cb => cb.checked = false);
+  showToast("체크리스트를 초기화했습니다.");
+}
+
+function showToast(msg, type) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast-animate px-4 py-3 rounded-lg shadow-lg text-sm font-medium mb-3 ${type==='error'?'bg-rose-600 text-white':'bg-slate-800 text-white'}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s';
+    setTimeout(() => c.contains(t) && c.removeChild(t), 300); }, 2500);
+}
+
+document.getElementById('sampleSel').addEventListener('change', renderSource);
+renderSource();
+</script>
+
+<!-- ─── 보관함(저장 기능) ─── (주)한국공공자치연구원 AI행정혁신연구소 ─── -->
+<script>
+/* ─────────────────────────────────────────────────────────────
+   보관함 (SaveKit) — 실습 앱 공통 저장 모듈
+   (주)한국공공자치연구원 AI행정혁신연구소
+
+   ① 입력하는 즉시 이 기기의 브라우저에 자동 저장한다.
+      창을 닫거나 새로 고쳐도 그 자리에서 이어서 진행할 수 있다.
+   ② 「이어하기 파일 저장」으로 파일을 내려받아
+      다른 기기 또는 다음 날의 실습에서 「불러오기」로 여는 것이 가능하다.
+   ③ 「기록 지우기」로 이 기기에 남은 입력 흔적을 즉시 삭제한다.
+      공용 PC에서 실습을 마친 경우 반드시 눌러야 한다.
+
+   저장 위치는 이 기기의 브라우저 안이며, 외부로 전송하지 아니한다.
+   ───────────────────────────────────────────────────────────── */
+(function () {
+  'use strict';
+
+  var KEY_PREFIX = 'kilg.';      // 한국공공자치연구원 실습 앱 공통 접두사
+  var SAVE_DELAY = 400;          // 입력이 멎고 0.4초 뒤에 저장한다
+  var cfg = null, timer = null, restoring = false, wiped = false, lastSaved = null;
+
+  /* ── 필드 식별키 ──────────────────────────────────────────
+     id 가 있으면 id 를, 라디오·체크박스는 name+value 를,
+     둘 다 없으면 종류별 등장 순서를 키로 삼는다.            */
+  function fieldKey(el, seq) {
+    var t = (el.type || '').toLowerCase();
+    if ((t === 'radio' || t === 'checkbox') && el.name) return '@' + el.name + '=' + el.value;
+    if (el.id) return '#' + el.id;
+    if (el.name) return '@' + el.name;
+    return '~' + el.tagName.toLowerCase() + ':' + seq;
+  }
+
+  function eachField(fn) {
+    var seq = {};
+    var list = document.querySelectorAll('input, textarea, select');
+    for (var i = 0; i < list.length; i++) {
+      var el = list[i];
+      var t = (el.type || '').toLowerCase();
+      if (t === 'file' || t === 'password' || t === 'button' || t === 'submit') continue;
+      if (el.closest && el.closest('[data-savekit-skip]')) continue;
+      var tag = el.tagName.toLowerCase();
+      seq[tag] = (seq[tag] || 0) + 1;
+      fn(el, fieldKey(el, seq[tag]));
+    }
+  }
+
+  function collect() {
+    var f = {};
+    eachField(function (el, k) {
+      var t = (el.type || '').toLowerCase();
+      f[k] = (t === 'radio' || t === 'checkbox') ? !!el.checked : el.value;
+    });
+    var extra = null;
+    try { extra = cfg.extra ? cfg.extra() : null; } catch (e) { extra = null; }
+    return { app: cfg.appName, appKey: cfg.appKey, savedAt: new Date().toISOString(), fields: f, extra: extra };
+  }
+
+  function applyFields(data) {
+    if (!data || !data.fields) return;
+    eachField(function (el, k) {
+      if (!(k in data.fields)) return;
+      var v = data.fields[k];
+      var t = (el.type || '').toLowerCase();
+      if (t === 'radio' || t === 'checkbox') {
+        if (el.checked !== !!v) { el.checked = !!v; fire(el, 'change'); }
+      } else if (el.value !== v) {
+        el.value = v;
+        fire(el, 'input'); fire(el, 'change');
+      }
+    });
+  }
+
+  function fire(el, type) {
+    try { el.dispatchEvent(new Event(type, { bubbles: true })); } catch (e) { /* 무시 */ }
+  }
+
+  /* ── 브라우저 저장 ────────────────────────────────────── */
+  function storeKey() { return KEY_PREFIX + cfg.appKey; }
+
+  /* 사람이 실제로 적어 넣은 내용이 하나라도 있는지 본다.
+     빈 화면을 저장해 두면 「기록 지우기」 뒤에도 흔적이 남으므로 저장하지 아니한다. */
+  function hasContent() {
+    var yes = false;
+    eachField(function (el) {
+      if (yes) return;
+      var t = (el.type || '').toLowerCase(), tag = el.tagName.toLowerCase();
+      if (t === 'radio' || t === 'checkbox' || tag === 'select') return;
+      if (String(el.value || '').trim()) yes = true;
+    });
+    return yes;
+  }
+
+  function save() {
+    if (restoring || wiped) return;
+    try {
+      if (!hasContent()) {                       // 적은 것이 없으면 저장하지 아니하고 기존 기록도 지운다
+        localStorage.removeItem(storeKey());
+        return;
+      }
+      var d = collect();
+      localStorage.setItem(storeKey(), JSON.stringify(d));
+      lastSaved = new Date();
+      paint('자동 저장됨 · ' + hhmm(lastSaved));
+    } catch (e) {
+      paint('이 브라우저는 자동 저장을 쓸 수 없는 설정입니다. 「이어하기 파일 저장」을 이용하십시오.', true);
+    }
+  }
+
+  function scheduleSave() {
+    if (restoring || wiped) return;
+    clearTimeout(timer);
+    timer = setTimeout(save, SAVE_DELAY);
+  }
+
+  function restore(data, source) {
+    if (!data) return false;
+    restoring = true;
+    try {
+      applyFields(data);                                   // 1차 — 지금 화면에 있는 칸
+      if (cfg.afterRestore) { try { cfg.afterRestore(data.extra || {}); } catch (e) { } }
+      applyFields(data);                                   // 2차 — 1차 뒤에 새로 그려진 칸
+    } finally {
+      restoring = false;
+    }
+    var when = data.savedAt ? new Date(data.savedAt) : null;
+    var msg = source === 'file'
+      ? '이어하기 파일을 불러왔습니다.'
+      : '이전에 입력하신 내용을 불러왔습니다' + (when ? ' (' + mmdd(when) + ' ' + hhmm(when) + ')' : '') + '.';
+    paint(msg);
+    toast(msg);
+    setTimeout(function () { paint('자동 저장됨 · ' + hhmm(new Date())); }, 4000);
+    return true;
+  }
+
+  function restoreFromBrowser() {
+    var raw;
+    try { raw = localStorage.getItem(storeKey()); } catch (e) { return false; }
+    if (!raw) return false;
+    var data;
+    try { data = JSON.parse(raw); } catch (e) { return false; }
+    return restore(data, 'browser');
+  }
+
+  /* ── 파일 내보내기 · 불러오기 ─────────────────────────── */
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function hhmm(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function mmdd(d) { return (d.getMonth() + 1) + '월 ' + d.getDate() + '일'; }
+  function stamp(d) {
+    return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes());
+  }
+
+  function exportFile() {
+    var d = collect();
+    d._안내 = '이 파일은 「' + cfg.appName + '」의 이어하기 파일입니다. '
+            + '앱 화면 아래쪽 보관함의 「이어하기 파일 열기」로 이 파일을 여시면 저장한 시점부터 이어서 진행할 수 있습니다.';
+    var body = '﻿' + JSON.stringify(d, null, 2);
+    var when = stamp(new Date());
+    // 브라우저가 한글 파일명을 지우는 경우가 있어, 내려받기 이름은 영문으로 둔다.
+    var asciiName = cfg.fileName + '_resume_' + when + '.json';
+    var korName = cfg.appName.replace(/\s+/g, '') + '_이어하기_' + when + '.json';
+    var done = function () {
+      toast('이어하기 파일을 저장하였습니다. 다음 실습에서 「이어하기 파일 열기」로 여십시오.');
+      paint('이어하기 파일로 저장함 · ' + hhmm(new Date()));
+    };
+
+    // ① 저장 위치를 고를 수 있는 브라우저에서는 한글 이름을 그대로 쓴다.
+    if (typeof window.showSaveFilePicker === 'function') {
+      window.showSaveFilePicker({
+        suggestedName: korName,
+        types: [{ description: '이어하기 파일', accept: { 'application/json': ['.json'] } }]
+      }).then(function (h) {
+        return h.createWritable().then(function (w) {
+          return w.write(body).then(function () { return w.close(); });
+        });
+      }).then(done).catch(function (e) {
+        if (e && e.name === 'AbortError') return;   // 이용자가 취소한 경우
+        blobDownload(body, asciiName); done();
+      });
+      return;
+    }
+    // ② 그 밖의 브라우저는 곧바로 내려받는다.
+    blobDownload(body, asciiName);
+    done();
+  }
+
+  function blobDownload(body, name) {
+    var blob = new Blob([body], { type: 'application/json;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name; a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }
+
+  function importFile(file) {
+    var r = new FileReader();
+    r.onload = function () {
+      var text = String(r.result || '').replace(/^﻿/, '');
+      var data;
+      try { data = JSON.parse(text); } catch (e) {
+        toast('이어하기 파일이 아닙니다. 앱에서 내려받은 파일인지 확인하십시오.', 'error');
+        return;
+      }
+      if (data.appKey && data.appKey !== cfg.appKey) {
+        toast('다른 앱의 이어하기 파일입니다. (' + (data.app || '알 수 없음') + ')', 'error');
+        return;
+      }
+      restore(data, 'file');
+      save();
+    };
+    r.readAsText(file, 'utf-8');
+  }
+
+  function wipe() {
+    if (!confirm('이 기기에 저장된 입력 내용을 지웁니다.\n지운 뒤에는 되돌릴 수 없으므로, 필요한 내용은 먼저 「이어하기 파일 저장」을 눌러 두십시오.\n\n지우시겠습니까?')) return;
+    wiped = true;                               // 이후의 자동 저장을 모두 막는다
+    clearTimeout(timer);
+    // 화면에 남은 입력도 함께 비운다. 비우지 아니하면 페이지를 떠나는 순간 다시 저장된다.
+    eachField(function (el) {
+      var t = (el.type || '').toLowerCase();
+      if (t === 'radio' || t === 'checkbox' || el.tagName.toLowerCase() === 'select') return;
+      el.value = '';
+    });
+    try { localStorage.removeItem(storeKey()); } catch (e) { }
+    paint('기록을 지웠습니다.');
+    toast('이 기기에 남아 있던 입력 내용을 지웠습니다.');
+    setTimeout(function () { location.reload(); }, 700);
+  }
+
+  /* ── 화면 아래 보관함 막대 ───────────────────────────── */
+  var bar, label;
+
+  function paint(text, warn) {
+    if (!label) return;
+    label.textContent = text;
+    label.style.color = warn ? '#b91c1c' : '#334155';
+  }
+
+  function toast(msg, type) {
+    if (typeof window.showToast === 'function') { try { window.showToast(msg, type); return; } catch (e) { } }
+    paint(msg, type === 'error');
+  }
+
+  function buildBar() {
+    var css = document.createElement('style');
+    css.textContent = [
+      '#savekit-bar{position:fixed;left:0;right:0;bottom:0;z-index:9999;',
+      'display:flex;align-items:center;gap:8px;flex-wrap:wrap;',
+      'padding:8px 14px;background:#f8fafc;border-top:1px solid #cbd5e1;',
+      'font-family:inherit;font-size:13px;box-shadow:0 -2px 8px rgba(15,23,42,.06)}',
+      '#savekit-bar .sk-t{font-weight:700;color:#0f172a;margin-right:2px;white-space:nowrap}',
+      '#savekit-bar .sk-s{flex:1 1 160px;min-width:120px;color:#334155}',
+      '#savekit-bar button{border:1px solid #cbd5e1;background:#fff;color:#0f172a;',
+      'border-radius:6px;padding:5px 11px;font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit}',
+      '#savekit-bar button:hover{background:#e2e8f0}',
+      '#savekit-bar button.sk-danger{color:#b91c1c;border-color:#fecaca}',
+      '#savekit-bar button.sk-danger:hover{background:#fee2e2}',
+      '@media print{#savekit-bar{display:none}}'
+    ].join('');
+    document.head.appendChild(css);
+
+    bar = document.createElement('div');
+    bar.id = 'savekit-bar';
+    bar.setAttribute('data-savekit-skip', '1');
+    bar.innerHTML =
+      '<span class="sk-t">보관함</span>' +
+      '<span class="sk-s" id="savekit-status">입력하시면 이 기기에 자동으로 저장됩니다.</span>' +
+      '<button type="button" id="savekit-export">이어하기 파일 저장</button>' +
+      '<button type="button" id="savekit-import">이어하기 파일 열기</button>' +
+      '<button type="button" class="sk-danger" id="savekit-wipe">기록 지우기</button>' +
+      '<input type="file" id="savekit-file" accept=".json,application/json" style="display:none">';
+    document.body.appendChild(bar);
+    label = document.getElementById('savekit-status');
+
+    document.getElementById('savekit-export').onclick = exportFile;
+    document.getElementById('savekit-wipe').onclick = wipe;
+    document.getElementById('savekit-import').onclick = function () {
+      document.getElementById('savekit-file').click();
+    };
+    document.getElementById('savekit-file').onchange = function (e) {
+      if (e.target.files && e.target.files[0]) importFile(e.target.files[0]);
+      e.target.value = '';
+    };
+
+    fitBody();
+    window.addEventListener('resize', fitBody);
+  }
+
+  /* 막대가 화면 아래를 차지하므로 그만큼 본문 자리를 좁힌다.
+     화면 전체를 쓰는 앱(h-screen)과 아래로 흐르는 앱을 나누어 처리한다. */
+  function fitBody() {
+    if (!bar) return;
+    var h = bar.offsetHeight;
+    var b = document.body, cs = window.getComputedStyle(b);
+    var full = (cs.overflowY === 'hidden' || cs.overflow === 'hidden')
+               && b.getBoundingClientRect().height >= window.innerHeight - 2;
+    if (full) {                                   // 화면에 꽉 채워 쓰는 앱
+      var mt = parseFloat(cs.marginTop) || 0, mb = parseFloat(cs.marginBottom) || 0;
+      b.style.height = 'calc(100vh - ' + (h + mt + mb) + 'px)';
+      b.style.paddingBottom = '';
+    } else {                                      // 아래로 길어지는 앱
+      b.style.paddingBottom = (h + 10) + 'px';
+    }
+  }
+
+  /* ── 시작 ────────────────────────────────────────────── */
+  function start(options) {
+    cfg = options;
+    buildBar();
+    restoreFromBrowser();
+    document.addEventListener('input', scheduleSave, true);
+    document.addEventListener('change', scheduleSave, true);
+    window.addEventListener('beforeunload', function () { clearTimeout(timer); save(); });
+    // 앱이 스스로 값을 바꾸는 경우(예시 불러오기·단계 이동)도 주기적으로 담아 둔다
+    setInterval(save, 5000);
+  }
+
+  window.SaveKit = { init: function (o) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { start(o); });
+    } else { start(o); }
+  } };
+})();
+
+SaveKit.init({
+  appKey  : 'data-insight-lab',
+  appName : 'AI 행정 데이터 인사이트 실습기',
+  fileName: '02-02_data-insight-lab',
+  extra   : function () {
+      return { built: !!document.getElementById('ta-0') };
+    },
+  afterRestore: function (x) {
+      // 5단계 지시문이 만들어진 상태였다면 다시 만들어 편집 내용을 되살린다.
+      if (typeof onDataInput === 'function') { try { onDataInput(); } catch (e) {} }
+      if (typeof renderSource === 'function') { try { renderSource(); } catch (e) {} }
+      var raw = document.getElementById('rawData');
+      if (x.built && raw && raw.value.trim() && typeof buildSteps === 'function') {
+        try { buildSteps(); } catch (e) {}
+      }
+    }
+});
+</script>
+</body>
+</html>
