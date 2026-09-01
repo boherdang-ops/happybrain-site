@@ -4,28 +4,96 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 
 const { title, description } = Astro.props;
+
 const siteName = '해피브레인';
-const fullTitle = title ? `${title} — ${siteName}` : `${siteName} · AI 행정혁신 연구노트`;
-const desc = description ?? '지자체 공무원을 위한 AI 활용, 그리고 사람이 남기는 프리미엄에 대한 기록. 박상득(해피브레인)의 글·책·영상 아카이브.';
+const siteUrl = 'https://happybrain.ai.kr';
+
+const fullTitle = title ? `${title} | ${siteName}` : `${siteName} - AI 행정혁신 연구노트`;
+
+const desc =
+  description ??
+  '지자체 공무원을 위한 AI 활용, 그리고 사람이 남기는 프리미엄에 대한 기록. 박상득(해피브레인)의 글·책·영상 아카이브.';
+
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl).href;
+
+const ogImage = new URL('/kpa-logo.png', siteUrl).href;
 ---
+
 <!doctype html>
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+
+    <!-- 기본 SEO -->
     <title>{fullTitle}</title>
+
     <meta name="description" content={desc} />
+
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:locale" content="ko_KR" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={desc} />
-    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImage} />
+
+    <!-- Twitter / SNS -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={desc} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- 사이트 아이콘 -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <!-- 구조화 데이터 : WebSite -->
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: siteName,
+        url: siteUrl,
+        inLanguage: 'ko-KR',
+        description: desc
+      })}
+    />
+
+    <!-- 구조화 데이터 : Person -->
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: '박상득',
+        alternateName: '해피브레인',
+        url: siteUrl
+      })}
+    />
   </head>
+
   <body>
     <a class="skip" href="#main">본문 바로가기</a>
+
     <Header />
+
     <main id="main">
       <slot />
     </main>
+
     <Footer />
   </body>
 </html>
