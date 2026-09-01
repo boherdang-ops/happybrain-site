@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://happybrain.ai.kr/sitemap.xml
