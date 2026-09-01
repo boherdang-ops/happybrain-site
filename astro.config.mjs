@@ -1,10 +1,10 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig } from 'astro/config'
 
-// 배포 후 실제 도메인으로 바꿔주세요 (예: 'https://happybrain.kr')
+// 배포 시 실제 도메인으로 바꿔주세요
 export default defineConfig({
-  site: 'https://example.com',
+  site: 'https://happybrain.ai.kr',
   build: {
     format: 'directory',
   },
-});
+})
