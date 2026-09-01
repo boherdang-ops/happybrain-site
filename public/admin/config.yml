@@ -237,6 +237,9 @@ collections:
         label: "법인 정보 (소개·푸터에 반영)"
         file: "src/data/org.json"
         fields:
+          - { name: siteName, label: "검색 노출용 사이트 이름 (예: AI행정혁신연구소)", widget: string, required: false }
+          - { name: siteTagline, label: "검색 결과 제목 (예: 한국공공자치연구원 AI행정혁신연구소)", widget: string, required: false }
+          - { name: siteDescription, label: "검색 결과 설명문 (2~3줄)", widget: text, required: false }
           - { name: name, label: "법인/기관 정식 명칭", widget: string }
           - { name: shortName, label: "짧은 이름 (푸터 표기)", widget: string }
           - { name: mission, label: "한 줄 슬로건", widget: string, required: false }

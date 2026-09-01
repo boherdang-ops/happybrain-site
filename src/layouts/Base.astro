@@ -2,17 +2,18 @@
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import org from '../data/org.json';
 
 const { title, description } = Astro.props;
 
-const siteName = '해피브레인';
+// 사이트 이름·설명은 /admin → 페이지 내용 → 법인 정보에서 수정할 수 있습니다.
+const siteName = org.siteName || org.shortName || 'AI행정혁신연구소';
+const siteTagline = org.siteTagline || org.name || siteName;
 const siteUrl = 'https://happybrain.ai.kr';
 
-const fullTitle = title ? `${title} | ${siteName}` : `${siteName} - AI 행정혁신 연구노트`;
+const fullTitle = title ? `${title} | ${siteName}` : siteTagline;
 
-const desc =
-  description ??
-  '지자체 공무원을 위한 AI 활용, 그리고 사람이 남기는 프리미엄에 대한 기록. 박상득(해피브레인)의 글·책·영상 아카이브.';
+const desc = description ?? org.siteDescription ?? org.intro;
 
 const canonicalUrl = new URL(Astro.url.pathname, siteUrl).href;
 
@@ -75,15 +76,20 @@ const ogImage = new URL('/kpa-logo.png', siteUrl).href;
       })}
     />
 
-    <!-- 구조화 데이터 : Person -->
+    <!-- 구조화 데이터 : Organization (기관) -->
     <script
       type="application/ld+json"
       set:html={JSON.stringify({
         '@context': 'https://schema.org',
-        '@type': 'Person',
-        name: '박상득',
-        alternateName: '해피브레인',
-        url: siteUrl
+        '@type': 'EducationalOrganization',
+        name: org.name,
+        alternateName: org.shortName,
+        url: siteUrl,
+        logo: ogImage,
+        description: org.intro,
+        ...(org.address ? { address: org.address } : {}),
+        ...(org.phone ? { telephone: org.phone } : {}),
+        ...(org.email ? { email: org.email } : {})
       })}
     />
   </head>
