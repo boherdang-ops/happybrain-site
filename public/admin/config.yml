@@ -119,7 +119,7 @@ collections:
             widget: text
         description: 홈 화면 순서대로 편집합니다. 서비스 연결은 상단 메뉴와 법인 소개에도 함께 반영됩니다.
         preview_path: /
-      - name: home
+      - name: display_home
         label: 첫 화면 · 버튼과 하단 연결
         file: src/data/display-home.json
         fields:
@@ -212,7 +212,7 @@ collections:
             widget: string
             required: false
         preview_path: /about/
-      - name: about
+      - name: display_about
         label: 법인 소개 · 화면 제목
         file: src/data/display-about.json
         fields:
@@ -275,7 +275,7 @@ collections:
             label: 교육 문의 이메일 아래 안내
             widget: text
         preview_path: /contact/
-      - name: contact
+      - name: display_contact
         label: 사업 문의 · 제목과 질문하기
         file: src/data/display-contact.json
         fields:
@@ -329,7 +329,7 @@ collections:
     editor:
       preview: false
     files:
-      - name: insights
+      - name: display_insights
         label: 인사이트 · 상단 소개
         file: src/data/display-insights.json
         fields:
@@ -346,7 +346,7 @@ collections:
             label: 상단 소개
             widget: text
         preview_path: /writing/
-      - name: news
+      - name: display_news
         label: 공지·소식 · 상단 소개
         file: src/data/display-news.json
         fields:
@@ -360,7 +360,7 @@ collections:
             label: 작은 윗줄
             widget: string
         preview_path: /news/
-      - name: resources
+      - name: display_resources
         label: 교육 자료실 · 상단 소개
         file: src/data/display-resources.json
         fields:
@@ -386,7 +386,7 @@ collections:
             label: Learning Hub 연결 주소
             widget: string
         preview_path: /resources/
-      - name: videos
+      - name: display_videos
         label: 영상 · 상단 소개
         file: src/data/display-videos.json
         fields:
@@ -400,7 +400,7 @@ collections:
             label: 상단 소개
             widget: text
         preview_path: /videos/
-      - name: apps
+      - name: display_apps
         label: 기존 행정지원앱 · 상단 소개
         file: src/data/display-apps.json
         fields:
@@ -492,7 +492,7 @@ collections:
             label: 푸터 설명
             widget: text
         preview_path: /
-      - name: common
+      - name: display_common
         label: 상단 메뉴·로고·푸터 표기
         file: src/data/display-common.json
         fields:
