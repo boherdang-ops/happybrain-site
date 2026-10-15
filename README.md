@@ -1,30 +1,22 @@
-# 해피브레인 — 개인 사이트 겸 콘텐츠 허브
+# 한국공공자치연구원 AI행정혁신연구소 법인 홈페이지
 
-박상득(해피브레인)의 글·책·영상 아카이브. AI 행정혁신에 대한 기록을 쌓고, 지자체 담당자에게 하는 일을 보여주는 사이트입니다.
+공공 AI 교육·연구·컨설팅을 소개하고 교육 안내, Learning Hub, 실무지원을 연결합니다.
 
-- **사이트:** Astro (정적 사이트, 빠르고 무료로 호스팅)
-- **글쓰기:** Sveltia CMS — 브라우저 `/admin`에서 Brunch처럼 작성
-- **호스팅:** Cloudflare Pages (무료)
+- 운영: https://happybrain.ai.kr/
+- 관리: https://happybrain.ai.kr/admin/ (기존 Sveltia CMS)
+- 배포: 기존 Cloudflare Pages 연동
 
-## 시작하기
-설치·배포·운영 방법은 **[SETUP.md](./SETUP.md)** 를 보세요.
+## 내용 수정
 
-## 로컬 실행
-```bash
-npm install
-npm run dev      # http://localhost:4321
-npm run build    # dist/ 에 정적 파일 생성
-```
+페이지 내용 → 법인 홈페이지 · 첫 화면: 첫 화면 문구.
+페이지 내용 → 법인 홈페이지 · 사업과 서비스: 섹션 문구, 서비스 연결, 교육과정 요약과 협의 단계.
+페이지 내용 → 법인 정보: 명칭·대표·연락처·사업 영역.
+페이지 내용 → 소개 페이지: 대표 인사말. 과거 자료는 미표시 항목으로 보존합니다.
 
-## 구조
-```
-src/
-  pages/        홈 · 글 · 책 · 영상 · 소개 · 강의·문의
-  content/      글·책·영상 콘텐츠 (마크다운)
-  components/   헤더 · 푸터
-  layouts/      공통 레이아웃
-  styles/       디자인 시스템 (색·타이포)
-public/
-  admin/        Sveltia CMS (브라우저 글쓰기 화면)
-  uploads/      업로드 이미지
-```
+교육과정 요약 변경 시 교육 안내 사이트와 대조합니다. 세 서비스의 상세 정보와 기록은 각 서비스의 기존 관리 화면에서 관리합니다. 홈페이지의 기존 콘텐츠 주소와 자료 접근 제어는 유지합니다.
+
+## 검증과 빌드
+
+npm ci
+npm run build
+npm run preview
