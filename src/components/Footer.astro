@@ -1,14 +1,16 @@
 ---
+import display from '../data/display-common.json';
+import footer from '../data/footer.json';
 import org from '../data/org.json';
 import corporate from '../data/corporate.json';
 const year = new Date().getFullYear();
 ---
 <footer class="site-footer">
  <div class="wrap footer-main">
-  <div class="footer-invitation"><p class="eyebrow">LET’S WORK TOGETHER</p><h2>{corporate.ctaTitle.split('\n').map((line,i)=><>{i>0&&<br/>}{line}</>)}</h2><p>{corporate.ctaBody}</p></div>
+  <div class="footer-invitation"><p class="eyebrow">{display.footerEyebrow}</p><h2>{footer.ctaTitle.split('\n').map((line,i)=><>{i>0&&<br/>}{line}</>)}</h2><p>{footer.ctaBody}</p></div>
   <dl class="footer-company" aria-label="법인 정보"><div><dt>기관명</dt><dd>{org.name}</dd></div>{org.ceo&&<div><dt>대표자</dt><dd>{org.ceo}</dd></div>}{org.bizNumber&&<div><dt>사업자등록번호</dt><dd>{org.bizNumber}</dd></div>}{org.address&&<div><dt>주소</dt><dd>{org.address}</dd></div>}{org.phone&&<div><dt>대표 전화</dt><dd><a href={`tel:${org.phone.replace(/[^0-9+]/g,'')}`}>{org.phone}</a></dd></div>}{org.email&&<div><dt>이메일</dt><dd><a href={`mailto:${org.email}`}>{org.email}</a></dd></div>}</dl>
  </div>
- <div class="wrap footer-baseline"><span>© {year} {org.name}</span><span>AI ADMINISTRATIVE INNOVATION</span></div>
+ <div class="wrap footer-baseline"><span>© {year} {org.name}</span><span>{display.footerTagline}</span></div>
 </footer>
 <style>
 .site-footer{background:#132c3a;color:#fff}.footer-main{display:grid;grid-template-columns:1.25fr 1fr;gap:70px;align-items:center;padding-block:64px}.footer-invitation .eyebrow{font-size:10px}.footer-invitation h2{font-family:var(--sans);font-size:clamp(1.7rem,3vw,2.5rem);line-height:1.4;letter-spacing:-.04em;color:white;word-break:keep-all}.footer-invitation>p:last-child{font-size:14px;line-height:1.9;color:#c0d1d5;margin:22px 0 0;max-width:600px}.footer-company{display:flex;flex-direction:column;gap:11px;margin:0;border-left:1px solid #ffffff30;padding-left:30px}.footer-company>div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:baseline}.footer-company dt{font-size:11px;color:#d6bb8c}.footer-company dd{margin:0;font-size:12px;color:#dbe6e8;line-height:1.75;overflow-wrap:anywhere}.footer-company a{color:inherit}.footer-baseline{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;font-size:10px;color:#a4bdc3;padding-block:20px;border-top:1px solid #ffffff20}.footer-baseline span:last-child{font-family:var(--mono);font-size:9px;letter-spacing:.08em}@media(max-width:760px){.footer-main{grid-template-columns:1fr;gap:32px;padding-block:42px}.footer-company{border-left:0;border-top:1px solid #ffffff30;padding:24px 0 0}.footer-company>div{grid-template-columns:88px minmax(0,1fr)}.footer-baseline{gap:8px;font-size:9px}}@media print{.site-footer{background:white;color:#111;border-top:1px solid #bbb}.footer-main{padding-block:20px;gap:30px}.footer-invitation h2,.footer-company dd,.footer-company dt,.footer-invitation>p:last-child,.footer-baseline{color:#111}.footer-company{border-color:#bbb}}

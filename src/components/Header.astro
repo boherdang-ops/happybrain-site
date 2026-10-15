@@ -1,15 +1,16 @@
 ---
+import display from '../data/display-common.json';
 import org from '../data/org.json';
 import banner from '../data/banner.json';
 import {publicLink} from '../lib/banner.mjs';
 import corporate from '../data/corporate.json';
 const path = Astro.url.pathname;
-const nav = [{href:'/about/',label:'법인 소개'},{href:'/#business',label:'사업 영역'},...corporate.services.map(s=>({href:s.url,label:s.title})),{href:'/news/',label:'공지·소식'},{href:'/writing/',label:'인사이트'},{href:'/contact/',label:'사업 문의'}];
+const nav = [{href:'/about/',label:display.navAbout},{href:'/#business',label:display.navBusiness},...corporate.services.map(s=>({href:s.url,label:s.title})),{href:'/news/',label:display.navNews},{href:'/writing/',label:display.navInsights},{href:'/contact/',label:display.navContact}];
 ---
 <aside id="site-banner" class="site-banner" aria-label="주요 알림" hidden data-banner={JSON.stringify(banner)}><div class="wrap banner-inner">{publicLink(banner.image)&&<img src={publicLink(banner.image)} alt={banner.imageAlt||''} width="100" height="65"/>}<div class="banner-copy"><strong>{banner.title}</strong>{banner.description&&<p>{banner.description}</p>}</div>{publicLink(banner.link)&&<a href={publicLink(banner.link)}>{banner.linkLabel||'자세히 보기'} ↗</a>}{banner.dismissible&&<button type="button" id="banner-close" aria-label="알림 배너 닫기">×</button>}</div></aside>
 <header class="site-header">
  <div class="wrap bar">
-  <a class="brand" href="/" aria-label={`${org.name} 홈`}><img src="/kpa-symbol.png" alt="KPA" width="70" height="28"/><span><small>한국공공자치연구원</small><strong>{org.shortName}</strong></span></a>
+  <a class="brand" href="/" aria-label={`${org.name} 홈`}><img src={display.brandImage} alt={display.brandImageAlt} width="70" height="28"/><span><small>{display.brandParent}</small><strong>{org.shortName}</strong></span></a>
   <button id="nav-toggle" aria-expanded="false" aria-controls="primary-nav">메뉴 <span aria-hidden="true">☰</span></button>
   <nav id="primary-nav" aria-label="주요 메뉴"><ul>{nav.map(n=><li><a href={n.href} aria-current={path===n.href?'page':undefined} class:list={{current:path===n.href,consult:n.href==='/contact/'}}>{n.label}</a></li>)}</ul></nav>
  </div>
