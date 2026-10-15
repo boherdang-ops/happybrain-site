@@ -1,54 +1,18 @@
 ---
 import Base from '../../layouts/Base.astro';
 import contact from '../../data/contact.json';
-import site from '../../data/site.json';
 import org from '../../data/org.json';
-import corporate from '../../data/corporate.json';
-
+import {publicLink} from '../../lib/banner.mjs';
 const email = org.email || contact.email;
-const { note } = contact;
-const channels = site.channels;
+const mailLink=`mailto:${email}?subject=${encodeURIComponent(contact.inquirySubject || '교육·사업 문의')}`;
 ---
-<Base title="사업 문의" description="지방정부·공공기관의 AI 교육 및 행정혁신 컨설팅 문의.">
-  <section class="page-head">
-    <div class="wrap">
-      <p class="eyebrow">Contact</p>
-      <h1>사업 문의</h1>
-      <p class="page-lead">기관의 교육대상과 일정, 해결하려는 업무를 바탕으로 교육·컨설팅 방향을 함께 검토합니다.</p>
-    </div>
-  </section>
-
-  <section class="section wrap contact-grid">
-    <div>
-      <p class="eyebrow">Email</p>
-      <a class="email" href={`mailto:${email}`}>{email}</a>
-      <p class="note">{note}</p>{org.phone && <p><strong>대표 전화</strong><br/><a href={`tel:${org.phone.replace(/[^0-9+]/g,'')}`}>{org.phone}</a></p>}<div class="inquiry-guide"><h2>문의 시 알려주세요</h2><ul><li>기관명과 담당 부서</li><li>교육대상·인원·희망 일정</li><li>해결하려는 업무와 필요한 지원</li></ul></div>
-    </div>
-    <div>
-      <p class="eyebrow">SERVICE DESK</p><h2>업무 적용 중 도움이 필요하신가요?</h2><p class="note">실무지원 사이트에서 AI 활용 방법을 확인하거나 운영자에게 지원을 요청할 수 있습니다.</p><a class="btn" href={corporate.services[2].url}>실무지원 이용하기 ↗</a><p class="eyebrow channel-label">참고 채널</p>
-      <ul class="channels">
-        {channels.map((c) => (
-          <li><a href={c.href} target="_blank" rel="noopener">{c.label} →</a></li>
-        ))}
-      </ul>
-    </div>
-  </section>
+<Base title="사업 문의" description="지방정부·공공기관을 위한 교육 문의와 사업 관련 Q&A.">
+ <section class="page-head"><div class="wrap"><p class="eyebrow">CONTACT</p><h1>사업 문의</h1><p class="page-lead">기관의 교육대상과 일정, 해결하려는 업무를 바탕으로 교육·컨설팅 방향을 함께 검토합니다.</p></div></section>
+ <section class="section wrap contact-grid">
+  <div class="education-inquiry" aria-labelledby="education-inquiry-heading"><p class="eyebrow">EDUCATION INQUIRY</p><h2 id="education-inquiry-heading">교육 문의</h2><a class="email" href={mailLink}>{email}</a><p class="note">{contact.note}</p>{org.phone&&<p class="phone"><strong>대표 전화</strong><a href={`tel:${org.phone.replace(/[^0-9+]/g,'')}`}>{org.phone}</a></p>}<div class="inquiry-guide"><h3>문의 시 알려주세요</h3><ul><li>기관명과 담당 부서</li><li>교육대상·인원·희망 일정</li><li>관심 있는 교육과정 또는 해결하려는 업무</li></ul></div><a class="btn" href={mailLink}>교육 문의 메일 작성 ↗</a></div>
+  <div class="faq" aria-labelledby="faq-heading"><p class="eyebrow">Q&A</p><h2 id="faq-heading">자주 묻는 질문</h2><div class="faq-list">{(contact.faqs||[]).map(item=><details><summary>{item.question}</summary><div class="faq-answer"><p>{item.answer}</p>{publicLink(item.link)&&<a href={publicLink(item.link)}>{item.linkLabel||'관련 안내 보기'} ↗</a>}</div></details>)}</div></div>
+ </section>
 </Base>
-
 <style>
-  .page-head { background: var(--navy-deep); color: var(--paper-on-navy); }
-  .page-head .wrap { padding-block: clamp(3rem, 8vw, 5rem); }
-  .page-head h1 { color: #fff; margin-top: .8rem; }
-  .page-head .eyebrow { color: var(--gold); }
-  .page-head .eyebrow::before { background: var(--gold); }
-  .page-lead { color: var(--paper-on-navy); max-width: 34rem; margin-top: 1rem; }
-
-  .contact-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 3rem; align-items: start; }
-  .email { font-family: var(--serif); font-size: clamp(1.4rem, 4vw, 2.1rem); font-weight: 600; color: var(--ink); display: inline-block; margin: .6rem 0 1.2rem; border-bottom: 2px solid var(--gold); }
-  .email:hover { text-decoration: none; color: var(--blue); }
-  .note { color: var(--muted); max-width: 30rem; line-height: 1.7; }
-  .channels { list-style: none; margin: .6rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .7rem; }
-  .channels a { font-size: 1.05rem; }
-  @media (max-width: 620px) { .contact-grid { grid-template-columns: 1fr; gap: 2rem; } }
-h1,h2{font-family:var(--sans);word-break:keep-all}.contact-grid h2{font-size:1.25rem;margin-bottom:18px}.email{overflow-wrap:anywhere;max-width:100%;font-family:var(--sans)}.inquiry-guide{border-top:1px solid var(--line);margin-top:28px;padding-top:24px}.inquiry-guide ul{padding-left:20px;font-size:15px}.channel-label{display:block;margin-top:35px}
+h1,h2,h3{font-family:var(--sans);word-break:keep-all}.page-head{background:var(--navy-deep);color:var(--paper-on-navy)}.page-head .wrap{padding-block:clamp(3rem,8vw,5rem)}.page-head h1{color:#fff;margin-top:.8rem}.page-head .eyebrow{color:var(--gold)}.page-lead{color:var(--paper-on-navy);max-width:36rem;margin:1rem 0 0}.contact-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:64px;align-items:start}.contact-grid h2{font-size:1.6rem;line-height:1.4;margin-bottom:20px}.email{font-size:clamp(1.15rem,2.4vw,1.7rem);font-weight:600;display:inline-block;color:var(--ink);border-bottom:2px solid var(--gold);margin-bottom:20px;max-width:100%;overflow-wrap:anywhere;line-height:1.6}.email:hover{text-decoration:none;color:var(--blue)}.note{font-size:14px;color:var(--muted);line-height:1.85;max-width:31rem}.phone{display:flex;flex-direction:column;gap:5px;margin:24px 0}.phone strong{font-size:13px}.phone a{font-size:15px}.inquiry-guide{border-top:1px solid var(--line);padding-top:23px;margin:26px 0}.inquiry-guide h3{font-size:17px}.inquiry-guide ul{padding-left:20px;margin:14px 0 0;font-size:14px;line-height:1.9;color:var(--muted)}.education-inquiry .btn{font-size:14px}.faq-list{border-top:1px solid #cad7d3}.faq details{border-bottom:1px solid #cad7d3;padding:19px 0}.faq summary{cursor:pointer;font-size:15px;font-weight:600;line-height:1.75;word-break:keep-all}.faq-answer{padding:15px 0 0 18px}.faq-answer p{font-size:14px;color:var(--muted);line-height:1.9;margin:0}.faq-answer a{display:inline-block;margin-top:12px;font-size:13px;font-weight:600}@media(max-width:760px){.contact-grid{grid-template-columns:1fr;gap:40px}.contact-grid h2{font-size:1.4rem}.email{font-size:clamp(1.05rem,5vw,1.5rem)}.section{padding-block:40px}}@media print{.faq details{break-inside:avoid}.education-inquiry .btn{display:none}.faq-answer{padding-left:0}}
 </style>
