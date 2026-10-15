@@ -107,3 +107,6 @@ img { max-width: 100%; display: block; }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .skip { position: absolute; left: -999px; }
 .skip:focus { left: 1rem; top: 1rem; z-index: 100; background: var(--ink); color: var(--paper); padding: .5rem .9rem; border-radius: 2px; }
+
+/* Corporate site: shared layout and accessible navigation. */
+html{scroll-padding-top:105px}main{overflow-wrap:break-word}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #317b89;outline-offset:4px}@media print{.site-header,.skip{display:none}.site-footer{break-inside:avoid}a{overflow-wrap:anywhere}}
