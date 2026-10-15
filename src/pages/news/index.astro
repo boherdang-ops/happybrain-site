@@ -1,12 +1,13 @@
 ---
+import display from '../../data/display-news.json';
 import Base from '../../layouts/Base.astro';
 import {getCollection} from 'astro:content';
 const posts=(await getCollection('notices',({data})=>!data.draft)).sort((a,b)=>Number(b.data.pinned)-Number(a.data.pinned)||b.data.date.valueOf()-a.data.date.valueOf());
 const categories=['공지','홍보','AI 정책','교육 정보'];
 const fmt=d=>new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
 ---
-<Base title="공지·소식" description="AI행정혁신연구소의 공지와 홍보, 공공 AI 정책 및 교육 정보.">
-<section class="page-head"><div class="wrap"><p class="eyebrow">NEWS & NOTICES</p><h1>공지·소식</h1><p>법인 소식과 공고, 공공 AI 정책 및 교육 정보를 전합니다.</p></div></section>
+<Base title={display.title} description="AI행정혁신연구소의 공지와 홍보, 공공 AI 정책 및 교육 정보.">
+<section class="page-head"><div class="wrap"><p class="eyebrow">{display.eyebrow}</p><h1>{display.title}</h1><p>{display.intro}</p></div></section>
 <section class="section wrap"><div class="board-controls"><div role="group" aria-label="게시글 분류"><button type="button" data-category="all" aria-pressed="true">전체</button>{categories.map(c=><button type="button" data-category={c} aria-pressed="false">{c}</button>)}</div><label><span class="visually-hidden">게시글 검색</span><input type="search" id="notice-search" placeholder="제목·내용 검색" aria-label="게시글 검색"/></label></div>
 <div class="board-list">{posts.map(p=><a class="board-item" href={`/news/${p.id}/`} data-notice data-category={p.data.category} data-search={`${p.data.title} ${p.data.summary||''}`}><span class="board-meta">{p.data.pinned&&<b>고정</b>}{p.data.category}</span><div><h2>{p.data.title}</h2>{p.data.summary&&<p>{p.data.summary}</p>}{p.data.attachments.length>0&&<span class="attachment-note">첨부자료 {p.data.attachments.length}건</span>}</div><time datetime={p.data.date.toISOString()}>{fmt(p.data.date)}</time></a>)}</div>
 <p id="notice-empty" role="status" hidden={posts.length>0}>{posts.length?'조건에 맞는 게시글이 없습니다.':'등록된 소식이 없습니다.'}</p>
