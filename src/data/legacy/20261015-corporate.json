@@ -1,0 +1,89 @@
+{
+  "businessTitle": "교육에서 실제 업무 적용까지,\n행정의 변화를 함께 설계합니다.",
+  "businessIntro": "지방정부와 공공기관의 AI 활용 교육, 행정혁신 컨설팅, 연구·콘텐츠 개발을 수행합니다. 교육 안내와 학습, 실무지원을 연결해 배운 내용을 현장에서 다시 활용할 수 있도록 돕습니다.",
+  "servicesTitle": "배우고, 적용하고,\n막힌 지점을 해결하는 연결.",
+  "servicesIntro": "필요한 서비스를 선택하세요. 교육 담당자는 과정 안내에서, 학습자는 Learning Hub에서, 업무 적용 중 도움이 필요하다면 실무지원에서 시작할 수 있습니다.",
+  "services": [
+    {
+      "key": "education",
+      "eyebrow": "EDUCATION",
+      "title": "교육 안내",
+      "desc": "기관에 필요한 교육을 선택하고 운영계획을 확인합니다.",
+      "detail": "대상·시간·교육목표·커리큘럼과 과정별 안내 자료를 확인할 수 있습니다.",
+      "label": "교육과정 살펴보기",
+      "url": "https://boherdang-ops.github.io/ai-administrative-innovation/courses/"
+    },
+    {
+      "key": "learning",
+      "eyebrow": "LEARNING HUB",
+      "title": "Learning Hub",
+      "desc": "오늘의 업무에 필요한 AI 활용 방법을 익힙니다.",
+      "detail": "행정문서, 정책기획, 데이터 분석부터 AI 업무혁신과 공공 AI 거버넌스까지 업무별로 학습합니다.",
+      "label": "학습 시작하기",
+      "url": "https://boherdang-ops.github.io/ai-administrative-innovation/learning/"
+    },
+    {
+      "key": "practice",
+      "eyebrow": "PRACTICE SUPPORT",
+      "title": "실무지원",
+      "desc": "배운 내용을 내 업무에 적용하고 어려움을 해결합니다.",
+      "detail": "AI 상담 요청문 준비, 운영자 지원 요청, 활용 사례를 통해 업무 적용 방법과 결과를 검토합니다.",
+      "label": "실무지원 이용하기",
+      "url": "https://boherdang-ops.github.io/ai-administrative-innovation/practice/"
+    }
+  ],
+  "coursesTitle": "대상과 업무에 맞는 교육과정",
+  "coursesIntro": "간부의 정책 판단부터 실무 역량, 정책기획과 혁신리더 양성까지. 세부 내용과 최신 운영계획은 교육 안내 사이트에서 확인하세요.",
+  "courses": [
+    {
+      "title": "AI 행정혁신 최고위 정책 워크숍",
+      "target": "단체장 및 과장급 이상 간부 공무원",
+      "duration": "2시간",
+      "url": "https://boherdang-ops.github.io/ai-administrative-innovation/courses/#C01"
+    },
+    {
+      "title": "생성형 AI 기반 행정 실무 역량강화 워크숍",
+      "target": "지자체 전 직원",
+      "duration": "7시간",
+      "url": "https://boherdang-ops.github.io/ai-administrative-innovation/courses/#C02"
+    },
+    {
+      "title": "생성형 AI 기반 행정 실무 및 정책기획 심화 워크숍",
+      "target": "지자체 전 직원",
+      "duration": "14시간",
+      "url": "https://boherdang-ops.github.io/ai-administrative-innovation/courses/#C03"
+    },
+    {
+      "title": "제로빌드 정책기획 심화 워크숍",
+      "target": "기획·정책·예산·공모사업 담당 실무자",
+      "duration": "14시간",
+      "url": "https://boherdang-ops.github.io/ai-administrative-innovation/courses/#C04"
+    },
+    {
+      "title": "문제해결형 혁신리더 양성과정",
+      "target": "부서별 핵심 인재",
+      "duration": "49시간",
+      "url": "https://boherdang-ops.github.io/ai-administrative-innovation/courses/#C05"
+    }
+  ],
+  "approachTitle": "기관의 과제에서 시작합니다.",
+  "approachIntro": "필요한 교육과 지원의 범위를 함께 정하고, 실제 업무에 적용할 수 있는 방향으로 설계합니다.",
+  "steps": [
+    {
+      "title": "수요 확인",
+      "body": "교육대상, 기관의 현안과 업무, 활용 경험을 확인합니다."
+    },
+    {
+      "title": "과정·지원 설계",
+      "body": "목표와 운영 여건에 맞춰 교육과 실습, 지원 범위를 협의합니다."
+    },
+    {
+      "title": "학습·현장 적용",
+      "body": "교육과 Learning Hub, 실무지원으로 업무 적용을 이어갑니다."
+    }
+  ],
+  "insightsTitle": "행정 AI를 이해하는 자료와 관점",
+  "insightsIntro": "연구·해설 콘텐츠와 교육 자료를 함께 살펴보세요.",
+  "ctaTitle": "우리 기관에 필요한 AI 활용,\n함께 구체화하겠습니다.",
+  "ctaBody": "교육대상과 일정, 해결하려는 업무를 알려주시면 교육·컨설팅 방향을 함께 검토하겠습니다."
+}

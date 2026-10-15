@@ -1,0 +1,22 @@
+{
+  "footerName": "AI행정혁신연구소",
+  "footerTagline": "AI는 혁신의 도구, 행정의 중심은 사람입니다.",
+  "channels": [
+    {
+      "label": "유튜브",
+      "href": "https://www.youtube.com/@해피브레인-q7l"
+    },
+    {
+      "label": "블로그",
+      "href": "https://blog.naver.com/PostList.naver?blogId=happybrain_ai"
+    },
+    {
+      "label": "브런치",
+      "href": "https://brunch.co.kr/@happybrain"
+    },
+    {
+      "label": "페이스북",
+      "href": "https://www.facebook.com/beacon.korea"
+    }
+  ]
+}
