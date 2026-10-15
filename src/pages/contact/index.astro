@@ -2,16 +2,19 @@
 import Base from '../../layouts/Base.astro';
 import contact from '../../data/contact.json';
 import site from '../../data/site.json';
+import org from '../../data/org.json';
+import corporate from '../../data/corporate.json';
 
-const { email, note } = contact;
+const email = org.email || contact.email;
+const { note } = contact;
 const channels = site.channels;
 ---
-<Base title="강의·문의" description="지자체 AI 교육, 강연, 컨설팅 문의.">
+<Base title="사업 문의" description="지방정부·공공기관의 AI 교육 및 행정혁신 컨설팅 문의.">
   <section class="page-head">
     <div class="wrap">
       <p class="eyebrow">Contact</p>
-      <h1>강의·문의</h1>
-      <p class="page-lead">지자체 AI 교육, 강연, 컨설팅에 대한 문의를 환영합니다.</p>
+      <h1>사업 문의</h1>
+      <p class="page-lead">기관의 교육대상과 일정, 해결하려는 업무를 바탕으로 교육·컨설팅 방향을 함께 검토합니다.</p>
     </div>
   </section>
 
@@ -19,10 +22,10 @@ const channels = site.channels;
     <div>
       <p class="eyebrow">Email</p>
       <a class="email" href={`mailto:${email}`}>{email}</a>
-      <p class="note">{note}</p>
+      <p class="note">{note}</p>{org.phone && <p><strong>대표 전화</strong><br/><a href={`tel:${org.phone.replace(/[^0-9+]/g,'')}`}>{org.phone}</a></p>}<div class="inquiry-guide"><h2>문의 시 알려주세요</h2><ul><li>기관명과 담당 부서</li><li>교육대상·인원·희망 일정</li><li>해결하려는 업무와 필요한 지원</li></ul></div>
     </div>
     <div>
-      <p class="eyebrow">Channels</p>
+      <p class="eyebrow">SERVICE DESK</p><h2>업무 적용 중 도움이 필요하신가요?</h2><p class="note">실무지원 사이트에서 AI 활용 방법을 확인하거나 운영자에게 지원을 요청할 수 있습니다.</p><a class="btn" href={corporate.services[2].url}>실무지원 이용하기 ↗</a><p class="eyebrow channel-label">참고 채널</p>
       <ul class="channels">
         {channels.map((c) => (
           <li><a href={c.href} target="_blank" rel="noopener">{c.label} →</a></li>
@@ -47,4 +50,5 @@ const channels = site.channels;
   .channels { list-style: none; margin: .6rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .7rem; }
   .channels a { font-size: 1.05rem; }
   @media (max-width: 620px) { .contact-grid { grid-template-columns: 1fr; gap: 2rem; } }
+h1,h2{font-family:var(--sans);word-break:keep-all}.contact-grid h2{font-size:1.25rem;margin-bottom:18px}.email{overflow-wrap:anywhere;max-width:100%;font-family:var(--sans)}.inquiry-guide{border-top:1px solid var(--line);margin-top:28px;padding-top:24px}.inquiry-guide ul{padding-left:20px;font-size:15px}.channel-label{display:block;margin-top:35px}
 </style>
