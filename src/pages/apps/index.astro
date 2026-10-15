@@ -1,18 +1,16 @@
 ---
+import display from '../../data/display-apps.json';
 import Base from '../../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 
 const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.order);
 ---
-<Base title="행정지원앱" description="바이브 코딩으로 만든, 공무원 실무에 바로 쓰는 AI 도구 모음. 설치 없이 브라우저에서 무료로.">
+<Base title={display.title} description={display.intro}>
   <section class="page-head">
     <div class="wrap">
-      <p class="eyebrow">Tools</p>
-      <h1>행정지원앱</h1>
-      <p class="page-lead">
-        실무에서 직접 쓰려고 만든 AI 도구들입니다. 설치 없이 브라우저에서 바로,
-        대부분 무료로 써보실 수 있어요.
-      </p>
+      <p class="eyebrow">{display.eyebrow}</p>
+      <h1>{display.title}</h1>
+      <p class="page-lead">{display.intro}</p>
     </div>
   </section>
 
