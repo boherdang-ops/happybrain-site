@@ -227,7 +227,7 @@ collections:
           - { name: link, label: "이동 주소 (https:// 또는 /news/ 등)", widget: string, required: false }
           - { name: linkLabel, label: "링크 이름", widget: string, required: false }
           - { name: startDate, label: "시작일 (한국시간, 비우면 즉시)", widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", required: false }
-          - { name: endDate, label: "종료일 (한국시간, 해당일 자정까지 / 비우면 계속)", widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", required: false }
+          - { name: endDate, label: "종료일 (한국시간, 해당일 포함 / 비우면 계속)", widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", required: false }
           - { name: dismissible, label: "방문자 닫기 허용 (브라우저 탭 동안)", widget: boolean, default: true }
       - name: corporate
         label: "법인 홈페이지 · 사업과 서비스"
@@ -271,8 +271,8 @@ collections:
               - { name: body, label: "설명", widget: text }
           - { name: insightsTitle, label: "자료·인사이트 제목", widget: text }
           - { name: insightsIntro, label: "자료·인사이트 소개", widget: text }
-          - { name: ctaTitle, label: "하단 문의 제목", widget: text }
-          - { name: ctaBody, label: "하단 문의 설명", widget: text }
+          - { name: ctaTitle, label: "공통 푸터 제목", widget: text }
+          - { name: ctaBody, label: "공통 푸터 설명", widget: text }
       - name: about
         label: "소개 페이지"
         file: "src/data/about.json"
