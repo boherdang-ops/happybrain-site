@@ -1,4 +1,5 @@
 ---
+import display from '../../data/display-insights.json';
 import Base from '../../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 
@@ -9,12 +10,12 @@ const posts = (await getCollection('writing', ({ data }) => !data.draft))
 
 const categories = ['AI 활용법', 'AI 행정혁신', 'Human Premium', '교육 노트'];
 ---
-<Base title="인사이트" description="행정 AI를 이해하는 자료와 관점 — AI 활용과 행정혁신을 위한 연구·해설과 교육 자료를 살펴보세요.">
+<Base title={display.title} description={display.intro}>
   <section class="page-head">
     <div class="wrap">
-      <p class="eyebrow">Insights · 인사이트</p>
-      <h1>행정 AI를 이해하는 자료와 관점</h1>
-      <p class="page-lead">AI 활용과 행정혁신을 위한 연구·해설과 교육 자료를 살펴보세요.</p>
+      <p class="eyebrow">{display.eyebrow}</p>
+      <h1>{display.heading}</h1>
+      <p class="page-lead">{display.intro}</p>
     </div>
   </section>
 
