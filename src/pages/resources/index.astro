@@ -1,4 +1,5 @@
 ---
+import display from '../../data/display-resources.json';
 import Base from '../../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 import { safeUrl } from '../../lib/media.js';
@@ -15,20 +16,17 @@ const categories = ['강의자료', '프롬프트 모음', '실습문제', '워�
 const used = categories.filter((c) => items.some((i) => i.data.category === c));
 const fmtDate = (d) => d ? new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(d) : '';
 ---
-<Base title="자료실" description="AI 교육 강의자료, 프롬프트 모음, 실습문제, 워크시트를 무료로 내려받으세요.">
+<Base title={display.title} description={display.intro}>
   <section class="page-head">
     <div class="wrap">
-      <p class="eyebrow">Resources</p>
-      <h1>자료실</h1>
-      <p class="page-lead">
-        교육에서 쓰는 강의자료와 프롬프트 모음, 실습문제와 워크시트를 나눕니다.
-        누구나 자유롭게 내려받아 쓰세요.
-      </p>
+      <p class="eyebrow">{display.eyebrow}</p>
+      <h1>{display.title}</h1>
+      <p class="page-lead">{display.intro}</p>
     </div>
   </section>
 
   <section class="section wrap">
-    <aside class="connected-site" aria-label="Learning Hub"><div><strong>Learning Hub</strong><p>AI 활용을 배우고, 행정 현안을 분석하며, 실제 업무에 적용하는 학습공간입니다.</p></div><a class="btn" href="https://boherdang-ops.github.io/ai-administrative-innovation/learning/">Learning Hub 시작하기 ↗</a></aside>
+    <aside class="connected-site" aria-label="Learning Hub"><div><strong>{display.hubTitle}</strong><p>{display.hubIntro}</p></div><a class="btn" href={display.hubUrl}>{display.hubLabel} ↗</a></aside>
     {items.length > 0 && (
       <div class="tools">
         <div class="filters" data-filters>
