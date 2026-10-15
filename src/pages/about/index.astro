@@ -53,14 +53,6 @@ const { name, penName, intro, greeting, signName, signTitle, focus, career, ctaH
   </section>
 
   <section class="section wrap"><p class="eyebrow">CONNECTED SERVICES</p><h2 class="sec-title">교육·학습·실무지원의 연결</h2><div class="focus">{corporate.services.map(s=><article class="focus-item"><h3>{s.title}</h3><p>{s.detail}</p><a href={s.url}>{s.label} ↗</a></article>)}</div></section>
-  <!-- CTA -->
-  <section class="section cta-strip">
-    <div class="wrap cta-inner">
-      <h2>기관의 AI 활용 과제, 함께 검토하겠습니다.</h2>
-      <p>교육 설계와 행정혁신 컨설팅에 대해 문의해 주세요.</p>
-      <a class="btn btn--on-navy" href="/contact/">문의하기</a>
-    </div>
-  </section>
 </Base>
 
 <style>
@@ -92,10 +84,6 @@ const { name, penName, intro, greeting, signName, signTitle, focus, career, ctaH
   .sign-title { font-family: var(--mono); font-size: .76rem; letter-spacing: .08em; color: var(--muted); }
   .sign-name { font-family: var(--serif); font-weight: 700; font-size: 1.25rem; color: var(--ink); }
 
-  .cta-strip { background: var(--navy-deep); color: var(--paper-on-navy); }
-  .cta-inner { text-align: center; max-width: 40rem; margin-inline: auto; }
-  .cta-inner h2 { color: #fff; }
-  .cta-inner p { margin: 1rem 0 1.8rem; color: var(--paper-on-navy); }
   @media (max-width: 520px) { .career li { grid-template-columns: 1fr; gap: .2rem; } }
 h1,h2,h3{font-family:var(--sans);word-break:keep-all}.intro-inner{max-width:var(--measure)}.intro h1{display:block;font-size:clamp(1.8rem,4vw,3rem);margin:0 0 24px}.profile-strip .greeting{max-height:none}.focus-item a{display:inline-block;margin-top:15px;font-size:14px}
 </style>
