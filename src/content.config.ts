@@ -111,4 +111,8 @@ const resources = defineCollection({
 
 
 
-export const collections = { writing, books, videos, apps, courses, resources };
+const notices = defineCollection({
+ loader: glob({pattern:'**/*.md',base:'./src/content/notices'}),
+ schema:z.object({title:z.string(),date:z.coerce.date(),category:z.enum(['공지','홍보','AI 정책','교육 정보']).default('공지'),summary:z.string().optional(),pinned:z.boolean().default(false),draft:z.boolean().default(false),sourceLabel:z.string().optional(),sourceUrl:z.string().optional(),attachments:z.array(z.object({label:z.string(),file:z.string()})).default([])})
+});
+export const collections = { writing, books, videos, apps, courses, resources, notices };
