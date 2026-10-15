@@ -1,9 +1,12 @@
 ---
 import org from '../data/org.json';
+import banner from '../data/banner.json';
+import {publicLink} from '../lib/banner.mjs';
 import corporate from '../data/corporate.json';
 const path = Astro.url.pathname;
-const nav = [{href:'/about/',label:'법인 소개'},{href:'/#business',label:'사업 영역'},...corporate.services.map(s=>({href:s.url,label:s.title})),{href:'/writing/',label:'인사이트'},{href:'/contact/',label:'사업 문의'}];
+const nav = [{href:'/about/',label:'법인 소개'},{href:'/#business',label:'사업 영역'},...corporate.services.map(s=>({href:s.url,label:s.title})),{href:'/news/',label:'공지·소식'},{href:'/writing/',label:'인사이트'},{href:'/contact/',label:'사업 문의'}];
 ---
+<aside id="site-banner" class="site-banner" aria-label="주요 알림" hidden data-banner={JSON.stringify(banner)}><div class="wrap banner-inner">{publicLink(banner.image)&&<img src={publicLink(banner.image)} alt={banner.imageAlt||''} width="100" height="65"/>}<div class="banner-copy"><strong>{banner.title}</strong>{banner.description&&<p>{banner.description}</p>}</div>{publicLink(banner.link)&&<a href={publicLink(banner.link)}>{banner.linkLabel||'자세히 보기'} ↗</a>}{banner.dismissible&&<button type="button" id="banner-close" aria-label="알림 배너 닫기">×</button>}</div></aside>
 <header class="site-header">
  <div class="wrap bar">
   <a class="brand" href="/" aria-label={`${org.name} 홈`}><img src="/kpa-symbol.png" alt="KPA" width="70" height="28"/><span><small>한국공공자치연구원</small><strong>{org.shortName}</strong></span></a>
@@ -12,6 +15,10 @@ const nav = [{href:'/about/',label:'법인 소개'},{href:'/#business',label:'�
  </div>
 </header>
 <script>
+ import {isBannerVisible} from '../lib/banner.mjs';
+ const bannerElement=document.querySelector<HTMLElement>('#site-banner');
+ if(bannerElement){try{const config=JSON.parse(bannerElement.dataset.banner||'{}');const signature=JSON.stringify(config);let closed=false;try{closed=config.dismissible&&sessionStorage.getItem('corporate-banner-dismissed')===signature}catch{}const update=()=>{bannerElement.hidden=closed||!isBannerVisible(config)};update();setInterval(update,60000);document.querySelector('#banner-close')?.addEventListener('click',()=>{closed=true;bannerElement.hidden=true;try{sessionStorage.setItem('corporate-banner-dismissed',signature)}catch{}})}catch{bannerElement.hidden=true}}
+
  const toggle=document.querySelector<HTMLButtonElement>('#nav-toggle');const nav=document.querySelector('#primary-nav');
  toggle?.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')!=='true';toggle.setAttribute('aria-expanded',String(open));nav?.classList.toggle('is-open',open)});
  nav?.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{toggle?.setAttribute('aria-expanded','false');nav.classList.remove('is-open')}));
@@ -19,6 +26,7 @@ const nav = [{href:'/about/',label:'법인 소개'},{href:'/#business',label:'�
 </script>
 <style>
 .site-header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line)}.bar{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:88px}.brand{display:flex;align-items:center;gap:12px;color:var(--ink);flex-shrink:0}.brand:hover{text-decoration:none}.brand img{width:64px;height:auto}.brand span{display:flex;flex-direction:column;line-height:1.35}.brand small{font-size:11px;letter-spacing:.04em}.brand strong{font-size:20px;letter-spacing:-.04em}nav ul{display:flex;align-items:center;gap:22px;list-style:none;margin:0;padding:0}nav a{color:var(--ink);font-size:14px;white-space:nowrap;font-weight:600}nav a:hover,nav a.current{color:var(--blue)}nav a.consult{display:inline-flex;padding:9px 15px;border:1px solid var(--ink);border-radius:3px}#nav-toggle{display:none}
-@media(max-width:1050px){.bar{flex-wrap:wrap;gap:0;min-height:76px;padding-block:13px}#nav-toggle{display:flex;align-items:center;gap:10px;background:none;border:1px solid var(--line);padding:9px 12px;color:var(--ink);font:inherit;font-size:14px;border-radius:3px}nav{display:none;width:100%;padding-top:20px}nav.is-open{display:block}nav ul{display:grid;grid-template-columns:1fr 1fr;gap:0}nav a{display:block;padding:12px 4px;border-top:1px solid var(--line)}nav a.consult{border:0;border-top:1px solid var(--line);padding:12px 4px}.brand img{width:53px}.brand strong{font-size:18px}}
+@media(max-width:1180px){.bar{flex-wrap:wrap;gap:0;min-height:76px;padding-block:13px}#nav-toggle{display:flex;align-items:center;gap:10px;background:none;border:1px solid var(--line);padding:9px 12px;color:var(--ink);font:inherit;font-size:14px;border-radius:3px}nav{display:none;width:100%;padding-top:20px}nav.is-open{display:block}nav ul{display:grid;grid-template-columns:1fr 1fr;gap:0}nav a{display:block;padding:12px 4px;border-top:1px solid var(--line)}nav a.consult{border:0;border-top:1px solid var(--line);padding:12px 4px}.brand img{width:53px}.brand strong{font-size:18px}}
 @media(max-width:360px){.brand strong{font-size:16px}.brand img{width:43px}.brand{gap:8px}.brand small{font-size:10px}}
+.site-banner{background:#eee3cb;border-bottom:1px solid #dcc59a;color:#243540}.site-banner[hidden]{display:none!important}.banner-inner{display:flex;align-items:center;gap:20px;padding-block:16px}.banner-inner img{width:100px;height:65px;object-fit:contain;flex-shrink:0}.banner-copy{flex:1;min-width:0}.banner-copy strong{font-size:15px;overflow-wrap:anywhere}.banner-copy p{font-size:13px;line-height:1.6;margin:4px 0 0;overflow-wrap:anywhere}.banner-inner>a{font-size:13px;font-weight:600;color:#233947}.banner-inner>button{border:0;background:transparent;font-size:26px;line-height:1;padding:8px;cursor:pointer;color:#233947}@media(max-width:640px){.banner-inner{gap:12px;flex-wrap:wrap}.banner-inner img{width:65px;height:55px}.banner-copy{flex-basis:calc(100% - 115px)}.banner-inner>a{margin-right:auto}}@media print{.site-banner{display:none!important}}
 </style>
