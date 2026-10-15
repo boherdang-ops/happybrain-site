@@ -1,0 +1,19 @@
+{
+  "title": "사업 문의",
+  "intro": "기관의 교육대상과 일정, 해결하려는 업무를 바탕으로 교육·컨설팅 방향을 함께 검토합니다.",
+  "educationTitle": "교육 문의",
+  "guideTitle": "문의 시 알려주세요",
+  "guideItems": [
+    "기관명과 담당 부서",
+    "교육대상·인원·희망 일정",
+    "관심 있는 교육과정 또는 해결하려는 업무"
+  ],
+  "faqTitle": "자주 묻는 질문",
+  "questionLabel": "질문하기",
+  "questionIntro": "교육·사업 관련 문의를 자유롭게 적어 주세요. 문의는 비공개로 접수되어 법인 메일로 전달됩니다.",
+  "questionPlaceholder": "궁금한 점이나 필요한 교육·사업 내용을 적어 주세요.",
+  "sendLabel": "질문 보내기",
+  "eyebrow": "CONTACT",
+  "educationEyebrow": "EDUCATION INQUIRY",
+  "faqEyebrow": "Q&A"
+}

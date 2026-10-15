@@ -1,0 +1,33 @@
+{
+  "inquiryLabel": "교육·컨설팅 문의",
+  "inquiryUrl": "/contact/",
+  "servicesLabel": "서비스 둘러보기",
+  "mapTitle": "LEARNING TO PRACTICE",
+  "mapFoot": "교육 설계 · 지속 학습 · 업무 적용",
+  "aboutLabel": "법인 소개 보기",
+  "coursesLabel": "전체 교육과정 · 안내 자료",
+  "newsTitle": "공지·소식",
+  "newsIntro": "법인 소식과 공고, 공공 AI 정책 및 교육 정보를 전합니다.",
+  "newsMore": "전체 소식 보기",
+  "insightsMore": "전체 인사이트",
+  "resourceLinks": [
+    {
+      "label": "교육 자료실",
+      "url": "/resources/"
+    },
+    {
+      "label": "Learning Hub 자료 찾기",
+      "url": "https://boherdang-ops.github.io/ai-administrative-innovation/learning/library.html"
+    },
+    {
+      "label": "영상 콘텐츠",
+      "url": "/videos/"
+    }
+  ],
+  "businessEyebrow": "OUR BUSINESS",
+  "servicesEyebrow": "CONNECTED SERVICES",
+  "educationEyebrow": "EDUCATION",
+  "approachEyebrow": "HOW WE WORK",
+  "newsEyebrow": "NEWS & NOTICES",
+  "insightsEyebrow": "RESOURCES & INSIGHTS"
+}
