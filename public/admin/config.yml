@@ -18,6 +18,32 @@ public_folder: "/uploads"
 locale: ko
 
 collections:
+  - name: notices
+    label: "공지·소식 게시판"
+    label_singular: "게시글"
+    folder: "src/content/notices"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    extension: md
+    format: frontmatter
+    summary: "{{title}} · {{category}}"
+    fields:
+      - { name: title, label: "제목", widget: string }
+      - { name: date, label: "게시일", widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD" }
+      - { name: category, label: "분류", widget: select, options: ["공지", "홍보", "AI 정책", "교육 정보"], default: "공지" }
+      - { name: summary, label: "요약", widget: text, required: false }
+      - { name: pinned, label: "상단 고정", widget: boolean, default: false }
+      - { name: draft, label: "초안 (켜면 공개되지 않음)", widget: boolean, default: true }
+      - { name: sourceLabel, label: "출처 이름", widget: string, required: false }
+      - { name: sourceUrl, label: "출처 주소 (https://)", widget: string, required: false }
+      - name: attachments
+        label: "첨부자료 (공개 게시용)"
+        widget: list
+        required: false
+        fields:
+          - { name: label, label: "자료 이름", widget: string }
+          - { name: file, label: "첨부파일 또는 외부 자료 주소", widget: file }
+      - { name: body, label: "본문", widget: markdown }
   # ── 교육과정 ────────────────────────────────────────
   - name: courses
     label: "교육과정"
@@ -189,6 +215,20 @@ collections:
     editor:
       preview: false
     files:
+      - name: banner
+        label: "알림 배너 (표시·기간 설정)"
+        file: "src/data/banner.json"
+        fields:
+          - { name: enabled, label: "배너 표시", widget: boolean, default: false }
+          - { name: title, label: "배너 제목 (표시 시 필수)", widget: string, required: false }
+          - { name: description, label: "설명", widget: text, required: false }
+          - { name: image, label: "배너 이미지 (선택)", widget: image, required: false }
+          - { name: imageAlt, label: "이미지 설명", widget: string, required: false }
+          - { name: link, label: "이동 주소 (https:// 또는 /news/ 등)", widget: string, required: false }
+          - { name: linkLabel, label: "링크 이름", widget: string, required: false }
+          - { name: startDate, label: "시작일 (한국시간, 비우면 즉시)", widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", required: false }
+          - { name: endDate, label: "종료일 (한국시간, 해당일 자정까지 / 비우면 계속)", widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", required: false }
+          - { name: dismissible, label: "방문자 닫기 허용 (브라우저 탭 동안)", widget: boolean, default: true }
       - name: corporate
         label: "법인 홈페이지 · 사업과 서비스"
         file: "src/data/corporate.json"
