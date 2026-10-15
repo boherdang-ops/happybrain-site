@@ -32,6 +32,7 @@ const fmtDate = (d) => new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month
 </Base>
 
 <style>
+  .post-head h1, .post-body :global(h1), .post-body :global(h2), .post-body :global(h3), .post-body :global(h4) { font-family: var(--sans); word-break: keep-all; }
   .post-head { border-bottom: 1px solid var(--line); }
   .post-head .wrap { padding-block: clamp(2.5rem, 6vw, 4rem); max-width: 46rem; }
   .post-head h1 { margin: .9rem 0 1rem; font-size: clamp(1.9rem, 4.5vw, 2.8rem); }
@@ -44,7 +45,7 @@ const fmtDate = (d) => new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month
   .post-body :global(a) { color: var(--blue); }
   .post-body :global(blockquote) {
     margin: 1.8rem 0; padding: .3rem 0 .3rem 1.4rem; border-left: 3px solid var(--gold);
-    color: var(--muted); font-family: var(--serif); font-size: 1.15rem;
+    color: var(--muted); font-family: var(--sans); font-size: 1.15rem;
   }
   .post-body :global(ul), .post-body :global(ol) { padding-left: 1.3rem; margin: 0 0 1.4em; }
   .post-body :global(li) { margin-bottom: .5em; }
