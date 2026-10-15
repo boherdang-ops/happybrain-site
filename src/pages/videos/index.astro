@@ -1,16 +1,17 @@
 ---
+import display from '../../data/display-videos.json';
 import Base from '../../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 import { videoThumb, bgImage } from '../../lib/media.js';
 
 const videos = (await getCollection('videos')).sort((a, b) => a.data.order - b.data.order);
 ---
-<Base title="영상" description="해피브레인 유튜브 영상 큐레이션.">
+<Base title={display.title} description={display.intro}>
   <section class="page-head">
     <div class="wrap">
-      <p class="eyebrow">Videos</p>
-      <h1>영상</h1>
-      <p class="page-lead">글로 다 담지 못한 이야기는 영상으로.</p>
+      <p class="eyebrow">{display.eyebrow}</p>
+      <h1>{display.title}</h1>
+      <p class="page-lead">{display.intro}</p>
     </div>
   </section>
 
