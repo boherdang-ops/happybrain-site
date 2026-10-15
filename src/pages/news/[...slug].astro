@@ -1,0 +1,18 @@
+---
+import Base from '../../layouts/Base.astro';
+import {getCollection,render} from 'astro:content';
+import {publicLink} from '../../lib/banner.mjs';
+export async function getStaticPaths(){return (await getCollection('notices',({data})=>!data.draft)).map(post=>({params:{slug:post.id},props:{post}}))}
+const {post}=Astro.props;const {Content}=await render(post);
+const fmt=d=>new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'long',day:'numeric'}).format(d);
+const attachments=post.data.attachments.filter(a=>publicLink(a.file));
+---
+<Base title={post.data.title} description={post.data.summary}>
+<article class="notice"><header class="notice-head wrap"><a href="/news/">← 공지·소식</a><p class="eyebrow">{post.data.category}{post.data.pinned?' · 고정':''}</p><h1>{post.data.title}</h1><time datetime={post.data.date.toISOString()}>{fmt(post.data.date)}</time></header>
+<div class="wrap notice-content"><Content/></div>
+{attachments.length>0&&<section class="wrap notice-attachments" aria-label="첨부자료"><h2>첨부자료</h2><ul>{attachments.map(a=><li><a href={publicLink(a.file)} target="_blank" rel="noopener noreferrer">{a.label} ↗</a></li>)}</ul><p>첨부자료는 새 탭에서 열립니다. 파일 형식에 따라 브라우저에서 열람하거나 내려받을 수 있습니다.</p></section>}
+{publicLink(post.data.sourceUrl)&&<aside class="wrap notice-source">출처: <a href={publicLink(post.data.sourceUrl)} target="_blank" rel="noopener noreferrer">{post.data.sourceLabel||'원문 보기'} ↗</a></aside>}
+<div class="wrap notice-back"><a href="/news/">목록으로 돌아가기 →</a></div></article></Base>
+<style>
+h1,h2{font-family:var(--sans);word-break:keep-all}.notice .wrap{max-width:56rem}.notice-head{padding-block:45px 30px;border-bottom:1px solid var(--line)}.notice-head>a{display:block;font-size:13px;margin-bottom:26px}.notice-head .eyebrow{margin-bottom:12px}.notice-head h1{font-size:clamp(1.8rem,4vw,2.8rem);line-height:1.45;margin-bottom:18px;overflow-wrap:anywhere}.notice-head time{font-size:13px;color:#65747f}.notice-content{padding-block:35px;line-height:1.9;overflow-wrap:anywhere}.notice-content :global(img){max-width:100%;height:auto}.notice-content :global(h2){font-size:24px;margin:30px 0 15px}.notice-content :global(h3){font-family:var(--sans);margin:25px 0 12px}.notice-content :global(table){display:block;max-width:100%;overflow-x:auto}.notice-content :global(pre){overflow-x:auto;font-size:13px;background:#edf1f0;padding:16px}.notice-attachments{padding-block:25px;border-block:1px solid var(--line)}.notice-attachments h2{font-size:18px}.notice-attachments ul{padding-left:20px}.notice-attachments li{padding:5px 0;overflow-wrap:anywhere}.notice-attachments p{font-size:12px;color:#65747f;margin:15px 0 0}.notice-source{font-size:13px;padding-block:25px;overflow-wrap:anywhere}.notice-back{padding-block:30px 45px;font-size:14px}@media print{.notice-back,.notice-head>a{display:none}.notice-content{padding-block:10px}.notice-head{padding-block:15px}.notice-attachments a::after{content:' (' attr(href) ')';font-size:9pt}}
+</style>
