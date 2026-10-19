@@ -50,9 +50,6 @@ collections:
               - name: key
                 label: 식별자 (education / learning / practice)
                 widget: hidden
-              - name: eyebrow
-                label: 영문 표기
-                widget: string
               - name: title
                 label: 서비스 이름
                 widget: string
