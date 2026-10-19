@@ -132,12 +132,6 @@ collections:
           - name: servicesLabel
             label: 서비스 이동 버튼
             widget: string
-          - name: mapTitle
-            label: 서비스 요약 영문 제목
-            widget: text
-          - name: mapFoot
-            label: 서비스 요약 하단 문구
-            widget: text
           - name: aboutLabel
             label: 법인 소개 버튼
             widget: string
