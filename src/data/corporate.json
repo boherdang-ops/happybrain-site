@@ -2,7 +2,7 @@
   "businessTitle": "교육에서 실제 업무 적용까지,\n행정의 변화를 함께 설계합니다.",
   "businessIntro": "지방정부와 공공기관의 AI 활용 교육, 행정혁신 컨설팅, 연구·콘텐츠 개발을 수행합니다. 교육 안내와 학습, 실무지원을 연결해 배운 내용을 현장에서 다시 활용할 수 있도록 돕습니다.",
   "servicesTitle": "배우고, 적용하고,\n막힌 지점을 해결하는 연결.",
-  "servicesIntro": "필요한 서비스를 선택하세요. 교육 담당자는 과정 안내에서, 학습자는 Learning Hub에서, 업무 적용 중 도움이 필요하다면 실무지원에서 시작할 수 있습니다.",
+  "servicesIntro": "필요한 서비스를 선택하세요. 교육 담당자는 과정 안내에서, 학습자는 Learning Hub에서, 업무 적용 중 도움이 필요하다면 실무지원에서 시작할 수 있습니다. 교육과 업무 적용에 앞서 현재 역량과 준비요건을 확인하려면 역량진단을 이용하세요.",
   "services": [
     {
       "key": "education",
@@ -12,6 +12,15 @@
       "detail": "대상·시간·교육목표·커리큘럼과 과정별 안내 자료를 확인할 수 있습니다.",
       "label": "교육과정 살펴보기",
       "url": "https://boherdang-ops.github.io/ai-administrative-innovation/courses/"
+    },
+    {
+      "key": "diagnosis",
+      "eyebrow": "AI READINESS",
+      "title": "역량진단",
+      "desc": "개인의 AI 활용 역량과 기관의 실행 준비를 확인합니다.",
+      "detail": "개인·기관 자가진단과 관심 과정별 준비요건을 살펴보고, 필요한 학습과 선행 과제를 확인할 수 있습니다.",
+      "label": "역량진단 시작하기",
+      "url": "https://boherdang-ops.github.io/ai-administrative-innovation/diagnosis/"
     },
     {
       "key": "learning",
