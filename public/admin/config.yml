@@ -68,9 +68,9 @@ collections:
               - name: url
                 label: 연결 주소
                 widget: string
-            min: 3
-            max: 3
-            hint: 교육 안내·Learning Hub·실무지원의 세 연결을 관리합니다. 상세 자료는 각 사이트에서 수정하세요.
+            min: 4
+            max: 4
+            hint: 교육 안내·역량진단·Learning Hub·실무지원의 네 연결을 관리합니다. 상세 자료는 각 사이트에서 수정하세요.
           - name: coursesTitle
             label: 교육과정 제목
             widget: text
